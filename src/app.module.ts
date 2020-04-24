@@ -20,6 +20,6 @@ const modules: DynamicModule[] = loadModules();
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     const controllers: any = loadControllers();
-  //  consumer.apply(AuthMiddleware).forRoutes(...controllers);
+    consumer.apply(AuthMiddleware).forRoutes(...controllers);
   }
 }
