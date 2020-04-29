@@ -23,14 +23,6 @@ const config: TypeOrmModuleOptions = {
   logging: data.DATABASE_LOGGING === 'true',
   logger: data.DATABASE_LOGGING_TYPE || null,
   migrations: [`${__dirname}/migrations/**/*{.ts,.js}`],
-  ssl:
-    data.NODE_ENV === 'development'
-      ? {
-          key: data.DATABASE_KEY.replace(/\\n/g, '\n'),
-          ca: data.DATABASE_CA.replace(/\\n/g, '\n'),
-          cert: data.DATABASE_CERT.replace(/\\n/g, '\n'),
-        }
-      : null,
   cli: {
     migrationsDir: 'src/migrations',
   },
