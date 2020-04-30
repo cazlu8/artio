@@ -1,45 +1,12 @@
-name: Pipeline Web API develop.
+name: Pipeline Web API Deploy develop.
 
 on:
   push:
     branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
-
-jobs:
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Use Node.js 12.x
-      uses: actions/setup-node@v1
-      with:
-        node-version: '12.x'
-
-    - name: Cache node modules
-      uses: actions/cache@v1
-      with:
-        path: node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.OS }}-build-${{ env.cache-name }}-
-          ${{ runner.OS }}-build-
-          ${{ runner.OS }}-
-
-    - name: Install dependencies
-      run: npm i
-
-    - name: Tests CI
-      run: |
-        npm run lint
-        npm run prettier
-      env:
-        CI: true
-        
+       
+jobs:       
   build:
     runs-on: ubuntu-latest
-    needs: [tests]
     steps:
     - uses: actions/checkout@v1
     
