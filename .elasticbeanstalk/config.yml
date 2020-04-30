@@ -2,9 +2,6 @@ branch-defaults:
   develop:
     environment: engage-web-api-dev
     group_suffix: null
-  master:
-    environment: engage-web-api-dev
-    group_suffix: null
 global:
   application_name: engage-web-api
   branch: develop
