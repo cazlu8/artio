@@ -1,4 +1,7 @@
 branch-defaults:
+  develop:
+    environment: engage-web-api-dev
+    group_suffix: null
   master:
     environment: engage-web-api-dev
     group_suffix: null
@@ -16,4 +19,3 @@ global:
   repository: null
   sc: git
   workspace_type: Application
-
