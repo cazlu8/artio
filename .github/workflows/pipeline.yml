@@ -1,4 +1,4 @@
-name: Pipeline Live Stream Web API.
+name: Pipeline Web API.
 
 on:
   push:
