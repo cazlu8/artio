@@ -32,13 +32,13 @@ async function bootstrap() {
     timeWindow: +process.env.TIME_WINDOW_RATE_LIMIT,
   });
 
-  app.register(fastifyCors, {
+ /* app.register(fastifyCors, {
     allowedHeaders: process.env.ALLOWED_HEADERS.split(','),
     credentials: true,
     methods: process.env.ALLOWED_METHODS.split(','),
     origin: process.env.ALLOWED_ORIGINS.split(','),
     preflightContinue: false,
-  });
+  });*/
 
   app.register(fastifyHelmet, { hidePoweredBy: true });
   app.register(fastifyCompress);
