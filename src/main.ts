@@ -19,7 +19,7 @@ async function bootstrap() {
       logger: process.env.SERVER_LOGGER,
     }),
   );
-  
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
