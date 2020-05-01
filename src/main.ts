@@ -5,7 +5,7 @@ import {
 } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
 import * as fastifyCompress from 'fastify-compress';
-//import * as fastifyHelmet from 'fastify-helmet';
+import * as fastifyHelmet from 'fastify-helmet';
 import * as fastifyRateLimit from 'fastify-rate-limit';
 //import * as fastifyCors from 'fastify-cors';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -40,7 +40,7 @@ async function bootstrap() {
     preflightContinue: false,
   });*/
 
- // app.register(fastifyHelmet, { hidePoweredBy: true });
+  app.register(fastifyHelmet, { hidePoweredBy: true });
   app.register(fastifyCompress);
 
   const swaggerOptions = new DocumentBuilder()
