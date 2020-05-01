@@ -7,7 +7,7 @@ import { ValidationPipe } from '@nestjs/common';
 import * as fastifyCompress from 'fastify-compress';
 import * as fastifyHelmet from 'fastify-helmet';
 import * as fastifyRateLimit from 'fastify-rate-limit';
-//import * as fastifyCors from 'fastify-cors';
+import * as fastifyCors from 'fastify-cors';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
@@ -19,7 +19,7 @@ async function bootstrap() {
       logger: process.env.SERVER_LOGGER,
     }),
   );
-  app.enableCors();
+  
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -32,13 +32,13 @@ async function bootstrap() {
     timeWindow: +process.env.TIME_WINDOW_RATE_LIMIT,
   });
 
- /* app.register(fastifyCors, {
+  app.register(fastifyCors, {
     allowedHeaders: process.env.ALLOWED_HEADERS.split(','),
     credentials: true,
     methods: process.env.ALLOWED_METHODS.split(','),
     origin: process.env.ALLOWED_ORIGINS.split(','),
     preflightContinue: false,
-  });*/
+  });
 
   app.register(fastifyHelmet, { hidePoweredBy: true });
   app.register(fastifyCompress);
