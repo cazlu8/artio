@@ -1,7 +1,7 @@
 import {
-    UseFilters,
-    ClassSerializerInterceptor,
-    UseInterceptors,
+  UseFilters,
+  ClassSerializerInterceptor,
+  UseInterceptors,
 } from '@nestjs/common';
 import { HttpExceptionFilter } from '../filters/http.exception.filter';
 import { ErrorsInterceptor } from '../interceptors/errors.interceptor';

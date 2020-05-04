@@ -8,6 +8,7 @@ import * as fastifyCompress from 'fastify-compress';
 import * as fastifyHelmet from 'fastify-helmet';
 import * as fastifyRateLimit from 'fastify-rate-limit';
 import * as fastifyCors from 'fastify-cors';
+import * as fastifyHealthCheck from 'fastify-healthcheck';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
@@ -19,6 +20,10 @@ async function bootstrap() {
       logger: process.env.SERVER_LOGGER,
     }),
   );
+
+  app.enableShutdownHooks();
+
+  app.register(fastifyHealthCheck);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -40,7 +45,11 @@ async function bootstrap() {
     preflightContinue: false,
   });
 
-  app.register(fastifyHelmet, { hidePoweredBy: true });
+  app.register(fastifyHelmet, {
+    setTo: '.NET 4.8',
+    referrerPolicy: { policy: 'same-origin' },
+    permittedPolicies: 'none'
+  });
   app.register(fastifyCompress);
 
   const swaggerOptions = new DocumentBuilder()
