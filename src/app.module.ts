@@ -28,6 +28,7 @@ export class AppModule {
       .apply(AuthMiddleware)
       .exclude(
         { path: '/users', method: RequestMethod.POST },
+        '/health',
         '/swagger',
         '/swagger/(.*)',
         '/swagger/static/(.*)',
