@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ObjectLiteral, Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -16,8 +20,10 @@ export class UserService {
   ) {}
 
   findOne(guid: string): Promise<User | void> {
-    return this.repository.findOneOrFail({ guid }).catch(() => {
-      throw new NotFoundException();
+    return this.repository.findOneOrFail({ guid }).catch(error => {
+      if (error.name === 'EntityNotFound')
+        throw new UnprocessableEntityException();
+      throw new InternalServerErrorException(error);
     });
   }
 

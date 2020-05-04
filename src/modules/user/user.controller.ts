@@ -9,18 +9,19 @@ import {
   HttpCode,
   Header,
   ParseIntPipe,
-} from '@nestjs/common';
+}                                                from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
-import { CreateUserDto } from './dto/user.create.dto';
-import { UserService } from './user.service';
-import { User } from './user.entity';
-import { BaseController } from '../../shared/controllers/base.controller';
-import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
-import { UpdateUserDto } from './dto/user.update.dto';
+import { CreateUserDto }                         from './dto/user.create.dto';
+import { UserService }                           from './user.service';
+import { User }                                  from './user.entity';
+import { VerifyIfIsAuthenticatedUserGuard }      from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
+import { UpdateUserDto }                         from './dto/user.update.dto';
+import { BaseWithoutAuthController }             from "../../shared/controllers/base.withoutAuth.controller";
+import { AuthGuard }                             from "../../shared/guards/auth.guard";
 
 @ApiTags('Users')
 @Controller('users')
-export class UserController extends BaseController {
+export class UserController extends BaseWithoutAuthController{
   constructor(private userService: UserService) {
     super();
   }
@@ -39,10 +40,10 @@ export class UserController extends BaseController {
     description: 'the user has been successfully updated',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @Put('/:id')
-  @HttpCode(204)
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Header('Content-Length', '0')
-  @UseGuards(VerifyIfIsAuthenticatedUserGuard)
+  @HttpCode(204)
+  @Put('/:id')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
@@ -55,8 +56,8 @@ export class UserController extends BaseController {
     description: 'get user by guid',
   })
   @ApiParam({ name: 'guid', type: 'string' })
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/:guid')
-  @UseGuards(VerifyIfIsAuthenticatedUserGuard)
   async findOne(@Param('guid') guid): Promise<User | void> {
     return this.userService.findOne(guid);
   }

@@ -1,16 +1,9 @@
 import {
-  UseFilters,
-  ClassSerializerInterceptor,
-  UseInterceptors,
   UseGuards,
 } from '@nestjs/common';
-import { HttpExceptionFilter } from '../filters/http.exception.filter';
-import { AuthGuard } from '../guards/auth.guard';
-import { ErrorsInterceptor } from '../interceptors/errors.interceptor';
-import { AllExceptionsFilter } from '../filters/all.exception.filter';
-@UseInterceptors(ErrorsInterceptor)
+
+import { AuthGuard }                 from '../guards/auth.guard';
+import { BaseWithoutAuthController } from "./base.withoutAuth.controller";
+
 @UseGuards(AuthGuard)
-@UseFilters(HttpExceptionFilter)
-@UseFilters(AllExceptionsFilter)
-@UseInterceptors(ClassSerializerInterceptor)
-export abstract class BaseController {}
+export abstract class BaseController extends BaseWithoutAuthController {}
