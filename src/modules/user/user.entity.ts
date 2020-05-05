@@ -33,6 +33,34 @@ export class User {
   email: string;
 
   @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'avatar_img' })
+  avatarImg?: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 10000, nullable: true, name: 'bio' })
+  bio?: string;
+
+  @ApiProperty()
+  @Column({ unique: true, nullable: true, name: 'phone_number' })
+  phoneNumber?: number;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'twitter_url' })
+  twitterUrl?: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'instagram_url' })
+  instagramUrl?: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'linkedin_url' })
+  linkedinUrl?: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'facebook_url' })
+  facebookUrl?: string;
+
+  @ApiProperty()
   @Column('boolean', { default: true, name: 'is_new' })
   isNew?: boolean;
 
