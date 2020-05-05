@@ -14,7 +14,7 @@ export class UpdateUserDto {
 
   @IsUrl()
   @ApiProperty()
-  avatarImg: string;
+  avatarImgUrl: string;
 
   @ApiProperty()
   bio: string;

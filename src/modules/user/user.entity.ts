@@ -33,8 +33,8 @@ export class User {
   email: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'avatar_img' })
-  avatarImg?: string;
+  @Column('varchar', { length: 255, nullable: true, name: 'avatar_img_url' })
+  avatarImgUrl?: string;
 
   @ApiProperty()
   @Column('varchar', { length: 2000, nullable: true, name: 'bio' })
