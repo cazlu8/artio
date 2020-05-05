@@ -11,13 +11,13 @@ import {
   ParseIntPipe,
 }                                                from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
-import { CreateUserDto } from './dto/user.create.dto';
-import { UserService } from './user.service';
-import { User } from './user.entity';
-import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
-import { UpdateUserDto } from './dto/user.update.dto';
-import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
-import { AuthGuard } from '../../shared/guards/auth.guard';
+import { CreateUserDto }                         from './dto/user.create.dto';
+import { UserService }                           from './user.service';
+import { User }                                  from './user.entity';
+import { VerifyIfIsAuthenticatedUserGuard }      from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
+import { UpdateUserDto }                         from './dto/user.update.dto';
+import { BaseWithoutAuthController }             from '../../shared/controllers/base.withoutAuth.controller';
+import { AuthGuard }                             from '../../shared/guards/auth.guard';
 
 @ApiTags('Users')
 @Controller('users')
