@@ -1,44 +1,41 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsEmail, IsPhoneNumber, IsUrl } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUserDto {
-  @IsNotEmpty()
   @ApiProperty()
   firstName: string;
 
-  @IsNotEmpty()
   @ApiProperty()
   lastName: string;
 
-  @IsNotEmpty()
+  @IsEmail()
   @ApiProperty()
   email: string;
 
-  @IsNotEmpty()
+  @IsUrl()
   @ApiProperty()
   avatarImg: string;
 
-  @IsNotEmpty()
   @ApiProperty()
   bio: string;
 
-  @IsNotEmpty()
+  @IsPhoneNumber('ZZ')
   @ApiProperty()
-  phoneNumber: number;
+  phoneNumber: string;
 
-  @IsNotEmpty()
+  @IsUrl()
   @ApiProperty()
   twitterUrl: string;
 
-  @IsNotEmpty()
+  @IsUrl()
   @ApiProperty()
   instagramUrl: string;
 
-  @IsNotEmpty()
+  @IsUrl()
   @ApiProperty()
   linkedinUrl: string;
 
-  @IsNotEmpty()
+  @IsUrl()
   @ApiProperty()
   facebookUrl: string;
 

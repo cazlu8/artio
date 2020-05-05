@@ -37,12 +37,17 @@ export class User {
   avatarImg?: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 10000, nullable: true, name: 'bio' })
+  @Column('varchar', { length: 2000, nullable: true, name: 'bio' })
   bio?: string;
 
   @ApiProperty()
-  @Column({ unique: true, nullable: true, name: 'phone_number' })
-  phoneNumber?: number;
+  @Column('varchar', {
+    length: 50,
+    unique: true,
+    nullable: true,
+    name: 'phone_number',
+  })
+  phoneNumber?: string;
 
   @ApiProperty()
   @Column('varchar', { length: 255, nullable: true, name: 'twitter_url' })
