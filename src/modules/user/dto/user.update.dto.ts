@@ -1,42 +1,55 @@
-import { IsEmail, IsPhoneNumber, IsUrl, IsNotEmpty } from 'class-validator';
+import { IsPhoneNumber, IsUrl, IsNotEmpty, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { UserGender } from '../enums/user.gender.enum';
 
 export class UpdateUserDto {
   @ApiProperty()
   @IsNotEmpty()
-  firstName: string;
+  firstName?: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  lastName: string;
+  lastName?: string;
 
   @IsUrl()
   @ApiProperty()
-  avatarImgUrl: string;
+  avatarImgUrl?: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  bio: string;
+  bio?: string;
 
   @IsPhoneNumber('ZZ')
   @ApiProperty()
-  phoneNumber: string;
+  phoneNumber?: string;
+
+  @IsEnum(UserGender)
+  @ApiProperty()
+  gender?: UserGender;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  company?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  currentPosition?: string;
 
   @IsUrl()
   @ApiProperty()
-  twitterUrl: string;
+  twitterUrl?: string;
 
   @IsUrl()
   @ApiProperty()
-  instagramUrl: string;
+  instagramUrl?: string;
 
   @IsUrl()
   @ApiProperty()
-  linkedinUrl: string;
+  linkedinUrl?: string;
 
   @IsUrl()
   @ApiProperty()
-  facebookUrl: string;
+  facebookUrl?: string;
 
   @ApiProperty()
   isNew?: boolean;

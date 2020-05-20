@@ -48,7 +48,7 @@ async function bootstrap() {
   app.register(fastifyHelmet, {
     setTo: '.NET 4.8',
     referrerPolicy: { policy: 'same-origin' },
-    permittedPolicies: 'none'
+    permittedPolicies: 'none',
   });
   app.register(fastifyCompress);
 
