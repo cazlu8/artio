@@ -10,6 +10,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Event } from '../event/event.entity';
 import { SpeakerSession } from '../speakerSession/speaker.session.entity';
+
 @Entity()
 export class Session {
   @PrimaryGeneratedColumn()

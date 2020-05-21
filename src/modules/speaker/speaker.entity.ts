@@ -18,6 +18,10 @@ export class Speaker {
   guid: string;
 
   @ApiProperty()
+  @Column('varchar', { length: 255, nullable: false, name: 'avatar_img' })
+  avatarImg: string;
+
+  @ApiProperty()
   @Column('varchar', { length: 255, nullable: false, name: 'first_name' })
   firstName: string;
 
