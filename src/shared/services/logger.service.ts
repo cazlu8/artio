@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+
 // passar p aws logging
 @Injectable()
 export class LoggerService {
