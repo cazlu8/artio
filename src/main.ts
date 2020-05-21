@@ -9,6 +9,7 @@ import * as fastifyHelmet from 'fastify-helmet';
 import * as fastifyRateLimit from 'fastify-rate-limit';
 import * as fastifyCors from 'fastify-cors';
 import * as fastifyHealthCheck from 'fastify-healthcheck';
+import * as cors from 'cors'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
@@ -22,7 +23,7 @@ async function bootstrap() {
   );
 
   app.enableShutdownHooks();
-
+  app.use(cors());
   app.register(fastifyHealthCheck);
 
   app.useGlobalPipes(
@@ -43,13 +44,13 @@ async function bootstrap() {
     methods: process.env.ALLOWED_METHODS.split(','),
     origin: process.env.ALLOWED_ORIGINS.split(','),
     preflightContinue: false,
-  });
+  });*/
 
   app.register(fastifyHelmet, {
     setTo: '.NET 4.8',
     referrerPolicy: { policy: 'same-origin' },
     permittedPolicies: 'none',
-  });*/
+  });
 
   app.register(fastifyCompress);
 
