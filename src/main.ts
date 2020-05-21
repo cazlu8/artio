@@ -22,9 +22,7 @@ async function bootstrap() {
   );
 
   app.enableShutdownHooks();
-
   app.register(fastifyHealthCheck);
-
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -37,19 +35,19 @@ async function bootstrap() {
     timeWindow: +process.env.TIME_WINDOW_RATE_LIMIT,
   });
 
-  app.register(fastifyCors, {
+ /* app.register(fastifyCors, {
     allowedHeaders: process.env.ALLOWED_HEADERS.split(','),
     credentials: true,
     methods: process.env.ALLOWED_METHODS.split(','),
     origin: process.env.ALLOWED_ORIGINS.split(','),
     preflightContinue: false,
-  });
+  });*/
 
-  app.register(fastifyHelmet, {
+  /*app.register(fastifyHelmet, {
     setTo: '.NET 4.8',
     referrerPolicy: { policy: 'same-origin' },
     permittedPolicies: 'none'
-  });
+  });*/
   app.register(fastifyCompress);
 
   const swaggerOptions = new DocumentBuilder()
@@ -59,7 +57,6 @@ async function bootstrap() {
 
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerOptions);
   SwaggerModule.setup('swagger', app, swaggerDocument);
-
   await app.listen(+process.env.PORT || 8000);
 }
 
