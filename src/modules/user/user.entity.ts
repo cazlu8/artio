@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { UserGender } from './enums/user.gender.enum';
 
 @Entity()
 export class User {
@@ -48,6 +49,18 @@ export class User {
     name: 'phone_number',
   })
   phoneNumber?: string;
+
+  @ApiProperty()
+  @Column('enum', { enum: UserGender, nullable: true, default: undefined })
+  gender?: UserGender;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'company' })
+  company?: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'current_position' })
+  currentPosition?: string;
 
   @ApiProperty()
   @Column('varchar', { length: 255, nullable: true, name: 'twitter_url' })

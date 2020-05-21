@@ -3,9 +3,9 @@ import {
   InternalServerErrorException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { InjectRepository }                          from '@nestjs/typeorm';
-import { ObjectLiteral , Repository , UpdateResult } from 'typeorm';
-import { User }                                      from './user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
+import { User } from './user.entity';
 import { LoggerService } from '../../shared/services/logger.service';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';

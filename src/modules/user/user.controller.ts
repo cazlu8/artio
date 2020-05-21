@@ -9,15 +9,15 @@ import {
   HttpCode,
   Header,
   ParseIntPipe,
-}                                                from '@nestjs/common';
+} from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
-import { CreateUserDto }                         from './dto/user.create.dto';
-import { UserService }                           from './user.service';
-import { User }                                  from './user.entity';
-import { VerifyIfIsAuthenticatedUserGuard }      from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
-import { UpdateUserDto }                         from './dto/user.update.dto';
-import { BaseWithoutAuthController }             from '../../shared/controllers/base.withoutAuth.controller';
-import { AuthGuard }                             from '../../shared/guards/auth.guard';
+import { CreateUserDto } from './dto/user.create.dto';
+import { UserService } from './user.service';
+import { User } from './user.entity';
+import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
+import { UpdateUserDto } from './dto/user.update.dto';
+import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
+import { AuthGuard } from '../../shared/guards/auth.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -40,7 +40,7 @@ export class UserController extends BaseWithoutAuthController {
     description: 'the user has been successfully updated',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Header('Content-Length', '0')
   @HttpCode(204)
   @Put('/:id')
