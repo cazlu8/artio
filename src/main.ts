@@ -37,7 +37,7 @@ async function bootstrap() {
     timeWindow: +process.env.TIME_WINDOW_RATE_LIMIT,
   });
 
-  app.register(fastifyCors, {
+ /* app.register(fastifyCors, {
     allowedHeaders: process.env.ALLOWED_HEADERS.split(','),
     credentials: true,
     methods: process.env.ALLOWED_METHODS.split(','),
@@ -49,7 +49,8 @@ async function bootstrap() {
     setTo: '.NET 4.8',
     referrerPolicy: { policy: 'same-origin' },
     permittedPolicies: 'none',
-  });
+  });*/
+
   app.register(fastifyCompress);
 
   const swaggerOptions = new DocumentBuilder()
