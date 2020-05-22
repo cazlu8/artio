@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
+import { UpdateResult } from 'typeorm';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UserService } from './user.service';
 import { User } from './user.entity';
@@ -40,14 +41,14 @@ export class UserController extends BaseWithoutAuthController {
     description: 'the user has been successfully updated',
   })
   @ApiParam({ name: 'id', type: 'number' })
-   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Header('Content-Length', '0')
   @HttpCode(204)
   @Put('/:id')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
-  ) {
+  ): Promise<void | UpdateResult> {
     return await this.userService.update(id, updateUserDto);
   }
 
