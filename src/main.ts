@@ -7,7 +7,7 @@ import { ValidationPipe } from '@nestjs/common';
 import * as fastifyCompress from 'fastify-compress';
 import * as fastifyHelmet from 'fastify-helmet';
 import * as fastifyRateLimit from 'fastify-rate-limit';
-const cors = require('cors');
+import * as cors from 'cors';
 import * as fastifyHealthCheck from 'fastify-healthcheck';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
