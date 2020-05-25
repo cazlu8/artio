@@ -35,6 +35,7 @@
     "@nestjs/swagger": "^4.5.8",
     "@nestjs/terminus": "^7.0.1",
     "@nestjs/typeorm": "^6.3.4",
+    "aws-sdk": "^2.683.0",
     "axios": "^0.19.2",
     "class-transformer": "^0.2.3",
     "class-validator": "^0.11.1",
@@ -60,7 +61,8 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.0",
     "rxjs": "^6.5.5",
-    "typeorm": "^0.2.25"
+    "sharp": "^0.25.3",
+    "typeorm": "^0.2.24"
   },
   "devDependencies": {
     "@nestjs/cli": "^6.13.2",

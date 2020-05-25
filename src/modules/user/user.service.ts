@@ -5,11 +5,15 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
+import * as AWS from 'aws-sdk';
 import { User } from './user.entity';
 import { LoggerService } from '../../shared/services/logger.service';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';
+import { CreateAvatarDto } from './dto/user.create.avatar.dto';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
+
+const sharp = require('sharp');
 
 @Injectable()
 export class UserService {
@@ -17,7 +21,8 @@ export class UserService {
     @InjectRepository(User)
     private readonly repository: Repository<User>,
     private readonly loggerService: LoggerService,
-  ) {}
+  ) {
+  }
 
   findOne(guid: string): Promise<User | void> {
     return this.repository.findOneOrFail({ guid }).catch(error => {
@@ -44,5 +49,45 @@ export class UserService {
     return this.repository
       .save(createUserDto)
       .catch(err => validateEntityUserException.check(err));
+  }
+
+  async createAvatar(
+    createAvatarDto: CreateAvatarDto,
+  ): Promise<void | ObjectLiteral> {
+    // eslint-disable-next-line global-require,import/no-extraneous-dependencies
+    AWS.config.setPromisesDependency(require('bluebird'));
+    AWS.config.update({
+      accessKeyId: process.env.ACCESS_KEY_ID,
+      secretAccessKey: process.env.SECRET_ACCESS_KEY,
+      region: process.env.AWS_REGION,
+    });
+
+    const s3 = new AWS.S3();
+    const base64Data = Buffer.from(
+      createAvatarDto.avatarImgUrl.replace(/^data:image\/\w+;base64,/, ''),
+      'base64',
+    );
+
+    const sharpedImage = await sharp(base64Data).resize(400, 400);
+
+    const type = createAvatarDto.avatarImgUrl.split(';')[0].split('/')[1];
+    const userId = createAvatarDto.guid;
+    const params = {
+      Bucket: process.env.S3_BUCKET,
+      Key: `${userId}`, // type is not required
+      Body: sharpedImage,
+      ACL: 'private',
+      ContentEncoding: 'base64', // required
+      ContentType: `image/${type}`, // required.
+    };
+
+    try {
+      const { Location } = await s3.upload(params).promise();
+      // eslint-disable-next-line no-param-reassign
+      createAvatarDto.avatarImgUrl = Location;
+    } catch (error) {
+      console.log(error);
+    }
+    return createAvatarDto;
   }
 }

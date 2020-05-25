@@ -13,6 +13,7 @@ import {
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { UpdateResult } from 'typeorm';
 import { CreateUserDto } from './dto/user.create.dto';
+import { CreateAvatarDto } from './dto/user.create.avatar.dto';
 import { UserService } from './user.service';
 import { User } from './user.entity';
 import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
@@ -34,6 +35,16 @@ export class UserController extends BaseWithoutAuthController {
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     return await this.userService.create(createUserDto);
+  }
+
+  @ApiCreatedResponse({
+    type: CreateAvatarDto,
+    description: 'the avatar has been successfully created',
+  })
+  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @Post('/create-avatar')
+  async createAvatar(@Body() createAvatarDto: CreateAvatarDto) {
+    return this.userService.createAvatar(createAvatarDto);
   }
 
   @ApiCreatedResponse({
