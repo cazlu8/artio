@@ -21,12 +21,12 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-                   allowedHeaders: process.env.ALLOWED_HEADERS.split(','),
-                   credentials: true,
-                   methods: process.env.ALLOWED_METHODS.split(','),
-                   origin: process.env.ALLOWED_ORIGINS.split(','),
-                   preflightContinue: false,
-                 });
+    allowedHeaders: process.env.ALLOWED_HEADERS.split(','),
+    credentials: true,
+    methods: process.env.ALLOWED_METHODS.split(','),
+    origin: process.env.ALLOWED_ORIGINS.split(','),
+    preflightContinue: false,
+  });
   app.enableShutdownHooks();
   app.register(fastifyHealthCheck);
   app.useGlobalPipes(
