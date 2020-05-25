@@ -5,12 +5,12 @@ import {
 } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
 import * as fastifyCompress from 'fastify-compress';
-import * as fastifyHelmet from 'fastify-helmet';
 import * as fastifyRateLimit from 'fastify-rate-limit';
-//const cors = require('cors');
 import * as fastifyHealthCheck from 'fastify-healthcheck';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+
+// const cors = require('cors');
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -20,15 +20,10 @@ async function bootstrap() {
       logger: process.env.SERVER_LOGGER,
     }),
   );
-  app.enableCors({
-    allowedHeaders: process.env.ALLOWED_HEADERS.split(','),
-    credentials: true,
-    methods: process.env.ALLOWED_METHODS.split(','),
-    origin: process.env.ALLOWED_ORIGINS.split(','),
-    preflightContinue: false,
-  });
+
   app.enableShutdownHooks();
   app.register(fastifyHealthCheck);
+  app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -41,12 +36,6 @@ async function bootstrap() {
     timeWindow: +process.env.TIME_WINDOW_RATE_LIMIT,
   });
 
-  /*app.register(fastifyHelmet, {
-    setTo: '.NET 4.8',
-    referrerPolicy: { policy: 'same-origin' },
-    permittedPolicies: 'none',
-  });*/
-
   app.register(fastifyCompress);
 
   const swaggerOptions = new DocumentBuilder()
@@ -57,7 +46,7 @@ async function bootstrap() {
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerOptions);
   SwaggerModule.setup('swagger', app, swaggerDocument);
 
-  await app.listen(+process.env.PORT || 8000);
+  await app.listen(+process.env.PORT || 8000, '0.0.0.0');
 }
 
 bootstrap();
