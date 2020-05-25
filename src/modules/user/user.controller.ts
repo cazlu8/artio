@@ -57,7 +57,7 @@ export class UserController extends BaseWithoutAuthController {
     description: 'get user by guid',
   })
   @ApiParam({ name: 'guid', type: 'string' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  //@UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/:guid')
   async findOne(@Param('guid') guid): Promise<User | void> {
     return this.userService.findOne(guid);
