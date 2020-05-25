@@ -7,7 +7,7 @@ import { ValidationPipe } from '@nestjs/common';
 import * as fastifyCompress from 'fastify-compress';
 import * as fastifyRateLimit from 'fastify-rate-limit';
 import * as fastifyHealthCheck from 'fastify-healthcheck';
-const cors = require('cors');
+//const cors = require('cors');
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
@@ -19,10 +19,11 @@ async function bootstrap() {
       logger: process.env.SERVER_LOGGER,
     }),
   );
-
+  app.enableCors({
+    origin: true,
+  });
   app.enableShutdownHooks();
   app.register(fastifyHealthCheck);
-  app.use( '*' , cors());
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
