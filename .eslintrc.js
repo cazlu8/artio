@@ -29,6 +29,7 @@ module.exports = {
     'no-return-await': 'off',
     'import/no-cycle': 'off',
     'no-console': 'off',
-    'import/named': 'off'
+    'import/named': 'off',
+    '@typescript-eslint/no-var-requires': 'off'
   },
 };
