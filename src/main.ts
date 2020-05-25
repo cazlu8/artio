@@ -10,8 +10,6 @@ import * as fastifyHealthCheck from 'fastify-healthcheck';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
-// const cors = require('cors');
-
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -23,7 +21,13 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
   app.register(fastifyHealthCheck);
-  app.enableCors();
+  app.enableCors({
+    allowedHeaders: process.env.ALLOWED_HEADERS.split(','),
+    credentials: true,
+    methods: process.env.ALLOWED_METHODS.split(','),
+    origin: process.env.ALLOWED_ORIGINS.split(','),
+    preflightContinue: false,
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -35,6 +39,12 @@ async function bootstrap() {
     ban: +process.env.TIMES_BAN_RATE_REQUESTS,
     timeWindow: +process.env.TIME_WINDOW_RATE_LIMIT,
   });
+
+  /* app.register(fastifyHelmet, {
+   setTo: '.NET 4.8',
+   referrerPolicy: { policy: 'same-origin' },
+   permittedPolicies: 'none',
+ });*/
 
   app.register(fastifyCompress);
 
