@@ -5,7 +5,6 @@ import {
 } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
 import * as fastifyCompress from 'fastify-compress';
-import * as fastifyHelmet from 'fastify-helmet';
 import * as fastifyRateLimit from 'fastify-rate-limit';
 import * as fastifyHealthCheck from 'fastify-healthcheck';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -37,12 +36,6 @@ async function bootstrap() {
     timeWindow: +process.env.TIME_WINDOW_RATE_LIMIT,
   });
 
-  app.register(fastifyHelmet, {
-    setTo: '.NET 4.8',
-    referrerPolicy: { policy: 'same-origin' },
-    permittedPolicies: 'none',
-  });
-
   app.register(fastifyCompress);
 
   const swaggerOptions = new DocumentBuilder()
@@ -53,7 +46,7 @@ async function bootstrap() {
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerOptions);
   SwaggerModule.setup('swagger', app, swaggerDocument);
 
-  await app.listen(+process.env.PORT || 8000);
+  await app.listen(+process.env.PORT || 8000, '0.0.0.0');
 }
 
 bootstrap();
