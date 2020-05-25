@@ -30,6 +30,6 @@ module.exports = {
     'import/no-cycle': 'off',
     'no-console': 'off',
     'import/named': 'off',
-    'no-var-requires': 'off'
+    '@typescript-eslint/no-var-requires': 'off'
   },
 };
