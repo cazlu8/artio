@@ -28,7 +28,7 @@ export class AuthMiddleware implements NestMiddleware {
       process.env.JWT_SECRET_KEY_STAGING,
     ].map(async key => {
       const publicKey = key.replace(/\\n/g, '\n');
-      await verifyToken(token, publicKey);
+      return await verifyToken(token, publicKey);
     });
   }
 }
