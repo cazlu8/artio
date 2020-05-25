@@ -10,7 +10,7 @@ import * as fastifyHealthCheck from 'fastify-healthcheck';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
-const cors = require('cors');
+// const cors = require('cors');
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -23,7 +23,7 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
   app.register(fastifyHealthCheck);
-  app.use(cors());
+  app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
