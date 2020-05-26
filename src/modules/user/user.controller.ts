@@ -41,7 +41,7 @@ export class UserController extends BaseWithoutAuthController {
     type: CreateAvatarDto,
     description: 'the avatar has been successfully created',
   })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+//  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post('/create-avatar')
   async createAvatar(@Body() createAvatarDto: CreateAvatarDto) {
     return this.userService.createAvatar(createAvatarDto);

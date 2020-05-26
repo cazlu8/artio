@@ -20,7 +20,7 @@ function getDirectories(dirPath: string): Dirent[] {
   );
 }
 
-export default function loader(pathDir: string, patternFile: string) {
+export default function loaderUtils(pathDir: string, patternFile: string) {
   return getDirectories(pathDir)
     .map(({ name: dir }: { name: string }) => ({
       dir,

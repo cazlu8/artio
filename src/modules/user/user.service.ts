@@ -5,22 +5,20 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
-import * as AWS from 'aws-sdk';
 import { User } from './user.entity';
-import { LoggerService } from '../../shared/services/logger.service';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';
+import { S3 } from '../../shared/config/AWS';
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
-
-const sharp = require('sharp');
+import { handleBase64 } from '../../shared/utils/image.utils';
+import * as sharp from 'sharp';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly repository: Repository<User>,
-    private readonly loggerService: LoggerService,
   ) {}
 
   findOne(guid: string): Promise<User | void> {
@@ -44,7 +42,6 @@ export class UserService {
   }
 
   create(createUserDto: CreateUserDto): Promise<void | ObjectLiteral> {
-    this.loggerService.log('saving the user');
     return this.repository
       .save(createUserDto)
       .catch(err => validateEntityUserException.check(err));
@@ -52,28 +49,16 @@ export class UserService {
 
   async createAvatar(
     createAvatarDto: CreateAvatarDto,
-  ): Promise<void | ObjectLiteral> {
-    // eslint-disable-next-line global-require,import/no-extraneous-dependencies
-    AWS.config.setPromisesDependency(require('bluebird'));
-    AWS.config.update({
-      accessKeyId: process.env.ACCESS_KEY_ID,
-      secretAccessKey: process.env.SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION,
-    });
-
-    const s3 = new AWS.S3();
-    const base64Data = Buffer.from(
-      createAvatarDto.avatarImgUrl.replace(/^data:image\/\w+;base64,/, ''),
-      'base64',
-    );
+  ): Promise<void> {
+    const { avatarImgUrl, guid: userId } = createAvatarDto;
+    const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
 
     const sharpedImage = await sharp(base64Data)
       .resize(400, 400)
       .png();
 
-    const userId = createAvatarDto.guid;
     const params = {
-      Bucket: process.env.S3_BUCKET,
+      Bucket: process.env.S3_BUCKET_AVATAR,
       Key: `${userId}.png`, // type is not required
       Body: sharpedImage,
       ACL: 'private',
@@ -82,9 +67,11 @@ export class UserService {
     };
 
     try {
-      await s3.upload(params).promise();
+      await S3()
+        .upload(params)
+        .promise();
     } catch (error) {
-      console.log(error);
+      throw new InternalServerErrorException(error);
     }
   }
 }
