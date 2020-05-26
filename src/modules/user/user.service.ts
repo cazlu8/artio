@@ -21,8 +21,7 @@ export class UserService {
     @InjectRepository(User)
     private readonly repository: Repository<User>,
     private readonly loggerService: LoggerService,
-  ) {
-  }
+  ) {}
 
   findOne(guid: string): Promise<User | void> {
     return this.repository.findOneOrFail({ guid }).catch(error => {
@@ -68,26 +67,24 @@ export class UserService {
       'base64',
     );
 
-    const sharpedImage = await sharp(base64Data).resize(400, 400);
+    const sharpedImage = await sharp(base64Data)
+      .resize(400, 400)
+      .png();
 
-    const type = createAvatarDto.avatarImgUrl.split(';')[0].split('/')[1];
     const userId = createAvatarDto.guid;
     const params = {
       Bucket: process.env.S3_BUCKET,
-      Key: `${userId}`, // type is not required
+      Key: `${userId}.png`, // type is not required
       Body: sharpedImage,
       ACL: 'private',
       ContentEncoding: 'base64', // required
-      ContentType: `image/${type}`, // required.
+      ContentType: `image/png`, // required.
     };
 
     try {
-      const { Location } = await s3.upload(params).promise();
-      // eslint-disable-next-line no-param-reassign
-      createAvatarDto.avatarImgUrl = Location;
+      await s3.upload(params).promise();
     } catch (error) {
       console.log(error);
     }
-    return createAvatarDto;
   }
 }
