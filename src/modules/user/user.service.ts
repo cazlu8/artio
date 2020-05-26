@@ -2,17 +2,17 @@ import {
   Injectable,
   InternalServerErrorException,
   UnprocessableEntityException,
-}                                                  from '@nestjs/common';
-import { InjectRepository }                        from '@nestjs/typeorm';
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
-import { User }                                    from './user.entity';
-import { CreateUserDto }                           from './dto/user.create.dto';
-import { UpdateUserDto }   from './dto/user.update.dto';
+import { User } from './user.entity';
+import { CreateUserDto } from './dto/user.create.dto';
+import { UpdateUserDto } from './dto/user.update.dto';
 import * as AWS from 'aws-sdk';
-import { s3Config }          from "../../shared/config/AWS"
+import { s3Config } from '../../shared/config/AWS';
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
-import validateEntityUserException                 from '../../shared/exceptions/user/createValidation.user.exception';
-import { handleBase64 }                            from "../../shared/utils/image.utils";
+import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
+import { handleBase64 } from '../../shared/utils/image.utils';
 import * as sharp from 'sharp';
 
 @Injectable()
@@ -69,9 +69,7 @@ export class UserService {
 
     try {
       const s3 = new AWS.S3(s3Config());
-      await s3
-        .upload(params)
-        .promise();
+      await s3.upload(params).promise();
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
