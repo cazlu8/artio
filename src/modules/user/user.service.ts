@@ -2,16 +2,17 @@ import {
   Injectable,
   InternalServerErrorException,
   UnprocessableEntityException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+}                                                  from '@nestjs/common';
+import { InjectRepository }                        from '@nestjs/typeorm';
 import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
-import { User } from './user.entity';
-import { CreateUserDto } from './dto/user.create.dto';
-import { UpdateUserDto } from './dto/user.update.dto';
-import { S3 } from '../../shared/config/AWS';
+import { User }                                    from './user.entity';
+import { CreateUserDto }                           from './dto/user.create.dto';
+import { UpdateUserDto }   from './dto/user.update.dto';
+import * as AWS from 'aws-sdk';
+import { s3Config }          from "../../shared/config/AWS"
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
-import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
-import { handleBase64 } from '../../shared/utils/image.utils';
+import validateEntityUserException                 from '../../shared/exceptions/user/createValidation.user.exception';
+import { handleBase64 }                            from "../../shared/utils/image.utils";
 import * as sharp from 'sharp';
 
 @Injectable()
@@ -49,7 +50,7 @@ export class UserService {
 
   async createAvatar(
     createAvatarDto: CreateAvatarDto,
-  ): Promise<void> {
+  ): Promise<void | ObjectLiteral> {
     const { avatarImgUrl, guid: userId } = createAvatarDto;
     const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
 
@@ -59,15 +60,16 @@ export class UserService {
 
     const params = {
       Bucket: process.env.S3_BUCKET_AVATAR,
-      Key: `${userId}.png`, // type is not required
+      Key: `${userId}.png`,
       Body: sharpedImage,
       ACL: 'private',
-      ContentEncoding: 'base64', // required
-      ContentType: `image/png`, // required.
+      ContentEncoding: 'base64',
+      ContentType: `image/png`,
     };
 
     try {
-      await S3()
+      const s3 = new AWS.S3(s3Config());
+      await s3
         .upload(params)
         .promise();
     } catch (error) {
