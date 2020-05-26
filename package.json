@@ -37,6 +37,7 @@
     "@nestjs/typeorm": "^6.3.4",
     "aws-sdk": "^2.683.0",
     "axios": "^0.19.2",
+    "bluebird": "^3.7.2",
     "class-transformer": "^0.2.3",
     "class-validator": "^0.11.1",
     "cors": "^2.8.5",
