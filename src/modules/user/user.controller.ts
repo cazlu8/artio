@@ -59,7 +59,7 @@ export class UserController extends BaseWithoutAuthController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<void | UpdateResult> {
-    return await this.userService
+    return this.userService
       .update(id, updateUserDto)
       .then(() => res.status(204).send());
   }
