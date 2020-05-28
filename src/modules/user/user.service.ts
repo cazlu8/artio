@@ -5,15 +5,15 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
+import * as sharp from 'sharp';
+import * as AWS from 'aws-sdk';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';
-import * as AWS from 'aws-sdk';
 import { s3Config } from '../../shared/config/AWS';
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import { handleBase64 } from '../../shared/utils/image.utils';
-import * as sharp from 'sharp';
 
 @Injectable()
 export class UserService {
