@@ -7,7 +7,7 @@ import {
   UseGuards,
   Put,
   HttpCode,
-  Header,
+  Res,
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
@@ -52,15 +52,16 @@ export class UserController extends BaseWithoutAuthController {
     description: 'the user has been successfully updated',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
-  @Header('Content-Length', '0')
-  @HttpCode(204)
+  //@UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Put('/:id')
   async update(
+    @Res() res,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<void | UpdateResult> {
-    return await this.userService.update(id, updateUserDto);
+    return await this.userService
+      .update(id, updateUserDto)
+      .then(() => res.status(204).send());
   }
 
   @ApiCreatedResponse({
