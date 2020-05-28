@@ -53,7 +53,4 @@ export class UpdateUserDto {
   @IsOptional()
   @ApiProperty()
   facebookUrl?: string;
-
-  @ApiProperty()
-  isNew?: boolean;
 }
