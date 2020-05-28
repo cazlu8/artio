@@ -1,4 +1,10 @@
-import { IsPhoneNumber, IsUrl, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
+import {
+  IsPhoneNumber,
+  IsUrl,
+  IsNotEmpty,
+  IsEnum,
+  IsOptional,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserGender } from '../enums/user.gender.enum';
 
@@ -12,6 +18,7 @@ export class UpdateUserDto {
   lastName?: string;
 
   @IsUrl()
+  @IsOptional()
   @ApiProperty()
   avatarImgUrl?: string;
 
