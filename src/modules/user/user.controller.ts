@@ -52,7 +52,7 @@ export class UserController extends BaseWithoutAuthController {
     description: 'the user has been successfully updated',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  //@UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Put('/:id')
   async update(
     @Res() res,
