@@ -16,7 +16,6 @@ export class UpdateUserDto {
   avatarImgUrl?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
   bio?: string;
 
   @IsPhoneNumber('ZZ')
