@@ -6,7 +6,6 @@ import {
   Param,
   UseGuards,
   Put,
-  HttpCode,
   Res,
   ParseIntPipe,
 } from '@nestjs/common';

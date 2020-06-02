@@ -1,0 +1,19 @@
+version: '3.1'
+# Use: "docker-compose up -d" to run on detatched mode
+services:
+  # POSTGRES DB
+  postgres:
+    container_name: postgres
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: root
+  # REDIS DB
+  redis:
+    container_name: redis
+    image: redis
+    # Command: redis-server --requirepass RedisArtio2020!
+    ports:
+      - "6379:6379"

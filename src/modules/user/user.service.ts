@@ -52,6 +52,7 @@ export class UserService {
     createAvatarDto: CreateAvatarDto,
   ): Promise<void | ObjectLiteral> {
     const { avatarImgUrl, guid: userId } = createAvatarDto;
+
     const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
 
     const sharpedImage = await sharp(base64Data)
