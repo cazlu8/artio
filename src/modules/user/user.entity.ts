@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { Exclude } from 'class-transformer';
 import { UserGender } from './enums/user.gender.enum';
 
 @Entity()
@@ -14,6 +15,7 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Exclude()
   @Column('varchar', { nullable: false, name: 'guid', unique: true })
   guid: string;
 
