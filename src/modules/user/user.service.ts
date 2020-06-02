@@ -43,9 +43,7 @@ export class UserService {
   }
 
   create(createUserDto: CreateUserDto): Promise<void | ObjectLiteral> {
-    return this.repository
-      .save(createUserDto)
-      .catch(err => validateEntityUserException.check(err));
+    return this.repository.save(createUserDto).catch(err => console.log(err));
   }
 
   async createAvatar(

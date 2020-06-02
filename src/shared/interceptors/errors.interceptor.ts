@@ -16,7 +16,8 @@ export class ErrorsInterceptor implements NestInterceptor {
     return next.handle().pipe(
       catchError(err => {
         const message = err.response?.error || err.message;
-        this.loggerService.log(message);
+        console.log(message);
+       // this.loggerService.log(message);
         return throwError(err);
       }),
     );

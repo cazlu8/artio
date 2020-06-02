@@ -18,4 +18,4 @@ import { AvatarImageController } from './avatarImage.controller';
   controllers: [AvatarImageController],
   providers: [AvatarImageProcessor],
 })
-export class AvatarImageModule {}
+export class AvatarImage {}
