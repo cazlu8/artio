@@ -12,7 +12,6 @@ import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';
 import { s3Config } from '../../shared/config/AWS';
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
-import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import { handleBase64 } from '../../shared/utils/image.utils';
 
 @Injectable()

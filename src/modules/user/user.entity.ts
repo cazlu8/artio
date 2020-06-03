@@ -4,6 +4,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
+  BeforeInsert,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
@@ -91,4 +92,9 @@ export class User {
   @ApiProperty()
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @BeforeInsert()
+  updateAvatarUrl() {
+    this.avatarImgUrl = `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}/${this.guid}.png`;
+  }
 }

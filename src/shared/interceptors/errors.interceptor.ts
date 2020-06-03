@@ -1,8 +1,8 @@
 import {
+  CallHandler,
+  ExecutionContext,
   Injectable,
   NestInterceptor,
-  ExecutionContext,
-  CallHandler,
 } from '@nestjs/common';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -14,11 +14,10 @@ export class ErrorsInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
-      catchError(err => {
-        const message = err.response?.error || err.message;
-        console.log(message);
-       // this.loggerService.log(message);
-        return throwError(err);
+      catchError(error => {
+        const [request] = context?.getArgs();
+        this.loggerService.info(error, request);
+        return throwError(error);
       }),
     );
   }

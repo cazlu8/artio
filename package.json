@@ -65,7 +65,9 @@
     "rimraf": "^3.0.0",
     "rxjs": "^6.5.5",
     "sharp": "^0.25.3",
-    "typeorm": "^0.2.25"
+    "typeorm": "^0.2.25",
+    "winston": "^3.2.1",
+    "winston-cloudwatch": "^2.3.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^6.13.2",
