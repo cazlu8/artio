@@ -25,7 +25,11 @@ export class LoggerService {
       `Requesting ${request.raw.method} ${request.raw.originalUrl}`,
       {
         tags: 'http',
-        additionalInfo: { body: request.body, headers: request.headers },
+        additionalInfo: {
+          body: request.body,
+          headers: request.headers,
+          error,
+        },
       },
     );
   }

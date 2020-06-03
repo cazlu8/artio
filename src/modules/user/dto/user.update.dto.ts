@@ -17,11 +17,6 @@ export class UpdateUserDto {
   @IsNotEmpty()
   lastName?: string;
 
-  @IsUrl()
-  @IsOptional()
-  @ApiProperty()
-  avatarImgUrl?: string;
-
   @ApiProperty()
   bio?: string;
 
