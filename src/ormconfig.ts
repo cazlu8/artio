@@ -19,6 +19,7 @@ const config: TypeOrmModuleOptions = {
   entities: [`${__dirname}/**/*.entity{.ts,.js}`],
   keepConnectionAlive: true,
   synchronize: false,
+  subscribers: [`${__dirname}/**/*.subscriber{.ts,.js}`],
   migrationsRun,
   logging: data.DATABASE_LOGGING === 'true',
   logger: data.DATABASE_LOGGING_TYPE || null,
