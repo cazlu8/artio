@@ -3,23 +3,21 @@ import {
   InternalServerErrorException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
+import { ObjectLiteral, UpdateResult } from 'typeorm';
 import * as sharp from 'sharp';
 import * as AWS from 'aws-sdk';
+import { uuid } from 'uuidv4';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';
 import { s3Config } from '../../shared/config/AWS';
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectRepository(User)
-    private readonly repository: Repository<User>,
-  ) {}
+  constructor(private readonly repository: UserRepository) {}
 
   findOne(guid: string): Promise<User | void> {
     return this.repository.findOneOrFail({ guid }).catch(error => {
@@ -29,16 +27,23 @@ export class UserService {
     });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto): Promise<UpdateResult> {
-    return this.repository.update(id, updateUserDto);
+  updateUserInfo(
+    id: number,
+    updateUserDto: UpdateUserDto,
+  ): Promise<UpdateResult> {
+    return this.update(id, updateUserDto);
+  }
+
+  update(id: number, userData: Partial<User>): Promise<UpdateResult> {
+    return this.repository.update(id, userData);
   }
 
   getUserGuid(id) {
     return this.repository.findOne({ select: ['guid'], where: { id } });
   }
 
-  exists(key: string, value: any): Promise<number> {
-    return this.repository.count({ [key]: value });
+  exists(properties: {}): Promise<boolean> {
+    return this.repository.exists(properties);
   }
 
   create(createUserDto: CreateUserDto): Promise<void | ObjectLiteral> {
@@ -48,17 +53,21 @@ export class UserService {
   async createAvatar(
     createAvatarDto: CreateAvatarDto,
   ): Promise<void | ObjectLiteral> {
-    const { avatarImgUrl, guid: userId } = createAvatarDto;
+    const { avatarImgUrl, id: userId } = createAvatarDto;
 
     const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
+
+    // await this.exists({ avatarImgUrl: Not(null) });
 
     const sharpedImage = await sharp(base64Data)
       .resize(400, 400)
       .png();
 
+    const avatarId = uuid();
+
     const params = {
       Bucket: process.env.S3_BUCKET_AVATAR,
-      Key: `${userId}.png`,
+      Key: `${avatarId}.png`,
       Body: sharpedImage,
       ACL: 'private',
       ContentEncoding: 'base64',
@@ -68,6 +77,10 @@ export class UserService {
     try {
       const s3 = new AWS.S3(s3Config());
       await s3.upload(params).promise();
+      await this.repository.update(userId, {
+        avatarImgUrl: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}`,
+      });
+      return { url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}` };
     } catch (error) {
       throw new InternalServerErrorException(error);
     }

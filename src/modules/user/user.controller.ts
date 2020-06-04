@@ -59,7 +59,7 @@ export class UserController extends BaseWithoutAuthController {
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<void | UpdateResult> {
     return this.userService
-      .update(id, updateUserDto)
+      .updateUserInfo(id, updateUserDto)
       .then(() => res.status(204).send());
   }
 
