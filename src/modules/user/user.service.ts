@@ -53,11 +53,9 @@ export class UserService {
   async createAvatar(
     createAvatarDto: CreateAvatarDto,
   ): Promise<void | ObjectLiteral> {
-    const { avatarImgUrl, id: userId } = createAvatarDto;
+    const { avatarImgUrl, id } = createAvatarDto;
 
     const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
-
-    // await this.exists({ avatarImgUrl: Not(null) });
 
     const sharpedImage = await sharp(base64Data)
       .resize(400, 400)
@@ -73,11 +71,27 @@ export class UserService {
       ContentEncoding: 'base64',
       ContentType: `image/png`,
     };
+    const s3 = new AWS.S3(s3Config());
+
+    const user = await this.repository.get({
+      select: ['avatarImgUrl'],
+      where: { id },
+    });
+    const { Bucket } = params;
+    if (user?.avatarImgUrl) {
+      try {
+        const { avatarImgUrl: formerUrl } = user;
+        const lastIndex = formerUrl.lastIndexOf('/');
+        const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
+        await s3.deleteObject({ Bucket, Key: `${currentKey}.png` }).promise();
+      } catch (error) {
+        throw new InternalServerErrorException(error);
+      }
+    }
 
     try {
-      const s3 = new AWS.S3(s3Config());
       await s3.upload(params).promise();
-      await this.repository.update(userId, {
+      await this.update(id, {
         avatarImgUrl: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}`,
       });
       return { url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}` };

@@ -13,12 +13,15 @@ export class VerifyIfIsAuthenticatedUserGuard implements CanActivate {
   async validateRequest(request: any) {
     const { sub: authenticatedUserGuid } = request.raw?.user;
     const { guid: userGuid, id: userId } = request.params;
-    const { guid: userIdBody } = request.body || {};
-    if (userGuid || userIdBody) {
-      const guid = userGuid || userIdBody;
+    const { guid: userGuidBody, id: userIdBody } = request.body || {};
+    if (userGuid || userGuidBody) {
+      const guid = userGuid || userGuidBody;
       return this.validateGuid(guid, authenticatedUserGuid);
     }
-    if (userId) return await this.validateId(userId, authenticatedUserGuid);
+    if (userId || userIdBody) {
+      const id = userId || userIdBody;
+      return await this.validateId(id, authenticatedUserGuid);
+    }
     return false;
   }
 
