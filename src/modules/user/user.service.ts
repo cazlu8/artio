@@ -78,16 +78,7 @@ export class UserService {
       where: { id },
     });
     const { Bucket } = params;
-    if (user?.avatarImgUrl) {
-      try {
-        const { avatarImgUrl: formerUrl } = user;
-        const lastIndex = formerUrl.lastIndexOf('/');
-        const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
-        await s3.deleteObject({ Bucket, Key: `${currentKey}.png` }).promise();
-      } catch (error) {
-        throw new InternalServerErrorException(error);
-      }
-    }
+    await this.repository.deleteAvatar(user, Bucket);
 
     try {
       await s3.upload(params).promise();
