@@ -18,6 +18,7 @@ export class UpdateUserDto {
   lastName?: string;
 
   @ApiProperty()
+  @IsOptional()
   bio?: string;
 
   @IsPhoneNumber('ZZ')
