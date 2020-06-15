@@ -5,8 +5,8 @@ const s3Config = () => ({
 });
 
 const cognitoConfig = () => ({
-  accessKeyId: process.env.ACCESS_KEY_ID,
-  secretAccessKey: process.env.SECRET_ACCESS_KEY,
+  accessKeyId: process.env.COGNITO_ACCESS_KEY,
+  secretAccessKey: process.env.COGNITO_SECRET_ACCESS_KEY,
   region: 'us-west-2',
   apiVersion: '2016-04-18',
 });
