@@ -4,4 +4,11 @@ const s3Config = () => ({
   region: process.env.AWS_REGION,
 });
 
-export { s3Config };
+const cognitoConfig = () => ({
+  accessKeyId: process.env.ACCESS_KEY_ID,
+  secretAccessKey: process.env.SECRET_ACCESS_KEY,
+  region: 'us-west-2',
+  apiVersion: '2016-04-18',
+});
+
+export { s3Config, cognitoConfig };

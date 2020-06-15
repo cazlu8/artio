@@ -19,6 +19,7 @@ import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIs
 import { UpdateUserDto } from './dto/user.update.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
 import { AuthGuard } from '../../shared/guards/auth.guard';
+import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -72,5 +73,17 @@ export class UserController extends BaseWithoutAuthController {
   @Get('/:guid')
   async findOne(@Param('guid') guid): Promise<User | void> {
     return this.userService.findOne(guid);
+  }
+
+  @ApiCreatedResponse({
+    description: 'check if a given user exists on cognito user pool',
+  })
+  @ApiParam({ name: 'guid', type: 'string' })
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @Post('/checkUserExists')
+  async verifyIfUserExists(
+    @Body() checkUserExists: CheckUserExistsDto,
+  ): Promise<boolean> {
+    return this.userService.exists(checkUserExists);
   }
 }
