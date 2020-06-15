@@ -29,6 +29,7 @@ export class AppModule {
         .apply(AuthMiddleware)
         .exclude(
           { path: '/users', method: RequestMethod.POST },
+          { path: '/users/checkUserExists', method: RequestMethod.POST },
           '/health',
           '/swagger',
           '/swagger/(.*)',

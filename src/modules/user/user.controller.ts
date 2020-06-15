@@ -79,7 +79,6 @@ export class UserController extends BaseWithoutAuthController {
     description: 'check if a given user exists on cognito user pool',
   })
   @ApiParam({ name: 'guid', type: 'string' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post('/checkUserExists')
   async verifyIfUserExists(
     @Body() checkUserExists: CheckUserExistsDto,
