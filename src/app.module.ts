@@ -24,15 +24,16 @@ const modules: DynamicModule[] = loadModules();
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(AuthMiddleware)
-      .exclude(
-        { path: '/users', method: RequestMethod.POST },
-        '/health',
-        '/swagger',
-        '/swagger/(.*)',
-        '/swagger/static/(.*)',
-      )
-      .forRoutes('*');
+    if (process.env.NODE_ENV !== 'development')
+      consumer
+        .apply(AuthMiddleware)
+        .exclude(
+          { path: '/users', method: RequestMethod.POST },
+          '/health',
+          '/swagger',
+          '/swagger/(.*)',
+          '/swagger/static/(.*)',
+        )
+        .forRoutes('*');
   }
 }

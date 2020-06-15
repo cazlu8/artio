@@ -1,7 +1,7 @@
 import CreateBaseException from '../base/create.base.exception';
 
 export class CreateValidationUserException extends CreateBaseException {
-  private metadata: { UQ_user_email: string; UQ_user_guid: string };
+  private readonly metadata: { UQ_user_email: string; UQ_user_guid: string };
 
   constructor() {
     super();

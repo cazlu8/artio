@@ -10,10 +10,14 @@ import { uuid } from 'uuidv4';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';
-import { s3Config } from '../../shared/config/AWS';
+import { s3Config, cognitoConfig } from '../../shared/config/AWS';
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
 import { UserRepository } from './user.repository';
+import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
+import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
+
+const cognito = new AWS.CognitoIdentityServiceProvider(cognitoConfig());
 
 @Injectable()
 export class UserService {
@@ -34,20 +38,23 @@ export class UserService {
     return this.update(id, updateUserDto);
   }
 
-  update(id: number, userData: Partial<User>): Promise<UpdateResult> {
-    return this.repository.update(id, userData);
-  }
-
   getUserGuid(id) {
     return this.repository.findOne({ select: ['guid'], where: { id } });
   }
 
-  exists(properties: {}): Promise<boolean> {
-    return this.repository.exists(properties);
+  async exists(checkUserExistsDto: CheckUserExistsDto): Promise<boolean> {
+    const params = {
+      UserPoolId: process.env.COGNITO_USER_POOL_ID,
+      Filter: `email= "${checkUserExistsDto.email}"`,
+    };
+    const { Users }: any = await cognito.listUsers(params).promise();
+    return Users.length > 0;
   }
 
   create(createUserDto: CreateUserDto): Promise<void | ObjectLiteral> {
-    return this.repository.save(createUserDto).catch(err => console.log(err));
+    return this.repository
+      .save(createUserDto)
+      .catch(err => validateEntityUserException.check(err));
   }
 
   async createAvatar(
@@ -120,5 +127,9 @@ export class UserService {
         avatarImgUrl: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}`,
       }),
     ];
+  }
+
+  private update(id: number, userData: Partial<User>): Promise<UpdateResult> {
+    return this.repository.update(id, userData);
   }
 }
