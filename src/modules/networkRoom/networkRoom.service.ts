@@ -3,15 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ObjectLiteral, Repository } from 'typeorm';
 import { uuid } from 'uuidv4';
 import * as twilio from 'twilio';
+import * as any from 'promise.any';
+import * as util from 'util';
 import { config } from '../../shared/config/Twilio';
 import { NetworkRoom } from './networkRoom.entity';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 
 const { AccessToken } = twilio.jwt;
 const { VideoGrant } = AccessToken;
-const catchError = err => {
-  throw new Error(err);
-};
 
 @Injectable()
 export class NetworkRoomService {
@@ -28,6 +27,10 @@ export class NetworkRoomService {
     this.twilioConfig = twilioConfig();
   }
 
+  private catchError(err) {
+    throw new Error(err);
+  }
+
   async createRoom(): Promise<any> {
     const uid = uuid();
     return await this.clientConfig.video.rooms
@@ -36,44 +39,50 @@ export class NetworkRoomService {
         type: 'group-small',
         uniqueName: uid,
       })
-      .then(room => ({ sid: room.sid, uniqueName: room.uniqueName }))
-      .catch(catchError);
+      .then(room => {
+        return { sid: room.sid, uniqueName: room.uniqueName };
+      })
+      .catch(this.catchError);
   }
 
-  getRoom(rooms): Promise<any> {
-    const roomUniqueName = rooms.uniqueName;
-    const roomSid = rooms.sid;
-    return this.clientConfig.video
-      .rooms(roomSid)
-      .participants.list(
-        { status: 'connected' },
-        async (error, participants) => {
-          if (participants.length < 3) {
-            return roomUniqueName;
-          }
-          return await this.createRoom();
-        },
-      )
-      .catch(catchError);
-  }
-
-  async room(): Promise<ObjectLiteral | void> {
-    const rooms = await this.clientConfig.video.rooms.list({
-      status: 'in-progress',
-    });
-    const availableRoom = rooms.find(
-      async ({ sid, uniqueName }) => await this.getRoom({ sid, uniqueName }),
+  findAvailableRoom(roomSid, roomUniqueName) {
+    const participants: any = util.promisify(
+      this.clientConfig.video.rooms(roomSid).participants,
     );
-    return availableRoom || (await this.createRoom());
+    return participants.list({ status: 'connected' }).then(roomParticipant => {
+      if (roomParticipant.length < 4) {
+        return Promise.resolve({ sid: roomSid, uniqueName: roomUniqueName });
+      }
+      return Promise.reject();
+    });
   }
 
-  videoToken(networkRoomTokenDto: NetworkRoomTokenDto): string {
+  async getRoom(rooms): Promise<any> {
+    const participants = rooms.map(room =>
+      this.findAvailableRoom(room.sid, room.uniqueName),
+    );
+    return await any(participants);
+  }
+
+  room(): Promise<ObjectLiteral | void> {
+    return this.clientConfig.video.rooms
+      .list({ status: 'in-progress' })
+      .then(async rooms => {
+        try {
+          return await this.getRoom(rooms);
+        } catch (err) {
+          return await this.createRoom();
+        }
+      });
+  }
+
+  videoToken(networkRoomTokenDto: NetworkRoomTokenDto): ObjectLiteral {
     const { identity, room } = networkRoomTokenDto;
     const videoGrant = room ? new VideoGrant({ room }) : new VideoGrant();
     const token: any = this.twilioConfig;
     token.addGrant(videoGrant);
     token.identity = identity;
-    return JSON.stringify(token.toJwt());
+    return token.toJwt();
   }
 
   killRoom(params: { sid: string }): Promise<string | void> {
@@ -81,6 +90,6 @@ export class NetworkRoomService {
       .rooms(params.sid)
       .update({ status: 'completed' })
       .then(room => room.uniqueName)
-      .catch(catchError);
+      .catch(this.catchError);
   }
 }

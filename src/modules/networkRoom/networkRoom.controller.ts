@@ -19,7 +19,7 @@ export class NetworkRoomController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @Get()
-  async getRoom() {
+  getRoom() {
     return this.networkRoomService.room();
   }
 
@@ -29,7 +29,7 @@ export class NetworkRoomController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @Post('/getToken')
-  async getToken(@Body() networkRoomTokenDto: NetworkRoomTokenDto) {
+  getToken(@Body() networkRoomTokenDto: NetworkRoomTokenDto) {
     return this.networkRoomService.videoToken(networkRoomTokenDto);
   }
 
@@ -39,7 +39,7 @@ export class NetworkRoomController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @Post('/finishRoom')
-  async killRoom(@Body() params: { sid: string }) {
+  killRoom(@Body() params: { sid: string }) {
     return this.networkRoomService.killRoom(params);
   }
 }

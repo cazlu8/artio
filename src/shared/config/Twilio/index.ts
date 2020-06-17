@@ -16,6 +16,7 @@ const config = () => {
     apiKeySecret: process.env.TWILIO_API_SECRET,
     accountSid: process.env.TWILIO_ACCOUNT_SID,
   };
+
   return {
     clientConfig: clientConfig.bind(null, settings),
     twilioConfig: twilioConfig.bind(null, settings),
