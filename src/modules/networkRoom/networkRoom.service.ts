@@ -67,13 +67,13 @@ export class NetworkRoomService {
     return availableRoom || (await this.createRoom());
   }
 
-  videoToken(networkRoomTokenDto: NetworkRoomTokenDto): ObjectLiteral {
+  videoToken(networkRoomTokenDto: NetworkRoomTokenDto): string {
     const { identity, room } = networkRoomTokenDto;
     const videoGrant = room ? new VideoGrant({ room }) : new VideoGrant();
     const token: any = this.twilioConfig;
     token.addGrant(videoGrant);
     token.identity = identity;
-    return token;
+    return JSON.stringify(token.toJwt());
   }
 
   killRoom(params: { sid: string }): Promise<string | void> {
