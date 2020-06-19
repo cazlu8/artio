@@ -23,7 +23,7 @@ const cognito = new AWS.CognitoIdentityServiceProvider(cognitoConfig());
 export class UserService {
   constructor(private readonly repository: UserRepository) {}
 
-  findOne(guid: string): Promise<User | void> {
+  findOne(guid: string): Promise<Partial<User> | void> {
     return this.repository.findOneOrFail({ guid }).catch(error => {
       if (error.name === 'EntityNotFound') throw new NotFoundException();
       throw new InternalServerErrorException(error);
