@@ -1,16 +1,37 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
-import { BaseController } from '../../shared/controllers/base.controller';
 import { EventService } from './event.service';
 import EventListDto from './dto/event.list.dto';
 import EventDetailsDTO from './dto/event.details.dto';
 import EventUpcomingListDto from './dto/event.upcoming.dto';
+import CreateEventDTO from './dto/event.create.dto';
+import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
+import { AuthGuard } from '../../shared/guards/auth.guard';
+import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
 
 @ApiTags('Events')
 @Controller('events')
-export class EventController extends BaseController {
+export class EventController extends BaseWithoutAuthController {
   constructor(private service: EventService) {
     super();
+  }
+
+  @ApiCreatedResponse({
+    type: CreateEventDTO,
+    description: 'the event has been successfully created',
+  })
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @Post()
+  create(@Body() createEventDto: CreateEventDTO) {
+    return this.service.create(createEventDto);
   }
 
   @Get('/happening-now')

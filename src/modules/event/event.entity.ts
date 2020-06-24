@@ -3,13 +3,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
   PrimaryGeneratedColumn,
   Index,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { Session } from '../session/session.entity';
 
 @Entity()
 export class Event {
@@ -101,11 +99,11 @@ export class Event {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  // relationships
-  @OneToMany(
-    () => Session,
-    (sessionEvent: Session) => sessionEvent.event,
-    { cascade: true },
-  )
-  sessions: Session[];
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: false, name: 'liveUrl' })
+  liveUrl: string;
+
+  @ApiProperty()
+  @Column('boolean', { default: true, name: 'onLive' })
+  onLive?: boolean;
 }

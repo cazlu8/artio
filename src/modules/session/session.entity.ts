@@ -4,12 +4,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
-  ManyToOne,
-  OneToMany,
+  // ManyToOne,
+  // OneToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Event } from '../event/event.entity';
-import { SpeakerSession } from '../speakerSession/speaker.session.entity';
+// import { Event } from '../event/event.entity';
+// import { SpeakerSession } from '../speakerSession/speaker.session.entity';
 
 @Entity()
 export class Session {
@@ -44,17 +44,16 @@ export class Session {
   updatedAt: Date;
 
   // relationships
-  @ApiProperty()
-  @ManyToOne(
-    () => Event,
-    (event: Event) => event.sessions,
-  )
-  event: Event;
-
-  @ApiProperty()
-  @OneToMany(
-    () => SpeakerSession,
-    speakerSession => speakerSession.session,
-  )
-  public speakerSessions!: SpeakerSession[];
+  // @ApiProperty()
+  // @ManyToOne(
+  //   () => Event,
+  //   (event: Event) => event.sessions,
+  // )
+  // event: Event;
+  // @ApiProperty()
+  // @OneToMany(
+  //   () => SpeakerSession,
+  //   speakerSession => speakerSession.session,
+  // )
+  // public speakerSessions!: SpeakerSession[];
 }

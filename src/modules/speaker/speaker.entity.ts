@@ -4,10 +4,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
-  OneToMany,
+  // OneToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { SpeakerSession } from '../speakerSession/speaker.session.entity';
+// import { SpeakerSession } from '../speakerSession/speaker.session.entity';
 
 @Entity()
 export class Speaker {
@@ -50,10 +50,10 @@ export class Speaker {
   updatedAt: Date;
 
   // relationships
-  @ApiProperty()
-  @OneToMany(
-    () => SpeakerSession,
-    speakerSession => speakerSession.speaker,
-  )
-  public speakerSessions!: SpeakerSession[];
+  // @ApiProperty()
+  // @OneToMany(
+  //   () => SpeakerSession,
+  //   speakerSession => speakerSession.speaker,
+  // )
+  // public speakerSessions!: SpeakerSession[];
 }

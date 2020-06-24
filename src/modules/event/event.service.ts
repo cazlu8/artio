@@ -1,14 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
+import { ObjectLiteral } from 'typeorm';
 import { Event } from './event.entity';
 import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
 import EventDetailsDTO from './dto/event.details.dto';
 import EventUpcomingListDto from './dto/event.upcoming.dto';
+import CreateEventDTO from './dto/event.create.dto';
+import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 
 @Injectable()
 export class EventService {
   constructor(private readonly repository: EventRepository) {}
+
+  create(createEventDTO: CreateEventDTO): Promise<void | ObjectLiteral> {
+    return this.repository
+      .save(createEventDTO)
+      .catch(err => validateEntityUserException.check(err));
+  }
 
   getHappeningNowEvents(): Promise<EventListDto[] | void> {
     return this.repository
