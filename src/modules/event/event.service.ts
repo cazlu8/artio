@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
 import { ObjectLiteral } from 'typeorm';
 import { Event } from './event.entity';
@@ -47,5 +51,12 @@ export class EventService {
     return this.repository
       .getEventDetails(eventId)
       .then((event: Partial<Event>) => plainToClass(EventDetailsDTO, event));
+  }
+
+  getEvent(id: number): Promise<Partial<Event> | void> {
+    return this.repository.findOneOrFail({ id }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+      throw new InternalServerErrorException(error);
+    });
   }
 }

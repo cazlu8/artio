@@ -30,6 +30,8 @@ export class AppModule {
         .exclude(
           { path: '/users', method: RequestMethod.POST },
           { path: '/users/checkUserExists', method: RequestMethod.POST },
+          { path: '/events', method: RequestMethod.POST },
+          { path: '/events', method: RequestMethod.GET },
           '/health',
           '/swagger',
           '/swagger/(.*)',

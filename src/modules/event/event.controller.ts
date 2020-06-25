@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   Post,
   // UseGuards,
+  // UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { EventService } from './event.service';
@@ -14,9 +15,12 @@ import EventDetailsDTO from './dto/event.details.dto';
 import EventUpcomingListDto from './dto/event.upcoming.dto';
 import CreateEventDTO from './dto/event.create.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
+import { User } from '../user/user.entity';
 // import { AuthGuard } from '../../shared/guards/auth.guard';
 // import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
-
+import { Event } from './event.entity';
+// import { AuthGuard } from '../../shared/guards/auth.guard';
+// import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
 
 @ApiTags('Events')
 @Controller('events')
@@ -58,7 +62,7 @@ export class EventController extends BaseWithoutAuthController {
     return await this.service.getUpcomingEvents(skip);
   }
 
-  @Get('/:id')
+  @Get('/details/:id')
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: EventDetailsDTO,
@@ -68,5 +72,15 @@ export class EventController extends BaseWithoutAuthController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<EventDetailsDTO> {
     return await this.service.getEventDetails(id);
+  }
+
+  @ApiCreatedResponse({
+    type: User,
+    description: 'get user by guid',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @Get('/:id')
+  async findOne(@Param('id') id): Promise<Partial<Event> | void> {
+    return this.service.getEvent(id);
   }
 }
