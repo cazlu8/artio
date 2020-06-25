@@ -15,7 +15,7 @@ import EventDetailsDTO from './dto/event.details.dto';
 import EventUpcomingListDto from './dto/event.upcoming.dto';
 import CreateEventDTO from './dto/event.create.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
-import { User } from '../user/user.entity';
+// import { User } from '../user/user.entity';
 // import { AuthGuard } from '../../shared/guards/auth.guard';
 // import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
 import { Event } from './event.entity';
@@ -75,8 +75,8 @@ export class EventController extends BaseWithoutAuthController {
   }
 
   @ApiCreatedResponse({
-    type: User,
-    description: 'get user by guid',
+    type: Event,
+    description: 'get event by id',
   })
   @ApiParam({ name: 'id', type: 'number' })
   @Get('/:id')

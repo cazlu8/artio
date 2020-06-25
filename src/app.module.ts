@@ -31,7 +31,7 @@ export class AppModule {
           { path: '/users', method: RequestMethod.POST },
           { path: '/users/checkUserExists', method: RequestMethod.POST },
           { path: '/events', method: RequestMethod.POST },
-          { path: '/events', method: RequestMethod.GET },
+          { path: '/events/:id', method: RequestMethod.GET },
           '/health',
           '/swagger',
           '/swagger/(.*)',
