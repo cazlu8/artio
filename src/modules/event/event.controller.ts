@@ -83,4 +83,13 @@ export class EventController extends BaseWithoutAuthController {
   async findOne(@Param('id') id): Promise<Partial<Event> | void> {
     return this.service.getEvent(id);
   }
+
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'get all events',
+  })
+  @Get()
+  async find(): Promise<Partial<Event[]> | void> {
+    return this.service.getEvents();
+  }
 }

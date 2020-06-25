@@ -59,4 +59,11 @@ export class EventService {
       throw new InternalServerErrorException(error);
     });
   }
+
+  getEvents(): Promise<Partial<Event[]> | void> {
+    return this.repository.find().catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+      throw new InternalServerErrorException(error);
+    });
+  }
 }
