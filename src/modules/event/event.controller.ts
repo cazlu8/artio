@@ -5,7 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
-  UseGuards,
+  // UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { EventService } from './event.service';
@@ -14,8 +14,9 @@ import EventDetailsDTO from './dto/event.details.dto';
 import EventUpcomingListDto from './dto/event.upcoming.dto';
 import CreateEventDTO from './dto/event.create.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
-import { AuthGuard } from '../../shared/guards/auth.guard';
-import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
+// import { AuthGuard } from '../../shared/guards/auth.guard';
+// import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
+
 
 @ApiTags('Events')
 @Controller('events')
@@ -28,7 +29,7 @@ export class EventController extends BaseWithoutAuthController {
     type: CreateEventDTO,
     description: 'the event has been successfully created',
   })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post()
   create(@Body() createEventDto: CreateEventDTO) {
     return this.service.create(createEventDto);
