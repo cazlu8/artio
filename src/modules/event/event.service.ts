@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
-import { ObjectLiteral } from 'typeorm';
+import { ObjectLiteral, UpdateResult } from 'typeorm';
 import { Event } from './event.entity';
 import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
@@ -12,6 +12,7 @@ import EventDetailsDTO from './dto/event.details.dto';
 import EventUpcomingListDto from './dto/event.upcoming.dto';
 import CreateEventDTO from './dto/event.create.dto';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
+import UpdateEventDTO from './dto/event.update.dto';
 
 @Injectable()
 export class EventService {
@@ -65,5 +66,16 @@ export class EventService {
       if (error.name === 'EntityNotFound') throw new NotFoundException();
       throw new InternalServerErrorException(error);
     });
+  }
+
+  updateEventInfo(
+    id: number,
+    updateEventDTO: UpdateEventDTO,
+  ): Promise<UpdateResult> {
+    return this.update(id, updateEventDTO);
+  }
+
+  private update(id: number, eventData: Partial<Event>): Promise<UpdateResult> {
+    return this.repository.update(id, eventData);
   }
 }

@@ -10,7 +10,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
-import { UpdateResult } from 'typeorm';
+import { UpdateResult, ObjectLiteral } from 'typeorm';
 import { CreateUserDto } from './dto/user.create.dto';
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
 import { UserService } from './user.service';
@@ -20,6 +20,8 @@ import { UpdateUserDto } from './dto/user.update.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
+import { Event } from '../event/event.entity';
+import { CreateUserEventDto } from '../userEvents/dto/userEvents.create.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -84,5 +86,32 @@ export class UserController extends BaseWithoutAuthController {
     @Body() checkUserExists: CheckUserExistsDto,
   ): Promise<boolean> {
     return this.userService.exists(checkUserExists);
+  }
+
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'get events by user id',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @Get('events/:id')
+  async getUserEvents(@Param('id', ParseIntPipe) id: number): Promise<Event[]> {
+    return this.userService.getEventsByUserId(id);
+  }
+
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'L a user to a event',
+  })
+  @ApiParam({ name: 'userId and eventId', type: 'number' })
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @Post('linkEvent')
+  async bindUserEvent(
+    @Res() res,
+    @Body() createUserEventDto: CreateUserEventDto,
+  ): Promise<void | ObjectLiteral> {
+    return this.userService
+      .bindUserEvent(createUserEventDto)
+      .then(() => res.status(201).send());
   }
 }
