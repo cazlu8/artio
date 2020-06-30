@@ -23,7 +23,7 @@ export class Event {
   name: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: false, name: 'hero_img_url' })
+  @Column('varchar', { length: 255, nullable: true, name: 'hero_img_url' })
   heroImgUrl: string;
 
   @ApiProperty()
@@ -61,7 +61,7 @@ export class Event {
   @ApiProperty()
   @Column('varchar', {
     length: 20000,
-    nullable: false,
+    nullable: true,
     name: 'description',
   })
   description: string;
@@ -75,11 +75,11 @@ export class Event {
   additionalInfo: string;
 
   @ApiProperty()
-  @Column('float', { nullable: false, name: 'location_latitude' })
+  @Column('float', { nullable: true, name: 'location_latitude' })
   locationLatitude: number;
 
   @ApiProperty()
-  @Column('float', { nullable: false, name: 'location_longitude' })
+  @Column('float', { nullable: true, name: 'location_longitude' })
   locationLongitude: number;
 
   @ApiProperty()
@@ -100,10 +100,10 @@ export class Event {
   updatedAt: Date;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: false, name: 'liveUrl' })
+  @Column('varchar', { length: 255, nullable: true, name: 'liveUrl' })
   liveUrl: string;
 
   @ApiProperty()
-  @Column('boolean', { default: true, name: 'onLive' })
+  @Column('boolean', { default: false, name: 'onLive' })
   onLive?: boolean;
 }
