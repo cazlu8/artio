@@ -1,76 +1,76 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import { IsOptional } from 'class-validator';
 
 export default class UpdateEventDTO {
   @ApiProperty()
-  @IsNotEmpty()
-  name: string;
+  @IsOptional()
+  name?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  heroImgUrl: string;
-
-  @IsNotEmpty()
-  @ApiProperty()
-  locationName: string;
+  @IsOptional()
+  heroImgUrl?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  streetName: string;
+  @IsOptional()
+  locationName?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  streetNumber: string;
+  @IsOptional()
+  streetName?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  stateAcronym: string;
+  @IsOptional()
+  streetNumber?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  state: string;
+  @IsOptional()
+  stateAcronym?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  country: string;
+  @IsOptional()
+  state?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  city: string;
+  @IsOptional()
+  country?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  zipCode: string;
+  @IsOptional()
+  city?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  description: string;
+  @IsOptional()
+  zipCode?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  additionalInfo: string;
+  @IsOptional()
+  description?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  locationLongitude: number;
+  @IsOptional()
+  additionalInfo?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  locationLatitude: number;
+  @IsOptional()
+  locationLongitude?: number;
 
   @ApiProperty()
-  @IsNotEmpty()
-  startDate: Date;
+  @IsOptional()
+  locationLatitude?: number;
 
   @ApiProperty()
-  @IsNotEmpty()
-  endDate: Date;
+  @IsOptional()
+  startDate?: Date;
 
   @ApiProperty()
-  @IsNotEmpty()
-  liveUrl: string;
+  @IsOptional()
+  endDate?: Date;
 
   @ApiProperty()
-  @IsNotEmpty()
-  onLive: boolean;
+  @IsOptional()
+  liveUrl?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  onLive?: boolean;
 }

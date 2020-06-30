@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export default class CreateEventDTO {
   @ApiProperty()
@@ -7,8 +7,8 @@ export default class CreateEventDTO {
   name: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  heroImgUrl: string;
+  @IsOptional()
+  heroImgUrl?: string;
 
   @IsNotEmpty()
   @ApiProperty()
@@ -51,12 +51,12 @@ export default class CreateEventDTO {
   additionalInfo: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  locationLongitude: number;
+  @IsOptional()
+  locationLongitude?: number;
 
   @ApiProperty()
-  @IsNotEmpty()
-  locationLatitude: number;
+  @IsOptional()
+  locationLatitude?: number;
 
   @ApiProperty()
   @IsNotEmpty()
@@ -67,10 +67,10 @@ export default class CreateEventDTO {
   endDate: Date;
 
   @ApiProperty()
-  @IsNotEmpty()
-  liveUrl: string;
+  @IsOptional()
+  liveUrl?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  onLive: boolean;
+  @IsOptional()
+  onLive?: boolean;
 }
