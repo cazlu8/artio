@@ -93,7 +93,7 @@ export class UserController extends BaseWithoutAuthController {
     description: 'get events by user id',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('events/:id')
   async getUserEvents(@Param('id', ParseIntPipe) id: number): Promise<Event[]> {
     return this.userService.getEventsByUserId(id);
@@ -101,10 +101,10 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Event,
-    description: 'L a user to a event',
+    description: 'Link a user to a event',
   })
   @ApiParam({ name: 'userId and eventId', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post('linkEvent')
   async bindUserEvent(
     @Res() res,
