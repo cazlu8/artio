@@ -5,9 +5,10 @@ import { UserService } from './user.service';
 import { LoggerService } from '../../shared/services/logger.service';
 import { UserRepository } from './user.repository';
 import { User } from './user.entity';
+import { UserEvents } from '../userEvents/userEvents.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, UserRepository])],
+  imports: [TypeOrmModule.forFeature([User, UserRepository, UserEvents])],
   controllers: [UserController],
   providers: [UserService, LoggerService],
 })

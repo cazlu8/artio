@@ -5,10 +5,13 @@ import {
   UpdateDateColumn,
   PrimaryGeneratedColumn,
   BeforeInsert,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { UserGender } from './enums/user.gender.enum';
+import { Event } from '../event/event.entity';
 
 @Entity()
 export class User {
@@ -97,4 +100,8 @@ export class User {
   updateAvatarUrl() {
     this.avatarImgUrl = `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}/${this.guid}.png`;
   }
+
+  @ManyToMany(() => Event)
+  @JoinTable()
+  events: Event[];
 }

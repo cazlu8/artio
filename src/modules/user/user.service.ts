@@ -3,7 +3,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { ObjectLiteral, UpdateResult } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ObjectLiteral, UpdateResult, Repository } from 'typeorm';
 import * as sharp from 'sharp';
 import * as AWS from 'aws-sdk';
 import { uuid } from 'uuidv4';
@@ -16,12 +17,19 @@ import { handleBase64 } from '../../shared/utils/image.utils';
 import { UserRepository } from './user.repository';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
+import { Event } from '../event/event.entity';
+import { CreateUserEventDto } from '../userEvents/dto/userEvents.create.dto';
+import { UserEvents } from '../userEvents/userEvents.entity';
 
 const cognito = new AWS.CognitoIdentityServiceProvider(cognitoConfig());
 
 @Injectable()
 export class UserService {
-  constructor(private readonly repository: UserRepository) {}
+  constructor(
+    private readonly repository: UserRepository,
+    @InjectRepository(UserEvents)
+    private readonly userEventsRepository: Repository<UserEvents>,
+  ) {}
 
   findOne(guid: string): Promise<Partial<User> | void> {
     return this.repository.findOneOrFail({ guid }).catch(error => {
@@ -126,6 +134,16 @@ export class UserService {
         avatarImgUrl: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}`,
       }),
     ];
+  }
+
+  async getEventsByUserId(id: number): Promise<Event[]> {
+    return this.repository.getEventsByUserId(id);
+  }
+
+  async bindUserEvent(
+    createUserEventDto: CreateUserEventDto,
+  ): Promise<void | ObjectLiteral> {
+    return this.userEventsRepository.insert(createUserEventDto);
   }
 
   private update(id: number, userData: Partial<User>): Promise<UpdateResult> {
