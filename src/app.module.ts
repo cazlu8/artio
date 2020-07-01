@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BullModule } from '@nestjs/bull';
 import { AuthMiddleware } from './shared/middlewares/auth.middleware';
 import { loadModules } from './modules';
 import * as ormconfig from './ormconfig';
@@ -18,6 +19,13 @@ const modules: DynamicModule[] = loadModules();
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       useFactory: async () => ormconfig as any,
+    }),
+    BullModule.registerQueue({
+      name: 'audio',
+      redis: {
+        host: 'artio-events-staging.fzejto.ng.0001.usw1.cache.amazonaws.com',
+        port: 6379,
+      },
     }),
     ...modules,
   ],
