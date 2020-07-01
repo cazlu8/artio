@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthMiddleware } from './shared/middlewares/auth.middleware';
+// import { AuthMiddleware } from './shared/middlewares/auth.middleware';
 import { loadModules } from './modules';
 import * as ormconfig from './ormconfig';
 
@@ -24,7 +24,7 @@ const modules: DynamicModule[] = loadModules();
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    if (process.env.NODE_ENV !== 'development')
+    /* if (process.env.NODE_ENV !== 'development')
       consumer
         .apply(AuthMiddleware)
         .exclude(
@@ -40,6 +40,6 @@ export class AppModule {
           '/swagger/(.*)',
           '/swagger/static/(.*)',
         )
-        .forRoutes('*');
+        .forRoutes('*'); */
   }
 }
