@@ -32,7 +32,7 @@ const modules: DynamicModule[] = loadModules();
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    if (process.env.NODE_ENV !== 'development')
+    if (process.env.NODE_ENV === 'development')
       consumer
         .apply(AuthMiddleware)
         .exclude(
