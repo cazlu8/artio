@@ -12,6 +12,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { UserGender } from './enums/user.gender.enum';
 import { Event } from '../event/event.entity';
+import { Role } from '../role/role.entity';
 
 @Entity()
 export class User {
@@ -104,4 +105,8 @@ export class User {
   @ManyToMany(() => Event)
   @JoinTable()
   events: Event[];
+
+  @ManyToMany(() => Role)
+  @JoinTable()
+  role: Role[];
 }
