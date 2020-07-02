@@ -104,7 +104,7 @@ export class UserController extends BaseWithoutAuthController {
     description: 'Link a user to a event',
   })
   @ApiParam({ name: 'userId and eventId', type: 'number' })
-  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post('linkEvent')
   async bindUserEvent(
     @Res() res,
