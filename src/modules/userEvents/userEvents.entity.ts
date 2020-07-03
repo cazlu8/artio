@@ -16,11 +16,11 @@ export class UserEvents {
   id: number;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', unique: false, name: 'userId', primary: true })
+  @PrimaryColumn({ type: 'int', name: 'userId', primary: true })
   userId: number;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', unique: false, name: 'eventId', primary: true })
+  @PrimaryColumn({ type: 'int', name: 'eventId', primary: true })
   eventId: number;
 
   @OneToOne(() => Event)

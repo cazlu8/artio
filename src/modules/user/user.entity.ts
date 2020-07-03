@@ -70,20 +70,8 @@ export class User {
   currentPosition?: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'twitter_url' })
-  twitterUrl?: string;
-
-  @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'instagram_url' })
-  instagramUrl?: string;
-
-  @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'linkedin_url' })
-  linkedinUrl?: string;
-
-  @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'facebook_url' })
-  facebookUrl?: string;
+  @Column('json', { nullable: true, name: 'social_urls' })
+  socialUrls?: string;
 
   @ApiProperty()
   @Column('boolean', { default: true, name: 'is_new' })

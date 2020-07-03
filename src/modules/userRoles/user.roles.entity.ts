@@ -6,11 +6,11 @@ import { User } from '../user/user.entity';
 @Entity()
 export class UserRoles {
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', unique: false, name: 'userId', primary: true })
+  @PrimaryColumn({ type: 'int', name: 'userId', primary: true })
   userId: number;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', unique: false, name: 'roleId', primary: true })
+  @PrimaryColumn({ type: 'int', name: 'roleId', primary: true })
   roleId: number;
 
   @OneToOne(() => User)
