@@ -104,6 +104,14 @@ export class Event {
   liveUrl: string;
 
   @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'streamKey' })
+  streamKey: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'streamUrl' })
+  streamUrl: string;
+
+  @ApiProperty()
   @Column('boolean', { default: false, name: 'onLive' })
   onLive?: boolean;
 }

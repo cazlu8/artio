@@ -72,5 +72,13 @@ export default class UpdateEventDTO {
 
   @ApiProperty()
   @IsOptional()
+  streamKey?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  streamUrl?: string;
+
+  @ApiProperty()
+  @IsOptional()
   onLive?: boolean;
 }
