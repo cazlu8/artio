@@ -54,7 +54,6 @@ export class UserController extends BaseWithoutAuthController {
     description: 'get user avatar by id',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/avatar/:id')
   async getAvatarUrl(@Param('id') id): Promise<Partial<User> | void> {
     return this.userService.getAvatarUrl(id);
