@@ -136,6 +136,13 @@ export class UserService {
     ];
   }
 
+  getAvatarUrl(id): Promise<Partial<User> | void> {
+    return this.repository.findOne({
+      select: ['avatarImgUrl'],
+      where: { id },
+    });
+  }
+
   async getEventsByUserId(id: number): Promise<Event[]> {
     return this.repository.getEventsByUserId(id);
   }

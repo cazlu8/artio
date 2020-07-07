@@ -50,6 +50,17 @@ export class UserController extends BaseWithoutAuthController {
   }
 
   @ApiCreatedResponse({
+    type: User,
+    description: 'get user avatar by id',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @Get('/avatar/:id')
+  async getAvatarUrl(@Param('id') id): Promise<Partial<User> | void> {
+    return this.userService.getAvatarUrl(id);
+  }
+
+  @ApiCreatedResponse({
     type: UpdateUserDto,
     description: 'the user has been successfully updated',
   })
