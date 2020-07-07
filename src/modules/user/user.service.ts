@@ -17,7 +17,6 @@ import { handleBase64 } from '../../shared/utils/image.utils';
 import { UserRepository } from './user.repository';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
-import { Event } from '../event/event.entity';
 import { CreateUserEventDto } from '../userEvents/dto/userEvents.create.dto';
 import { UserEvents } from '../userEvents/userEvents.entity';
 
@@ -143,7 +142,7 @@ export class UserService {
     });
   }
 
-  async getEventsByUserId(id: number): Promise<Event[]> {
+  async getEventsByUserId(id: number) {
     return this.repository.getEventsByUserId(id);
   }
 
