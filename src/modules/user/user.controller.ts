@@ -60,6 +60,16 @@ export class UserController extends BaseWithoutAuthController {
   }
 
   @ApiCreatedResponse({
+    type: User,
+    description: 'get user by email',
+  })
+  @ApiParam({ name: 'email', type: 'string' })
+  @Get('/email/:email')
+  async getUserByEmail(@Param('email') email): Promise<User | void> {
+    return this.userService.getUserByEmail(email);
+  }
+
+  @ApiCreatedResponse({
     type: UpdateUserDto,
     description: 'the user has been successfully updated',
   })

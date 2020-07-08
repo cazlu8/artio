@@ -142,6 +142,12 @@ export class UserService {
     });
   }
 
+  getUserByEmail(email): Promise<User | void> {
+    return this.repository.findOne({
+      where: { email },
+    });
+  }
+
   async getEventsByUserId(id: number) {
     return this.repository.getEventsByUserId(id);
   }
