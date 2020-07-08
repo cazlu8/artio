@@ -51,7 +51,6 @@ export class User {
   @ApiProperty()
   @Column('varchar', {
     length: 50,
-    unique: true,
     nullable: true,
     name: 'phone_number',
   })
