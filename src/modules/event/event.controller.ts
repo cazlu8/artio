@@ -7,7 +7,7 @@ import {
   Post,
   Put,
   Res,
-  UseGuards,
+  // UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { UpdateResult } from 'typeorm';
@@ -19,8 +19,8 @@ import CreateEventDTO from './dto/event.create.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
 import { Event } from './event.entity';
 import UpdateEventDTO from './dto/event.update.dto';
-import { AuthGuard } from '../../shared/guards/auth.guard';
-import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
+// import { AuthGuard } from '../../shared/guards/auth.guard';
+// import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
 
 @ApiTags('Events')
 @Controller('events')
@@ -33,24 +33,23 @@ export class EventController extends BaseWithoutAuthController {
     type: CreateEventDTO,
     description: 'the event has been successfully created',
   })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post()
   create(@Body() createEventDto: CreateEventDTO) {
     return this.service.create(createEventDto);
   }
 
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/happening-now')
   @ApiCreatedResponse({
     type: EventListDto,
     description: 'get the happening now events',
     isArray: true,
   })
+  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   async getHappeningNowEvents(): Promise<EventListDto[] | void> {
     return await this.service.getHappeningNowEvents();
   }
 
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/upcoming/:skip')
   @ApiParam({ name: 'skip', type: 'number' })
   @ApiCreatedResponse({
@@ -58,19 +57,20 @@ export class EventController extends BaseWithoutAuthController {
     description: 'get the upcoming events',
     isArray: true,
   })
+  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   async getUpcomingEvents(
     @Param('skip', ParseIntPipe) skip: number,
   ): Promise<EventUpcomingListDto> {
     return await this.service.getUpcomingEvents(skip);
   }
 
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/details/:id')
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: EventDetailsDTO,
     description: 'get the event details',
   })
+  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   async getEventDetails(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<EventDetailsDTO> {
@@ -82,8 +82,8 @@ export class EventController extends BaseWithoutAuthController {
     description: 'get event by id',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/:id')
+  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   async findOne(@Param('id', ParseIntPipe) id): Promise<Partial<Event> | void> {
     return this.service.getEvent(id);
   }
@@ -92,8 +92,8 @@ export class EventController extends BaseWithoutAuthController {
     type: Event,
     description: 'get all events',
   })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get()
+  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   async find(): Promise<Partial<Event[]> | void> {
     return this.service.getEvents();
   }
@@ -103,8 +103,8 @@ export class EventController extends BaseWithoutAuthController {
     description: 'the event has been successfully updated',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Put('/:id')
+  // @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   update(
     @Res() res,
     @Param('id', ParseIntPipe) id: number,
