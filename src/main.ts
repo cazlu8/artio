@@ -9,6 +9,7 @@ import * as fastifyRateLimit from 'fastify-rate-limit';
 import * as fastifyHealthCheck from 'fastify-healthcheck';
 import * as fastifyHelmet from 'fastify-helmet';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { WsAdapter } from '@nestjs/platform-ws';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -22,6 +23,7 @@ async function bootstrap() {
   app.enableCors({
     origin: true,
   });
+  app.useWebSocketAdapter(new WsAdapter(app));
   app.enableShutdownHooks();
   app.register(fastifyHealthCheck);
   app.useGlobalPipes(
