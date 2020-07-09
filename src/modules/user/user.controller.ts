@@ -54,6 +54,7 @@ export class UserController extends BaseWithoutAuthController {
     description: 'get user avatar by id',
   })
   @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard)
   @Get('/avatar/:id')
   async getAvatarUrl(@Param('id') id): Promise<Partial<User> | void> {
     return this.userService.getAvatarUrl(id);
@@ -64,6 +65,7 @@ export class UserController extends BaseWithoutAuthController {
     description: 'get user by email',
   })
   @ApiParam({ name: 'email', type: 'string' })
+  @UseGuards(AuthGuard)
   @Get('/email/:email')
   async getUserByEmail(@Param('email') email): Promise<User | void> {
     return this.userService.getUserByEmail(email);
