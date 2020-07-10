@@ -10,6 +10,7 @@ import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
 import EventDetailsDTO from './dto/event.details.dto';
 import EventUpcomingListDto from './dto/event.upcoming.dto';
+import EventPastListDto from './dto/event.past.dto';
 import CreateEventDTO from './dto/event.create.dto';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import UpdateEventDTO from './dto/event.update.dto';
@@ -48,7 +49,7 @@ export class EventService {
     });
   }
 
-  getPastEvents(skip: number): Promise<EventUpcomingListDto> {
+  getPastEvents(skip: number): Promise<EventPastListDto> {
     const getCount: Promise<number> = this.repository.getPastCount();
     const getEvents: Promise<Partial<
       Event[]

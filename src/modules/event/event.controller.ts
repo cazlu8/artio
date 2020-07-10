@@ -15,6 +15,7 @@ import { EventService } from './event.service';
 import EventListDto from './dto/event.list.dto';
 import EventDetailsDTO from './dto/event.details.dto';
 import EventUpcomingListDto from './dto/event.upcoming.dto';
+import EventPastListDto from './dto/event.past.dto';
 import CreateEventDTO from './dto/event.create.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
 import { Event } from './event.entity';
@@ -73,7 +74,7 @@ export class EventController extends BaseWithoutAuthController {
   @Get('/past/:skip')
   async getPastEvents(
     @Param('skip', ParseIntPipe) skip: number,
-  ): Promise<EventUpcomingListDto> {
+  ): Promise<EventPastListDto> {
     return await this.service.getPastEvents(skip);
   }
 
