@@ -21,7 +21,9 @@ import { BaseWithoutAuthController } from '../../shared/controllers/base.without
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
-import { CreateUserEventDto } from '../userEvents/dto/userEvents.create.dto';
+// import { CreateUserEventDto } from '../userEvents/dto/userEvents.create.dto';
+// import { CreateUserEventsRolesDto } from '../userEventsRoles/dto/create.user.events.roles.dto';
+// import { Role } from '../role/role.entity';
 
 @ApiTags('Users')
 @Controller('users')
@@ -130,10 +132,11 @@ export class UserController extends BaseWithoutAuthController {
   @Post('linkEvent')
   async bindUserEvent(
     @Res() res,
-    @Body() createUserEventDto: CreateUserEventDto,
+    @Body() { roleId, userId, eventId },
   ): Promise<void | ObjectLiteral> {
+    const req = { roleId, userId, eventId };
     return this.userService
-      .bindUserEvent(createUserEventDto)
+      .bindUserEvent({ req })
       .then(() => res.status(201).send());
   }
 }

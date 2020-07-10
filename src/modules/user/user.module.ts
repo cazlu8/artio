@@ -6,9 +6,19 @@ import { LoggerService } from '../../shared/services/logger.service';
 import { UserRepository } from './user.repository';
 import { User } from './user.entity';
 import { UserEvents } from '../userEvents/userEvents.entity';
+import { UserEventsRoles } from '../userEventsRoles/user.events.roles.entity';
+import { Role } from '../role/role.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, UserRepository, UserEvents])],
+  imports: [
+    TypeOrmModule.forFeature([
+      User,
+      UserRepository,
+      UserEvents,
+      UserEventsRoles,
+      Role,
+    ]),
+  ],
   controllers: [UserController],
   providers: [UserService, LoggerService],
 })
