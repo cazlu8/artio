@@ -52,7 +52,7 @@ export class EventController extends BaseWithoutAuthController {
   @ApiParam({ name: 'skip', type: 'number' })
   @ApiCreatedResponse({
     type: EventUpcomingListDto,
-    description: 'get the upcoming events',
+    description: 'get upcoming events',
     isArray: true,
   })
   @UseGuards(AuthGuard)
@@ -61,6 +61,20 @@ export class EventController extends BaseWithoutAuthController {
     @Param('skip', ParseIntPipe) skip: number,
   ): Promise<EventUpcomingListDto> {
     return await this.service.getUpcomingEvents(skip);
+  }
+
+  @ApiParam({ name: 'skip', type: 'number' })
+  @ApiCreatedResponse({
+    type: EventUpcomingListDto,
+    description: 'get past events',
+    isArray: true,
+  })
+  @UseGuards(AuthGuard)
+  @Get('/past/:skip')
+  async getPastEvents(
+    @Param('skip', ParseIntPipe) skip: number,
+  ): Promise<EventUpcomingListDto> {
+    return await this.service.getPastEvents(skip);
   }
 
   @ApiParam({ name: 'id', type: 'number' })

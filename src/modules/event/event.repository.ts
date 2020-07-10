@@ -1,6 +1,7 @@
 import {
   EntityRepository,
   MoreThan,
+  LessThan,
   Repository,
   SelectQueryBuilder,
 } from 'typeorm';
@@ -17,14 +18,25 @@ import {
 export class EventRepository extends Repository<Event> {
   getHappeningNowEvents(): Promise<Partial<Event[]> | void> {
     const where = 'event.start_date <= now() and event.end_date > now()';
-    return this.getListEvents(where)
+    const order = 'DESC';
+    return this.getListEvents(where, order)
       .addSelect(getFormattedDayOfWeek, 'day')
       .getRawMany();
   }
 
   getUpcomingEvents(skip: number): Promise<Partial<Event[]> | void> {
     const where = 'event.start_date > now() and event.end_date > now()';
-    return this.getListEvents(where)
+    const order = 'DESC';
+    return this.getListEvents(where, order)
+      .skip(skip)
+      .take(10)
+      .getRawMany();
+  }
+
+  getPastEvents(skip: number): Promise<Partial<Event[]> | void> {
+    const where = 'event.start_date < now() and event.end_date < now()';
+    const order = 'ASC';
+    return this.getListEvents(where, order)
       .skip(skip)
       .take(10)
       .getRawMany();
@@ -53,8 +65,21 @@ export class EventRepository extends Repository<Event> {
     });
   }
 
+  getPastCount() {
+    const now: string = new Date().toISOString();
+    return this.count({
+      where: {
+        startDate: LessThan(now),
+        endDate: LessThan(now),
+      },
+    });
+  }
+
   // private functions
-  private getListEvents(where: string): SelectQueryBuilder<Partial<Event>> {
+  private getListEvents(
+    where: string,
+    order: any,
+  ): SelectQueryBuilder<Partial<Event>> {
     const attributes = ['id'];
     return this.createQueryBuilder('event')
       .select(attributes)
@@ -62,7 +87,7 @@ export class EventRepository extends Repository<Event> {
       .addSelect('hero_img_url', 'heroImgUrl')
       .addSelect(getFormattedDateQuery, 'date')
       .addSelect(getFormattedLocationQuery, 'location')
-      .orderBy('start_date', 'DESC')
+      .orderBy('start_date', order)
       .where(where);
   }
 }

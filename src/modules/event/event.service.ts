@@ -48,6 +48,24 @@ export class EventService {
     });
   }
 
+  getPastEvents(skip: number): Promise<EventUpcomingListDto> {
+    const getCount: Promise<number> = this.repository.getPastCount();
+    const getEvents: Promise<Partial<
+      Event[]
+    > | void> = this.repository.getPastEvents(skip);
+    return Promise.all([getCount, getEvents]).then(([amount, events]) => {
+      const eventList: EventListDto[] = plainToClass(
+        EventListDto,
+        events as Event[],
+      );
+      return {
+        events: eventList,
+        skip: skip + eventList.length,
+        ended: (skip || 1) >= amount,
+      };
+    });
+  }
+
   getEventDetails(eventId: number): Promise<EventDetailsDTO> {
     return this.repository
       .getEventDetails(eventId)
