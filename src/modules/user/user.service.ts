@@ -17,10 +17,8 @@ import { handleBase64 } from '../../shared/utils/image.utils';
 import { UserRepository } from './user.repository';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
-// import { CreateUserEventDto } from '../userEvents/dto/userEvents.create.dto';
 import { UserEvents } from '../userEvents/userEvents.entity';
 import { UserEventsRoles } from '../userEventsRoles/user.events.roles.entity';
-// import { CreateUserEventsRolesDto } from '../userEventsRoles/dto/create.user.events.roles.dto';
 import { Role } from '../role/role.entity';
 
 const cognito = new AWS.CognitoIdentityServiceProvider(cognitoConfig());
@@ -96,7 +94,9 @@ export class UserService {
         this.deleteAvatar(user, s3, Bucket),
       ];
       await Promise.all(functions);
-      return { url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}` };
+      return {
+        url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
+      };
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
@@ -137,7 +137,7 @@ export class UserService {
     return [
       s3.upload(params).promise(),
       this.update(userId, {
-        avatarImgUrl: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}`,
+        avatarImgUrl: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
       }),
     ];
   }
