@@ -17,6 +17,14 @@ export class UserEventsRoles {
   @PrimaryColumn({ type: 'int', name: 'roleId', primary: true })
   roleId: number;
 
+  @ApiProperty()
+  @PrimaryColumn({ type: 'int', name: 'userEventsUserId', primary: true })
+  userEventsUserId: number;
+
+  @ApiProperty()
+  @PrimaryColumn({ type: 'int', name: 'userEventsEventId', primary: true })
+  userEventsEventId: number;
+
   @OneToOne(() => Role)
   @JoinColumn()
   role: Role;
