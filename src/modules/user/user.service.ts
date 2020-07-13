@@ -150,9 +150,14 @@ export class UserService {
   }
 
   getUserByEmail(email): Promise<User | void> {
-    return this.repository.findOne({
-      where: { email },
-    });
+    return this.repository
+      .findOneOrFail({
+        where: { email },
+      })
+      .catch(error => {
+        if (error.name === 'EntityNotFound') throw new NotFoundException();
+        throw new InternalServerErrorException(error);
+      });
   }
 
   async getEventsByUserId(id: number) {
@@ -171,10 +176,15 @@ export class UserService {
   }
 
   private async verifyUserRole(roleId: number): Promise<boolean> {
-    return !!(await this.roleRepository.findOneOrFail({
-      select: ['name'],
-      where: { id: roleId },
-    }));
+    return !!(await this.roleRepository
+      .findOneOrFail({
+        select: ['name'],
+        where: { id: roleId },
+      })
+      .catch(error => {
+        if (error.name === 'EntityNotFound') throw new NotFoundException();
+        throw new InternalServerErrorException(error);
+      }));
   }
 
   private async linkUserToEvent(userId: number, eventId: number): Promise<any> {
