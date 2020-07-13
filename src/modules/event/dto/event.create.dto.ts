@@ -12,7 +12,7 @@ export default class CreateEventDTO {
 
   @ApiProperty()
   @IsOptional()
-  locationName: string;
+  locationName?: string;
 
   @ApiProperty()
   @IsOptional()

@@ -21,4 +21,14 @@ export class UserRepository extends Repository<User> {
       .getRawMany()
       .then(rows => (rows[0].id === null ? [] : rows));
   }
+
+  getUserEventsByRole(userId: number, roleId: number) {
+    const attributes = ['*'];
+    return this.createQueryBuilder('events')
+      .select(attributes)
+      .where(
+        `id IN (select "userEventsEventId" from user_events_roles where "userEventsUserId" = ${userId} and "roleId" = ${roleId});`,
+      )
+      .getRawMany();
+  }
 }
