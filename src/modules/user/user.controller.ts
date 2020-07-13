@@ -117,6 +117,7 @@ export class UserController extends BaseWithoutAuthController {
     description: 'get events by user id',
   })
   @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('events/:id')
   async getUserEvents(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getEventsByUserId(id);
@@ -127,7 +128,7 @@ export class UserController extends BaseWithoutAuthController {
     description: 'get events by user id',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @UseGuards(AuthGuard)
   @Get('eventsByRole/:userId/:roleId')
   async getUserEventsByRole(
     @Param('userId', ParseIntPipe) userId: number,
