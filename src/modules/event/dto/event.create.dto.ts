@@ -10,44 +10,44 @@ export default class CreateEventDTO {
   @IsOptional()
   heroImgUrl?: string;
 
-  @IsNotEmpty()
   @ApiProperty()
+  @IsOptional()
   locationName: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   streetName: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   streetNumber: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   stateAcronym: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   state: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   country: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   city: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   zipCode: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   description: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   additionalInfo: string;
 
   @ApiProperty()
