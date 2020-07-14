@@ -142,4 +142,43 @@ export class EventController extends BaseWithoutAuthController {
   ) {
     return this.service.getUserEventsByRole(userId, roleId);
   }
+
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'get happening now events by user id',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard)
+  @Get('happeningNowByUser/:userId')
+  async getHappeningNowByUser(@Param('userId', ParseIntPipe) userId: number) {
+    return this.service.getHappeningNowByUser(userId);
+  }
+
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'get happening now events by user id',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard)
+  @Get('upcomingByUser/:userId/:skip')
+  async getUpcomingByUser(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Param('skip', ParseIntPipe) skip: number,
+  ) {
+    return this.service.getUpcomingByUser(userId, skip);
+  }
+
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'get happening now events by user id',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard)
+  @Get('pastByUser/:userId/:skip')
+  async getPastByUser(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Param('skip', ParseIntPipe) skip: number,
+  ) {
+    return this.service.getPastByUser(userId, skip);
+  }
 }

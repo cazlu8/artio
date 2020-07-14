@@ -98,6 +98,48 @@ export class EventService {
     return this.repository.getUserEventsByRole(userId, roleId);
   }
 
+  async getHappeningNowByUser(userId: number) {
+    return this.repository.getHappeningNowByUser(userId);
+  }
+
+  async getUpcomingByUser(userId: number, skip: number) {
+    const getCount: Promise<number> = this.repository.getUpcomingCount();
+    const getEvents: Promise<Partial<
+      Event[]
+    > | void> = this.repository.getUpcomingByUser(userId, skip);
+    return Promise.all([getCount, getEvents]).then(([amount, events]) => {
+      const eventList: EventListDto[] = plainToClass(
+        EventListDto,
+        events as Event[],
+      );
+      return {
+        events: eventList,
+        skip: skip + eventList.length,
+        ended: (skip || 1) >= amount,
+      };
+    });
+    // return this.repository.getUpcomingByUser(userId, skip);
+  }
+
+  async getPastByUser(userId: number, skip: number) {
+    const getCount: Promise<number> = this.repository.getPastCount();
+    const getEvents: Promise<Partial<
+      Event[]
+    > | void> = this.repository.getPastByUser(userId, skip);
+    return Promise.all([getCount, getEvents]).then(([amount, events]) => {
+      const eventList: EventListDto[] = plainToClass(
+        EventListDto,
+        events as Event[],
+      );
+      return {
+        events: eventList,
+        skip: skip + eventList.length,
+        ended: (skip || 1) >= amount,
+      };
+    });
+    // return this.repository.getPastByUser(userId, skip);
+  }
+
   private update(id: number, eventData: Partial<Event>): Promise<UpdateResult> {
     return this.repository.update(id, eventData);
   }

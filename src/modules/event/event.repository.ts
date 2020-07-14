@@ -9,19 +9,14 @@ import { Event } from './event.entity';
 import {
   getFormattedDayOfWeekFromHappeningNow,
   getFormattedAddressQuery,
-  getFormattedDateQuery,
-  getFormattedDayOfWeek,
-  getFormattedLocationQuery,
 } from './queries';
 
 @EntityRepository(Event)
 export class EventRepository extends Repository<Event> {
   getHappeningNowEvents(): Promise<Partial<Event[]> | void> {
-    const where = 'event.start_date <= now() and event.end_date > now()';
+    const where = 'event.start_date <= now() and event.end_date >= now()';
     const order = 'DESC';
-    return this.getListEvents(where, order)
-      .addSelect(getFormattedDayOfWeek, 'day')
-      .getRawMany();
+    return this.getListEvents(where, order).getRawMany();
   }
 
   getUpcomingEvents(skip: number): Promise<Partial<Event[]> | void> {
@@ -76,17 +71,10 @@ export class EventRepository extends Repository<Event> {
   }
 
   // private functions
-  private getListEvents(
-    where: string,
-    order: any,
-  ): SelectQueryBuilder<Partial<Event>> {
-    const attributes = ['id'];
+  private getListEvents(where: string, order: any): SelectQueryBuilder<Event> {
+    const attributes = ['*'];
     return this.createQueryBuilder('event')
       .select(attributes)
-      .addSelect('name', 'title')
-      .addSelect('hero_img_url', 'heroImgUrl')
-      .addSelect(getFormattedDateQuery, 'date')
-      .addSelect(getFormattedLocationQuery, 'location')
       .orderBy('start_date', order)
       .where(where);
   }
@@ -105,6 +93,70 @@ export class EventRepository extends Repository<Event> {
         return `id IN ${subQuery}`;
       })
       .setParameters({ userId, roleId })
+      .getRawMany();
+  }
+
+  getHappeningNowByUser(userId: number) {
+    const attributes = ['*'];
+    return this.createQueryBuilder('event')
+      .select(attributes)
+      .orderBy('start_date', 'DESC')
+      .where(qb => {
+        const subQuery = qb
+          .subQuery()
+          .select('"eventId"')
+          .from('user_events', 'userEvents')
+          .where(
+            '"userId" = :userId and event.start_date <= now() and event.end_date >= now()',
+          )
+          .getQuery();
+        return `id IN ${subQuery}`;
+      })
+      .setParameters({ userId })
+      .getRawMany();
+  }
+
+  getUpcomingByUser(userId: number, skip: number) {
+    const attributes = ['*'];
+    return this.createQueryBuilder('event')
+      .select(attributes)
+      .orderBy('start_date', 'DESC')
+      .where(qb => {
+        const subQuery = qb
+          .subQuery()
+          .select('"eventId"')
+          .from('user_events', 'userEvents')
+          .where(
+            '"userId" = :userId and event.start_date > now() and event.end_date > now()',
+          )
+          .skip(skip)
+          .take(10)
+          .getQuery();
+        return `id IN ${subQuery}`;
+      })
+      .setParameters({ userId })
+      .getRawMany();
+  }
+
+  getPastByUser(userId: number, skip: number) {
+    const attributes = ['*'];
+    return this.createQueryBuilder('event')
+      .select(attributes)
+      .orderBy('start_date', 'DESC')
+      .where(qb => {
+        const subQuery = qb
+          .subQuery()
+          .select('"eventId"')
+          .from('user_events', 'userEvents')
+          .where(
+            '"userId" = :userId and event.start_date < now() and event.end_date < now()',
+          )
+          .skip(skip)
+          .take(10)
+          .getQuery();
+        return `id IN ${subQuery}`;
+      })
+      .setParameters({ userId })
       .getRawMany();
   }
 }
