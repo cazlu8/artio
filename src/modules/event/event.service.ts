@@ -94,6 +94,10 @@ export class EventService {
     return this.update(id, updateEventDTO);
   }
 
+  async getUserEventsByRole(userId: number, roleId: number) {
+    return this.repository.getUserEventsByRole(userId, roleId);
+  }
+
   private update(id: number, eventData: Partial<Event>): Promise<UpdateResult> {
     return this.repository.update(id, eventData);
   }

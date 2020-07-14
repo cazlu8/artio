@@ -90,4 +90,21 @@ export class EventRepository extends Repository<Event> {
       .orderBy('start_date', order)
       .where(where);
   }
+
+  getUserEventsByRole(userId: number, roleId: number) {
+    const attributes = ['*'];
+    return this.createQueryBuilder('event')
+      .select(attributes)
+      .where(qb => {
+        const subQuery = qb
+          .subQuery()
+          .select('"userEventsEventId"')
+          .from('user_events_roles', 'userEventsRoles')
+          .where(`"userEventsUserId" = :userId and "roleId" = :roleId`)
+          .getQuery();
+        return `id IN ${subQuery}`;
+      })
+      .setParameters({ userId, roleId })
+      .getRawMany();
+  }
 }

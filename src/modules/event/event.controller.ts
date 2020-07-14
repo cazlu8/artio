@@ -128,4 +128,18 @@ export class EventController extends BaseWithoutAuthController {
       .updateEventInfo(id, updateEventDto)
       .then(() => res.status(204).send());
   }
+
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'get events by user id',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard)
+  @Get('eventsByRole/:userId/:roleId')
+  async getUserEventsByRole(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Param('roleId', ParseIntPipe) roleId: number,
+  ) {
+    return this.service.getUserEventsByRole(userId, roleId);
+  }
 }

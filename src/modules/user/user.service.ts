@@ -164,10 +164,6 @@ export class UserService {
     return this.repository.getEventsByUserId(id);
   }
 
-  async getUserEventsByRole(userId: number, roleId: number) {
-    return this.repository.getUserEventsByRole(userId, roleId);
-  }
-
   async bindUserEvent({ req }): Promise<boolean> {
     const bindFunctions: any = [
       this.verifyUserRole(req.roleId),
