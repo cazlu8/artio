@@ -21,6 +21,7 @@ import { BaseWithoutAuthController } from '../../shared/controllers/base.without
 import { Event } from './event.entity';
 import UpdateEventDTO from './dto/event.update.dto';
 import { AuthGuard } from '../../shared/guards/auth.guard';
+import { AdminAuthGuard } from '../../shared/guards/admin-auth.guard';
 
 @ApiTags('Events')
 @Controller('events')
@@ -34,7 +35,7 @@ export class EventController extends BaseWithoutAuthController {
     description: 'the event has been successfully created',
   })
   @Post()
-  @UseGuards(AuthGuard)
+  @UseGuards(AdminAuthGuard)
   create(@Body() createEventDto: CreateEventDTO) {
     return this.service.create(createEventDto);
   }
@@ -44,7 +45,7 @@ export class EventController extends BaseWithoutAuthController {
     description: 'get the happening now events',
     isArray: true,
   })
-  @UseGuards(AuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Get('/happening-now')
   async getHappeningNowEvents(): Promise<EventListDto[] | void> {
     return await this.service.getHappeningNowEvents();
@@ -56,7 +57,7 @@ export class EventController extends BaseWithoutAuthController {
     description: 'get upcoming events',
     isArray: true,
   })
-  @UseGuards(AuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Get('/upcoming/:skip')
   async getUpcomingEvents(
     @Param('skip', ParseIntPipe) skip: number,
@@ -70,7 +71,7 @@ export class EventController extends BaseWithoutAuthController {
     description: 'get past events',
     isArray: true,
   })
-  @UseGuards(AuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Get('/past/:skip')
   async getPastEvents(
     @Param('skip', ParseIntPipe) skip: number,
@@ -106,7 +107,7 @@ export class EventController extends BaseWithoutAuthController {
     type: Event,
     description: 'get all events',
   })
-  @UseGuards(AuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Get()
   async find(): Promise<Partial<Event[]> | void> {
     return this.service.getEvents();

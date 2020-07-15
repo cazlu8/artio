@@ -118,7 +118,6 @@ export class EventService {
         ended: (skip || 1) >= amount,
       };
     });
-    // return this.repository.getUpcomingByUser(userId, skip);
   }
 
   async getPastByUser(userId: number, skip: number) {
@@ -137,7 +136,6 @@ export class EventService {
         ended: (skip || 1) >= amount,
       };
     });
-    // return this.repository.getPastByUser(userId, skip);
   }
 
   private update(id: number, eventData: Partial<Event>): Promise<UpdateResult> {

@@ -22,6 +22,9 @@ import { BaseWithoutAuthController } from '../../shared/controllers/base.without
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
+import { AdminAuthGuard } from '../../shared/guards/admin-auth.guard';
+import { OrganizerAuthGuard } from '../../shared/guards/organizer-auth.guard';
+
 
 @ApiTags('Users')
 @Controller('users')
@@ -65,7 +68,7 @@ export class UserController extends BaseWithoutAuthController {
     description: 'get user by email',
   })
   @ApiParam({ name: 'email', type: 'string' })
-  @UseGuards(AuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Get('/email/:email')
   async getUserByEmail(@Param('email') email): Promise<User | void> {
     return this.userService.getUserByEmail(email);
@@ -125,8 +128,8 @@ export class UserController extends BaseWithoutAuthController {
     type: Event,
     description: 'Link a user with role to a event',
   })
-  @ApiParam({ name: 'roleId, userId, eventId', type: 'number' })
-  @UseGuards(AuthGuard)
+  @ApiParam({ name: 'userId and eventId', type: 'number' })
+  @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
   @Post('linkEvent')
   async bindUserEvent(
     @Res() res,
