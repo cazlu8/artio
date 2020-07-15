@@ -3,6 +3,7 @@ import {
   Post,
   Body,
   Get,
+  Delete,
   Param,
   UseGuards,
   Put,
@@ -21,9 +22,6 @@ import { BaseWithoutAuthController } from '../../shared/controllers/base.without
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
-// import { CreateUserEventDto } from '../userEvents/dto/userEvents.create.dto';
-// import { CreateUserEventsRolesDto } from '../userEventsRoles/dto/create.user.events.roles.dto';
-// import { Role } from '../role/role.entity';
 
 @ApiTags('Users')
 @Controller('users')
@@ -125,9 +123,9 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Event,
-    description: 'Link a user to a event',
+    description: 'Link a user with role to a event',
   })
-  @ApiParam({ name: 'userId and eventId', type: 'number' })
+  @ApiParam({ name: 'roleId, userId, eventId', type: 'number' })
   @UseGuards(AuthGuard)
   @Post('linkEvent')
   async bindUserEvent(
@@ -138,5 +136,16 @@ export class UserController extends BaseWithoutAuthController {
     return this.userService
       .bindUserEvent({ req })
       .then(() => res.status(201).send());
+  }
+
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'delete avatar image by user id',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @Delete('removeAvatar/:id')
+  async removeAvatar(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.removeAvatar(id);
   }
 }

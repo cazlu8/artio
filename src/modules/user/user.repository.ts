@@ -21,4 +21,12 @@ export class UserRepository extends Repository<User> {
       .getRawMany()
       .then(rows => (rows[0].id === null ? [] : rows));
   }
+
+  removeAvatarUrl(id: any) {
+    return this.createQueryBuilder()
+      .update(User)
+      .set({ avatarImgUrl: null })
+      .where(`id = ${id}`)
+      .execute();
+  }
 }

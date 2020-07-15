@@ -123,7 +123,7 @@ export class UserService {
       const { avatarImgUrl: formerUrl } = user;
       const lastIndex = formerUrl.lastIndexOf('/');
       const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
-      return s3.deleteObject({ Bucket, Key: `${currentKey}.png` }).promise();
+      return s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
     }
     return Promise.resolve();
   }
@@ -158,6 +158,17 @@ export class UserService {
         if (error.name === 'EntityNotFound') throw new NotFoundException();
         throw new InternalServerErrorException(error);
       });
+  }
+
+  async removeAvatar(id: number) {
+    const user: any = await this.repository.get({
+      select: ['avatarImgUrl'],
+      where: { id },
+    });
+    await this.repository.removeAvatarUrl(id);
+    const s3 = new AWS.S3(s3Config());
+    const Bucket = process.env.S3_BUCKET_AVATAR;
+    await this.deleteAvatar(user, s3, Bucket);
   }
 
   async getEventsByUserId(id: number) {
