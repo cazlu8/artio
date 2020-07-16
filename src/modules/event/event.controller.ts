@@ -22,7 +22,6 @@ import { Event } from './event.entity';
 import UpdateEventDTO from './dto/event.update.dto';
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { AdminAuthGuard } from '../../shared/guards/admin-auth.guard';
-import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
 
 @ApiTags('Events')
 @Controller('events')
@@ -136,7 +135,7 @@ export class EventController extends BaseWithoutAuthController {
     description: 'get events by user id and role',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @UseGuards(AuthGuard)
   @Get('eventsByRole/:userId/:roleId')
   async getUserEventsByRole(
     @Param('userId', ParseIntPipe) userId: number,
@@ -150,7 +149,7 @@ export class EventController extends BaseWithoutAuthController {
     description: 'get happening now events by user id',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @UseGuards(AuthGuard)
   @Get('happeningNowByUser/:userId')
   async getHappeningNowByUser(@Param('userId', ParseIntPipe) userId: number) {
     return this.service.getHappeningNowByUser(userId);
@@ -161,7 +160,7 @@ export class EventController extends BaseWithoutAuthController {
     description: 'get upcoming events by user id',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @UseGuards(AuthGuard)
   @Get('upcomingByUser/:userId/:skip')
   async getUpcomingByUser(
     @Param('userId', ParseIntPipe) userId: number,
@@ -175,7 +174,7 @@ export class EventController extends BaseWithoutAuthController {
     description: 'get past events by user id',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @UseGuards(AuthGuard)
   @Get('pastByUser/:userId/:skip')
   async getPastByUser(
     @Param('userId', ParseIntPipe) userId: number,
