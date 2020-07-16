@@ -182,4 +182,64 @@ export class EventController extends BaseWithoutAuthController {
   ) {
     return this.service.getPastByUser(userId, skip);
   }
+
+  @ApiCreatedResponse({
+    type: UpdateEventDTO,
+    description: 'start intermission',
+  })
+  @ApiParam({ name: 'startIntermission' })
+  @UseGuards(AuthGuard)
+  @Put('/startIntermission/:eventId')
+  startIntermission(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Res() res,
+  ): Promise<void | UpdateResult> {
+    return this.service
+      .startIntermission(eventId)
+      .then(() => res.status(204).send());
+  }
+
+  @ApiCreatedResponse({
+    type: UpdateEventDTO,
+    description: 'finish intermission',
+  })
+  @ApiParam({ name: 'finishIntermission' })
+  @UseGuards(AuthGuard)
+  @Put('/finishIntermission/:eventId')
+  finishIntermission(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Res() res,
+  ): Promise<void | UpdateResult> {
+    return this.service
+      .finishIntermission(eventId)
+      .then(() => res.status(204).send());
+  }
+
+  @ApiCreatedResponse({
+    type: UpdateEventDTO,
+    description: 'start live',
+  })
+  @ApiParam({ name: 'startLive' })
+  @UseGuards(AuthGuard)
+  @Put('/startLive/:eventId')
+  startLive(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Res() res,
+  ): Promise<void | UpdateResult> {
+    return this.service.startLive(eventId).then(() => res.status(204).send());
+  }
+
+  @ApiCreatedResponse({
+    type: UpdateEventDTO,
+    description: 'finish live',
+  })
+  @ApiParam({ name: 'finishLive' })
+  @UseGuards(AuthGuard)
+  @Put('/finishLive/:eventId')
+  finishLive(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Res() res,
+  ): Promise<void | UpdateResult> {
+    return this.service.finishLive(eventId).then(() => res.status(204).send());
+  }
 }

@@ -138,6 +138,22 @@ export class EventService {
     });
   }
 
+  async startIntermission(eventId) {
+    return eventId;
+  }
+
+  async finishIntermission(eventId) {
+    return eventId;
+  }
+
+  async finishLive(eventId) {
+    return eventId;
+  }
+
+  async startLive(eventId) {
+    return eventId;
+  }
+
   private update(id: number, eventData: Partial<Event>): Promise<UpdateResult> {
     return this.repository.update(id, eventData);
   }
