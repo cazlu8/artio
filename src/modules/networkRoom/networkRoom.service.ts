@@ -92,4 +92,24 @@ export class NetworkRoomService {
       .then(room => room.uniqueName)
       .catch(this.catchError);
   }
+
+  listAll() {
+    return this.clientConfig.video.rooms
+      .list({ status: 'in-progress' })
+      .then(async rooms => {
+        return rooms.map(r => {
+          return r.sid;
+        });
+      });
+  }
+
+  killAll() {
+    return this.clientConfig.video.rooms
+      .list({ status: 'in-progress' })
+      .then(async rooms => {
+        return rooms.map(r => {
+          return this.killRoom({ sid: r.sid });
+        });
+      });
+  }
 }
