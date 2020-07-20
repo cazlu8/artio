@@ -24,7 +24,6 @@ import UpdateEventDTO from './dto/event.update.dto';
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { AdminAuthGuard } from '../../shared/guards/admin-auth.guard';
 import { CreateHeroImage } from './dto/event.create.heroImage.dto';
-import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
 
 @ApiTags('Events')
 @Controller('events')
@@ -250,7 +249,7 @@ export class EventController extends BaseWithoutAuthController {
     type: CreateHeroImage,
     description: 'the heroImage has been successfully created',
   })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @UseGuards(AuthGuard)
   @Post('/createHeroImage')
   async createHeroImage(@Body() createHeroImage: CreateHeroImage) {
     return this.service.createHeroImage(createHeroImage);
@@ -261,7 +260,7 @@ export class EventController extends BaseWithoutAuthController {
     description: 'delete heroImage image by user id',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @UseGuards(AuthGuard)
   @Delete('removeHeroImage/:id')
   async removeHeroImage(@Param('id', ParseIntPipe) id: number) {
     return this.service.removeHeroImage(id);
