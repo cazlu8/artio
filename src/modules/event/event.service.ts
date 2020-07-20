@@ -42,17 +42,7 @@ export class EventService {
     const getEvents: Promise<Partial<
       Event[]
     > | void> = this.repository.getUpcomingEvents(skip);
-    return Promise.all([getCount, getEvents]).then(([amount, events]) => {
-      const eventList: EventListDto[] = plainToClass(
-        EventListDto,
-        events as Event[],
-      );
-      return {
-        events: eventList,
-        skip: skip + eventList.length,
-        ended: (skip || 1) >= amount,
-      };
-    });
+    return this.paginateEvents(getCount, getEvents, skip);
   }
 
   getPastEvents(skip: number): Promise<EventPastListDto> {
@@ -60,17 +50,7 @@ export class EventService {
     const getEvents: Promise<Partial<
       Event[]
     > | void> = this.repository.getPastEvents(skip);
-    return Promise.all([getCount, getEvents]).then(([amount, events]) => {
-      const eventList: EventListDto[] = plainToClass(
-        EventListDto,
-        events as Event[],
-      );
-      return {
-        events: eventList,
-        skip: skip + eventList.length,
-        ended: (skip || 1) >= amount,
-      };
-    });
+    return this.paginateEvents(getCount, getEvents, skip);
   }
 
   getEventDetails(eventId: number): Promise<EventDetailsDTO> {
@@ -113,17 +93,7 @@ export class EventService {
     const getEvents: Promise<Partial<
       Event[]
     > | void> = this.repository.getUpcomingByUser(userId, skip);
-    return Promise.all([getCount, getEvents]).then(([amount, events]) => {
-      const eventList: EventListDto[] = plainToClass(
-        EventListDto,
-        events as Event[],
-      );
-      return {
-        events: eventList,
-        skip: skip + eventList.length,
-        ended: (skip || 1) >= amount,
-      };
-    });
+    return this.paginateEvents(getCount, getEvents, skip);
   }
 
   async getPastByUser(userId: number, skip: number) {
@@ -131,17 +101,7 @@ export class EventService {
     const getEvents: Promise<Partial<
       Event[]
     > | void> = this.repository.getPastByUser(userId, skip);
-    return Promise.all([getCount, getEvents]).then(([amount, events]) => {
-      const eventList: EventListDto[] = plainToClass(
-        EventListDto,
-        events as Event[],
-      );
-      return {
-        events: eventList,
-        skip: skip + eventList.length,
-        ended: (skip || 1) >= amount,
-      };
-    });
+    return this.paginateEvents(getCount, getEvents, skip);
   }
 
   async startIntermission(eventId) {
@@ -243,6 +203,24 @@ export class EventService {
         heroImgUrl: `${process.env.S3_BUCKET_HERO_IMAGE_PREFIX_URL}${heroImageId}.png`,
       }),
     ];
+  }
+
+  private paginateEvents(
+    getCount: Promise<number>,
+    getEvents: Promise<Partial<Event[]> | void>,
+    skip: number,
+  ) {
+    return Promise.all([getCount, getEvents]).then(([amount, events]) => {
+      const eventList: EventListDto[] = plainToClass(
+        EventListDto,
+        events as Event[],
+      );
+      return {
+        events: eventList,
+        skip: skip + eventList.length,
+        ended: (skip || 1) >= amount,
+      };
+    });
   }
 
   private update(id: number, eventData: Partial<Event>): Promise<UpdateResult> {
