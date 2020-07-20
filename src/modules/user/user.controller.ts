@@ -25,7 +25,6 @@ import { Event } from '../event/event.entity';
 import { AdminAuthGuard } from '../../shared/guards/admin-auth.guard';
 import { OrganizerAuthGuard } from '../../shared/guards/organizer-auth.guard';
 
-
 @ApiTags('Users')
 @Controller('users')
 export class UserController extends BaseWithoutAuthController {

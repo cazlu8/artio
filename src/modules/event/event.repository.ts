@@ -13,6 +13,10 @@ import {
 
 @EntityRepository(Event)
 export class EventRepository extends Repository<Event> {
+  async get({ where, select }) {
+    return this.findOne({ select, where });
+  }
+
   getHappeningNowEvents(): Promise<Partial<Event[]> | void> {
     const where = 'event.start_date <= now() and event.end_date >= now()';
     const order = 'DESC';
@@ -159,5 +163,13 @@ export class EventRepository extends Repository<Event> {
       })
       .setParameters({ userId })
       .getRawMany();
+  }
+
+  removeHeroImage(id: any) {
+    return this.createQueryBuilder()
+      .update(Event)
+      .set({ heroImgUrl: null })
+      .where(`id = ${id}`)
+      .execute();
   }
 }
