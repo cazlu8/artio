@@ -222,7 +222,7 @@ export class EventService {
   ): Promise<any> {
     const base64Data = Buffer.from(handleBase64(heroImageUrl), 'base64');
     const sharpedImage = await sharp(base64Data)
-      .resize(400, 400)
+      .resize(600, 375)
       .png();
     const user: any = await this.repository.get({
       select: ['heroImgUrl'],
