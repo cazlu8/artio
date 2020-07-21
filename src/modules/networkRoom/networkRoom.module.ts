@@ -5,7 +5,7 @@ import { NetworkRoomController } from './networkRoom.controller';
 import { NetworkRoom } from './networkRoom.entity';
 import { NetworkRoomService } from './networkRoom.service';
 import { LoggerService } from '../../shared/services/logger.service';
-import { EventsGateway } from './networkRoom.gateway';
+import { NetworkRoomGateway } from './networkRoom.gateway';
 import { NetworkRoomProcessor } from './networkRoom.processor';
 
 @Module({
@@ -23,7 +23,7 @@ import { NetworkRoomProcessor } from './networkRoom.processor';
   providers: [
     NetworkRoomService,
     LoggerService,
-    EventsGateway,
+    NetworkRoomGateway,
     NetworkRoomProcessor,
   ],
 })
