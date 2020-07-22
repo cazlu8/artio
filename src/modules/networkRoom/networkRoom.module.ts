@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
+import { ConfigService } from '@nestjs/config';
 import { NetworkRoomController } from './networkRoom.controller';
 import { NetworkRoomService } from './networkRoom.service';
 import { LoggerService } from '../../shared/services/logger.service';
@@ -10,12 +11,12 @@ import { UserEvents } from '../userEvents/userEvents.entity';
 
 @Module({
   imports: [
-    BullModule.registerQueue({
+    BullModule.registerQueueAsync({
       name: 'networkRoom',
-      redis: {
-        host: process.env.REDIS_HOST,
-        port: +process.env.REDIS_PORT,
-      },
+      useFactory: async (configService: ConfigService) => ({
+        redis: configService.get('redis'),
+      }),
+      inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([UserEvents]),
   ],
