@@ -1,8 +1,10 @@
 import { Process, Processor } from '@nestjs/bull';
 import { RedisService } from 'nestjs-redis';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { NetworkRoomService } from './networkRoom.service';
-import { NetworkRoomGateway } from './networkRoom.gateway';
 import { parallel } from '../../shared/utils/controlFlow.utils';
+import { UserEvents } from '../userEvents/userEvents.entity';
 
 const numCPUs = require('os').cpus().length;
 
@@ -11,7 +13,8 @@ export class NetworkRoomProcessor {
   private readonly redisClient: any;
 
   constructor(
-    private readonly gateway: NetworkRoomGateway,
+    @InjectRepository(UserEvents)
+    private readonly userEventsRepository: Repository<UserEvents>,
     private readonly service: NetworkRoomService,
     private readonly redisService: RedisService,
   ) {
@@ -21,7 +24,8 @@ export class NetworkRoomProcessor {
   @Process({ name: 'createRooms', concurrency: numCPUs })
   async handleTranscode(job, jobDone) {
     try {
-      const clientsAmount = 100;
+      const { eventId } = job.data;
+      const clientsAmount = await this.userEventsRepository.count({ eventId });
       const rooms = Math.ceil(clientsAmount / 3.11);
       await this.redisClient.set('clientsAmount', clientsAmount);
       const fn = Array.from(new Array(rooms)).map(() => this.createRoom());

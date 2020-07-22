@@ -6,7 +6,6 @@ import * as twilio from 'twilio';
 import * as any from 'promise.any';
 import * as util from 'util';
 import { config } from '../../shared/config/Twilio';
-import { NetworkRoom } from './networkRoom.entity';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 
 const { AccessToken } = twilio.jwt;
@@ -18,10 +17,7 @@ export class NetworkRoomService {
 
   private readonly twilioConfig: any;
 
-  constructor(
-    @InjectRepository(NetworkRoom)
-    private readonly repository?: Repository<NetworkRoom>,
-  ) {
+  constructor() {
     const { clientConfig, twilioConfig } = config();
     this.clientConfig = clientConfig();
     this.twilioConfig = twilioConfig();

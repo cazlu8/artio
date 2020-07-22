@@ -9,7 +9,6 @@ import { Queue } from 'bull';
 import { RedisService } from 'nestjs-redis';
 import * as Redlock from 'redlock';
 import { LoggerService } from '../../shared/services/logger.service';
-import { NetworkRoomService } from './networkRoom.service';
 
 @WebSocketGateway(3030)
 export class NetworkRoomGateway {
@@ -30,8 +29,8 @@ export class NetworkRoomGateway {
       retryDelay: 100,
       retryCount: Infinity,
     });
-    this.redlock.on('clientError', function(err) {
-      throw new Error(err);
+    this.redlock.on('clientError', error => {
+      throw new Error(error);
     });
   }
 
@@ -84,6 +83,4 @@ export class NetworkRoomGateway {
   async setRoom(key: string, room: string | number): Promise<void> {
     await this.redisClient.set(key, room);
   }
-
-  private catch;
 }
