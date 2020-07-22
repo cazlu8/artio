@@ -10,44 +10,44 @@ export default class CreateEventDTO {
   @IsOptional()
   heroImgUrl?: string;
 
-  @IsNotEmpty()
   @ApiProperty()
-  locationName: string;
+  @IsOptional()
+  locationName?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   streetName: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   streetNumber: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   stateAcronym: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   state: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   country: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   city: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   zipCode: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   description: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   additionalInfo: string;
 
   @ApiProperty()
@@ -69,6 +69,14 @@ export default class CreateEventDTO {
   @ApiProperty()
   @IsOptional()
   liveUrl?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  streamKey?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  streamUrl?: string;
 
   @ApiProperty()
   @IsOptional()

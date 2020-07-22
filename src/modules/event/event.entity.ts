@@ -27,35 +27,35 @@ export class Event {
   heroImgUrl: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: false, name: 'location_name' })
+  @Column('varchar', { length: 255, nullable: true, name: 'location_name' })
   locationName: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 200, nullable: false, name: 'street_name' })
+  @Column('varchar', { length: 200, nullable: true, name: 'street_name' })
   streetName: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 6, nullable: false, name: 'street_number' })
+  @Column('varchar', { length: 6, nullable: true, name: 'street_number' })
   streetNumber: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 2, nullable: false, name: 'state_acronym' })
+  @Column('varchar', { length: 2, nullable: true, name: 'state_acronym' })
   stateAcronym: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 30, nullable: false, name: 'state' })
+  @Column('varchar', { length: 30, nullable: true, name: 'state' })
   state: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 30, nullable: false, name: 'country' })
+  @Column('varchar', { length: 30, nullable: true, name: 'country' })
   country: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 50, nullable: false, name: 'city' })
+  @Column('varchar', { length: 50, nullable: true, name: 'city' })
   city: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 12, nullable: false, name: 'zip_code' })
+  @Column('varchar', { length: 12, nullable: true, name: 'zip_code' })
   zipCode: string;
 
   @ApiProperty()
@@ -102,6 +102,14 @@ export class Event {
   @ApiProperty()
   @Column('varchar', { length: 255, nullable: true, name: 'liveUrl' })
   liveUrl: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'streamKey' })
+  streamKey: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'streamUrl' })
+  streamUrl: string;
 
   @ApiProperty()
   @Column('boolean', { default: false, name: 'onLive' })

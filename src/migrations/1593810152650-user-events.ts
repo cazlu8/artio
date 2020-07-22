@@ -1,11 +1,11 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class userEventsRelationship1593460110043 implements MigrationInterface {
-  name = 'userEventsRelationship1593460110043';
+export class userevents1593810152650 implements MigrationInterface {
+  name = 'userevents1593810152650';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE TABLE "user_events" ("userId" integer NOT NULL, "eventId" integer NOT NULL, CONSTRAINT "PK_4bc8864800651979b9d5c410127" PRIMARY KEY ("userId", "eventId"))`,
+      `CREATE TABLE "user_events" ("id" SERIAL NOT NULL, "userId" integer NOT NULL, "eventId" integer NOT NULL, CONSTRAINT "PK_e16aa6bf768bd6b1439cec5c718" PRIMARY KEY ("id", "userId", "eventId"))`,
     );
     await queryRunner.query(
       `ALTER TABLE "user_events" ADD CONSTRAINT "FK_cdc20a262881171de056ae2e5aa" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,

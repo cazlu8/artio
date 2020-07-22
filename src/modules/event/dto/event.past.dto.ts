@@ -1,16 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty } from 'class-validator';
+import EventListDto from './event.list.dto';
 
-export default class SpeakerEventDTO {
+export default class EventPastListDto {
+  @IsNotEmpty()
+  @ApiProperty()
+  events: EventListDto[];
+
+  @IsNotEmpty()
+  @ApiProperty()
+  skip: number;
+
   @ApiProperty()
   @IsNotEmpty()
-  avatar: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  name: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  bio: string;
+  ended: boolean;
 }

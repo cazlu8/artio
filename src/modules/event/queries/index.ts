@@ -4,7 +4,7 @@ export const getFormattedAddressQuery =
 // Month startDay(0-31)-endDay(0-31), year (YYYY)
 export const getFormattedDateQuery =
   "concat(trim(concat(to_char(start_date, 'Month'))), ' '," +
-  "concat_ws('-', to_char(start_date, 'DD'), to_char(end_date, 'DD')), ',', to_char(start_date, 'YYYY'))";
+  "concat_ws('-', to_char(start_date, 'DD')), ',', to_char(start_date, 'YYYY'))";
 // get the day of week (english) if the event is of the type 'happening now'
 export const getFormattedDayOfWeekFromHappeningNow =
   "(case when start_date <= now() and end_date > now() then trim(to_char(now(), 'day')) end)";

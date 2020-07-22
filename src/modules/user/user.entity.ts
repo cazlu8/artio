@@ -12,6 +12,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { UserGender } from './enums/user.gender.enum';
 import { Event } from '../event/event.entity';
+import { Role } from '../role/role.entity';
 
 @Entity()
 export class User {
@@ -50,7 +51,6 @@ export class User {
   @ApiProperty()
   @Column('varchar', {
     length: 50,
-    unique: true,
     nullable: true,
     name: 'phone_number',
   })
@@ -69,20 +69,8 @@ export class User {
   currentPosition?: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'twitter_url' })
-  twitterUrl?: string;
-
-  @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'instagram_url' })
-  instagramUrl?: string;
-
-  @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'linkedin_url' })
-  linkedinUrl?: string;
-
-  @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'facebook_url' })
-  facebookUrl?: string;
+  @Column('json', { nullable: true, name: 'social_urls' })
+  socialUrls?: string;
 
   @ApiProperty()
   @Column('boolean', { default: true, name: 'is_new' })
@@ -104,4 +92,8 @@ export class User {
   @ManyToMany(() => Event)
   @JoinTable()
   events: Event[];
+
+  @ManyToMany(() => Role)
+  @JoinTable()
+  role: Role[];
 }

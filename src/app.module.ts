@@ -38,17 +38,12 @@ const modules: DynamicModule[] = loadModules();
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    if (process.env.NODE_ENV === 'development')
+    if (process.env.NODE_ENV !== 'development')
       consumer
         .apply(AuthMiddleware)
         .exclude(
           { path: '/users', method: RequestMethod.POST },
           { path: '/users/checkUserExists', method: RequestMethod.POST },
-          // { path: '/users/events/:id', method: RequestMethod.GET },
-          // { path: '/users/linkEvent', method: RequestMethod.POST },
-          // { path: '/events', method: RequestMethod.POST },
-          // { path: '/events', method: RequestMethod.GET },
-          // { path: '/events/:id', method: RequestMethod.GET },
           '/health',
           '/swagger',
           '/swagger/(.*)',

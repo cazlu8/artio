@@ -17,9 +17,9 @@ import { handleBase64 } from '../../shared/utils/image.utils';
 import { UserRepository } from './user.repository';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
-import { Event } from '../event/event.entity';
-import { CreateUserEventDto } from '../userEvents/dto/userEvents.create.dto';
 import { UserEvents } from '../userEvents/userEvents.entity';
+import { UserEventsRoles } from '../userEventsRoles/user.events.roles.entity';
+import { Role } from '../role/role.entity';
 
 const cognito = new AWS.CognitoIdentityServiceProvider(cognitoConfig());
 
@@ -29,6 +29,10 @@ export class UserService {
     private readonly repository: UserRepository,
     @InjectRepository(UserEvents)
     private readonly userEventsRepository: Repository<UserEvents>,
+    @InjectRepository(UserEventsRoles)
+    private readonly userEventsRolesRepository: Repository<UserEventsRoles>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {}
 
   findOne(guid: string): Promise<Partial<User> | void> {
@@ -90,7 +94,9 @@ export class UserService {
         this.deleteAvatar(user, s3, Bucket),
       ];
       await Promise.all(functions);
-      return { url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}` };
+      return {
+        url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
+      };
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
@@ -117,7 +123,7 @@ export class UserService {
       const { avatarImgUrl: formerUrl } = user;
       const lastIndex = formerUrl.lastIndexOf('/');
       const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
-      return s3.deleteObject({ Bucket, Key: `${currentKey}.png` }).promise();
+      return s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
     }
     return Promise.resolve();
   }
@@ -131,19 +137,85 @@ export class UserService {
     return [
       s3.upload(params).promise(),
       this.update(userId, {
-        avatarImgUrl: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}`,
+        avatarImgUrl: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
       }),
     ];
   }
 
-  async getEventsByUserId(id: number): Promise<Event[]> {
+  getAvatarUrl(id): Promise<Partial<User> | void> {
+    return this.repository.findOne({
+      select: ['avatarImgUrl'],
+      where: { id },
+    });
+  }
+
+  getUserByEmail(email): Promise<User | void> {
+    return this.repository
+      .findOneOrFail({
+        where: { email },
+      })
+      .catch(error => {
+        if (error.name === 'EntityNotFound') throw new NotFoundException();
+        throw new InternalServerErrorException(error);
+      });
+  }
+
+  async removeAvatar(id: number) {
+    const user: any = await this.repository.get({
+      select: ['avatarImgUrl'],
+      where: { id },
+    });
+    await this.repository.removeAvatarUrl(id);
+    const s3 = new AWS.S3(s3Config());
+    const Bucket = process.env.S3_BUCKET_AVATAR;
+    await this.deleteAvatar(user, s3, Bucket);
+  }
+
+  async getEventsByUserId(id: number) {
     return this.repository.getEventsByUserId(id);
   }
 
-  async bindUserEvent(
-    createUserEventDto: CreateUserEventDto,
-  ): Promise<void | ObjectLiteral> {
-    return this.userEventsRepository.insert(createUserEventDto);
+  async bindUserEvent({ req }): Promise<boolean> {
+    const bindFunctions: any = [
+      this.verifyUserRole(req.roleId),
+      this.linkUserToEvent(req.userId, req.eventId).then(id =>
+        this.linkUserAndRoleToEvent(id, req.roleId, req.userId, req.eventId),
+      ),
+    ];
+    await Promise.all(bindFunctions);
+    return true;
+  }
+
+  private async verifyUserRole(roleId: number): Promise<boolean> {
+    return !!(await this.roleRepository
+      .findOneOrFail({
+        select: ['name'],
+        where: { id: roleId },
+      })
+      .catch(error => {
+        if (error.name === 'EntityNotFound') throw new NotFoundException();
+        throw new InternalServerErrorException(error);
+      }));
+  }
+
+  private async linkUserToEvent(userId: number, eventId: number): Promise<any> {
+    return this.userEventsRepository
+      .save({ userId, eventId })
+      .then(({ id }) => id);
+  }
+
+  private async linkUserAndRoleToEvent(
+    userEventsId: number,
+    roleId: number,
+    userId: number,
+    eventId: number,
+  ): Promise<any> {
+    return this.userEventsRolesRepository.save({
+      userEventsId,
+      roleId,
+      userEventsUserId: userId,
+      userEventsEventId: eventId,
+    });
   }
 
   private update(id: number, userData: Partial<User>): Promise<UpdateResult> {

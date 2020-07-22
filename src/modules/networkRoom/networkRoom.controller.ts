@@ -42,4 +42,24 @@ export class NetworkRoomController extends BaseWithoutAuthController {
   killRoom(@Body() params: { sid: string }) {
     return this.networkRoomService.killRoom(params);
   }
+
+  @ApiCreatedResponse({
+    type: NetworkRoomDto,
+    description: 'this is your room id',
+  })
+  @UseGuards(AuthGuard)
+  @Get('/listAll')
+  listAll() {
+    return this.networkRoomService.listAll();
+  }
+
+  @ApiCreatedResponse({
+    type: NetworkRoomDto,
+    description: 'this is your room id',
+  })
+  @UseGuards(AuthGuard)
+  @Get('/killAll')
+  killAll() {
+    return this.networkRoomService.killAll();
+  }
 }

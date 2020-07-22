@@ -1,4 +1,10 @@
-import { Entity, PrimaryColumn, OneToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryColumn,
+  OneToOne,
+  JoinColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Event } from '../event/event.entity';
 import { User } from '../user/user.entity';
@@ -6,11 +12,15 @@ import { User } from '../user/user.entity';
 @Entity()
 export class UserEvents {
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', unique: false, name: 'userId', primary: true })
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @ApiProperty()
+  @PrimaryColumn({ type: 'int', name: 'userId', primary: true })
   userId: number;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', unique: false, name: 'eventId', primary: true })
+  @PrimaryColumn({ type: 'int', name: 'eventId', primary: true })
   eventId: number;
 
   @OneToOne(() => Event)

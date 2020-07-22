@@ -3,6 +3,7 @@ import {
   Post,
   Body,
   Get,
+  Delete,
   Param,
   UseGuards,
   Put,
@@ -21,7 +22,8 @@ import { BaseWithoutAuthController } from '../../shared/controllers/base.without
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
-import { CreateUserEventDto } from '../userEvents/dto/userEvents.create.dto';
+import { AdminAuthGuard } from '../../shared/guards/admin-auth.guard';
+import { OrganizerAuthGuard } from '../../shared/guards/organizer-auth.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -47,6 +49,28 @@ export class UserController extends BaseWithoutAuthController {
   @Post('/create-avatar')
   async createAvatar(@Body() createAvatarDto: CreateAvatarDto) {
     return this.userService.createAvatar(createAvatarDto);
+  }
+
+  @ApiCreatedResponse({
+    type: User,
+    description: 'get user avatar by id',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard)
+  @Get('/avatar/:id')
+  async getAvatarUrl(@Param('id') id): Promise<Partial<User> | void> {
+    return this.userService.getAvatarUrl(id);
+  }
+
+  @ApiCreatedResponse({
+    type: User,
+    description: 'get user by email',
+  })
+  @ApiParam({ name: 'email', type: 'string' })
+  @UseGuards(AdminAuthGuard)
+  @Get('/email/:email')
+  async getUserByEmail(@Param('email') email): Promise<User | void> {
+    return this.userService.getUserByEmail(email);
   }
 
   @ApiCreatedResponse({
@@ -93,25 +117,37 @@ export class UserController extends BaseWithoutAuthController {
     description: 'get events by user id',
   })
   @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @UseGuards(AuthGuard)
   @Get('events/:id')
-  async getUserEvents(@Param('id', ParseIntPipe) id: number): Promise<Event[]> {
+  async getUserEvents(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getEventsByUserId(id);
   }
 
   @ApiCreatedResponse({
     type: Event,
-    description: 'Link a user to a event',
+    description: 'Link a user with role to a event',
   })
   @ApiParam({ name: 'userId and eventId', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
   @Post('linkEvent')
   async bindUserEvent(
     @Res() res,
-    @Body() createUserEventDto: CreateUserEventDto,
+    @Body() { roleId, userId, eventId },
   ): Promise<void | ObjectLiteral> {
+    const req = { roleId, userId, eventId };
     return this.userService
-      .bindUserEvent(createUserEventDto)
+      .bindUserEvent({ req })
       .then(() => res.status(201).send());
+  }
+
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'delete avatar image by user id',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @Delete('removeAvatar/:id')
+  async removeAvatar(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.removeAvatar(id);
   }
 }
