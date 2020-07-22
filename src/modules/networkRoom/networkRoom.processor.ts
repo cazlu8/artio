@@ -21,11 +21,8 @@ export class NetworkRoomProcessor {
   @Process({ name: 'createRooms', concurrency: numCPUs })
   async handleTranscode(job, jobDone) {
     try {
-      const clientsAmount = 7;
+      const clientsAmount = 100;
       const rooms = Math.ceil(clientsAmount / 3.11);
-      let oddCounter = Math.floor((clientsAmount * 0.3) / 3.11);
-      if (clientsAmount % 3 === 0) oddCounter += 1;
-      await this.redisClient.set('oddCounter', oddCounter);
       await this.redisClient.set('clientsAmount', clientsAmount);
       const fn = Array.from(new Array(rooms)).map(() => this.createRoom());
       parallel(fn, () => jobDone(null), 16);

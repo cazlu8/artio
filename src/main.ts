@@ -9,12 +9,22 @@ import * as fastifyRateLimit from 'fastify-rate-limit';
 import * as fastifyHealthCheck from 'fastify-healthcheck';
 import * as fastifyHelmet from 'fastify-helmet';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { WsAdapter } from '@nestjs/platform-ws';
+import { IoAdapter } from '@nestjs/platform-socket.io';
+import * as redisIoAdapter from 'socket.io-redis';
 import * as cluster from 'cluster';
 import * as os from 'os';
 import { AppModule } from './app.module';
 
 const numCPUs = os.cpus().length;
+
+class RedisIoAdapter extends IoAdapter {
+  createIOServer(port: number, options?: any): any {
+    const server = super.createIOServer(port, options);
+    const redisAdapter = redisIoAdapter({ host: 'localhost', port: 6379 });
+    server.adapter(redisAdapter);
+    return server;
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -27,7 +37,7 @@ async function bootstrap() {
   app.enableCors({
     origin: true,
   });
-  app.useWebSocketAdapter(new WsAdapter(app));
+  app.useWebSocketAdapter(new RedisIoAdapter(app));
   app.enableShutdownHooks();
   app.register(fastifyHealthCheck);
   app.useGlobalPipes(

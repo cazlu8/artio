@@ -20,7 +20,7 @@ export class NetworkRoomService {
 
   constructor(
     @InjectRepository(NetworkRoom)
-    private readonly repository: Repository<NetworkRoom>,
+    private readonly repository?: Repository<NetworkRoom>,
   ) {
     const { clientConfig, twilioConfig } = config();
     this.clientConfig = clientConfig();
@@ -53,14 +53,14 @@ export class NetworkRoomService {
       if (roomParticipant.length < 4) {
         return Promise.resolve({ sid: roomSid, uniqueName: roomUniqueName });
       }
-      return Promise.reject();
+      return Promise.reject(new Error('no room available'));
     });
   }
 
   async getRoom(rooms): Promise<any> {
-    const participants = rooms.map(room =>
-      this.findAvailableRoom(room.sid, room.uniqueName),
-    );
+    const participants = rooms
+      //   .filter(room => room.uniqueName !== currentRoom)
+      .map(room => this.findAvailableRoom(room.sid, room.uniqueName));
     return await any(participants);
   }
 
@@ -71,7 +71,7 @@ export class NetworkRoomService {
         try {
           return await this.getRoom(rooms);
         } catch (err) {
-          return await this.createRoom();
+          console.log(err);
         }
       });
   }

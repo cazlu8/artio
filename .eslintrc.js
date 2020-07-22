@@ -31,6 +31,7 @@ module.exports = {
     'no-console': 'off',
     'import/named': 'off',
     '@typescript-eslint/no-var-requires': 'off',
-    'no-param-reassign': 'off'
+    'no-param-reassign': 'off',
+    'no-plusplus': 'off'
   },
 };

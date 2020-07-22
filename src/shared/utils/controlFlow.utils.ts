@@ -8,17 +8,17 @@ function parallel(promises, finish, concurrency) {
   else if (concurrency > length) concurrency = length;
 
   function spawn() {
+    function done() {
+      if (++processed === length) return finish();
+      running--, processed++;
+      return spawn();
+    }
+
     while (concurrency > running && length > index) {
       const currentTask = promises[index++];
       Promise.resolve(currentTask.then(done));
       running++;
     }
-  }
-
-  function done() {
-    if (++processed === length) return finish();
-    running--, processed++;
-    spawn();
   }
   spawn();
 }
