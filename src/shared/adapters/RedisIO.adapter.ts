@@ -13,7 +13,7 @@ export default class RedisIoAdapter extends IoAdapter {
   }
 
   createIOServer(port: number, options?: any): any {
-    const server = super.createIOServer(port, options);
+    const server = super.createIOServer(port, { connectTimeout: 10000 });
     const redisAdapter = redisIoAdapter({
       host: this.host,
       port: this.port,
