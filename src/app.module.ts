@@ -7,6 +7,7 @@ import {
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
+import { RedisModule } from 'nestjs-redis';
 import { AuthMiddleware } from './shared/middlewares/auth.middleware';
 import { loadModules } from './modules';
 import * as ormconfig from './ormconfig';
@@ -16,6 +17,11 @@ const modules: DynamicModule[] = loadModules();
 
 @Module({
   imports: [
+    RedisModule.register({
+      host: 'localhost',
+      port: 6379,
+      db: 0,
+    }) as DynamicModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       useFactory: async () => ormconfig as any,

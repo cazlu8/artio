@@ -6,7 +6,6 @@ import * as twilio from 'twilio';
 import * as any from 'promise.any';
 import * as util from 'util';
 import { config } from '../../shared/config/Twilio';
-import { NetworkRoom } from './networkRoom.entity';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 
 const { AccessToken } = twilio.jwt;
@@ -18,10 +17,7 @@ export class NetworkRoomService {
 
   private readonly twilioConfig: any;
 
-  constructor(
-    @InjectRepository(NetworkRoom)
-    private readonly repository: Repository<NetworkRoom>,
-  ) {
+  constructor() {
     const { clientConfig, twilioConfig } = config();
     this.clientConfig = clientConfig();
     this.twilioConfig = twilioConfig();
@@ -53,14 +49,14 @@ export class NetworkRoomService {
       if (roomParticipant.length < 4) {
         return Promise.resolve({ sid: roomSid, uniqueName: roomUniqueName });
       }
-      return Promise.reject();
+      return Promise.reject(new Error('no room available'));
     });
   }
 
   async getRoom(rooms): Promise<any> {
-    const participants = rooms.map(room =>
-      this.findAvailableRoom(room.sid, room.uniqueName),
-    );
+    const participants = rooms
+      //   .filter(room => room.uniqueName !== currentRoom)
+      .map(room => this.findAvailableRoom(room.sid, room.uniqueName));
     return await any(participants);
   }
 
@@ -71,7 +67,7 @@ export class NetworkRoomService {
         try {
           return await this.getRoom(rooms);
         } catch (err) {
-          return await this.createRoom();
+          console.log(err);
         }
       });
   }

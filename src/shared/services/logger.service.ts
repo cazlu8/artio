@@ -19,15 +19,15 @@ export class LoggerService {
     this.winstonLogger = logger;
   }
 
-  log(level = 'info', error, request) {
+  log(level = 'info', error, request: any = {}) {
     this.winstonLogger.log(
       level,
-      `Requesting ${request.raw.method} ${request.raw.originalUrl}`,
+      `Requesting ${request?.raw?.method} ${request?.raw?.originalUrl}`,
       {
         tags: 'http',
         additionalInfo: {
-          body: request.body,
-          headers: request.headers,
+          body: request?.body,
+          headers: request?.headers,
           error,
         },
       },

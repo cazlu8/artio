@@ -10,11 +10,12 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: root
+
   # REDIS DB
-#  redis:
-#    container_name: redis
-#    image: redis
-#    restart: unless-stopped
-#    # Command: redis-server --requirepass RedisArtio2020!
-#    ports:
-#      - "6379:6379"
+  redis:
+    container_name: redis
+    image: redis
+    restart: unless-stopped
+   # Command: redis-server --requirepass RedisArtio2020!
+    ports:
+      - "6379:6379"
