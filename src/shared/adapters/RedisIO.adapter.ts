@@ -6,10 +6,10 @@ export default class RedisIoAdapter extends IoAdapter {
 
   private readonly port: number;
 
-  constructor(app: any) {
+  constructor(app: any, host: string, port: number) {
     super(app);
-    this.host = process.env.REDIS_HOST;
-    this.port = +process.env.REDIS_PORT;
+    this.host = host;
+    this.port = port;
   }
 
   createIOServer(port: number, options?: any): any {

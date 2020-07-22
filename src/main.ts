@@ -27,7 +27,9 @@ async function bootstrap() {
   app.enableCors({
     origin: true,
   });
-  app.useWebSocketAdapter(new RedisIoAdapter(app));
+  app.useWebSocketAdapter(
+    new RedisIoAdapter(app, process.env.REDIS_HOST, +process.env.REDIS_PORT),
+  );
   app.enableShutdownHooks();
   app.register(fastifyHealthCheck);
   app.useGlobalPipes(
