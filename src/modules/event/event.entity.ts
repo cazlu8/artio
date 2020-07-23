@@ -92,6 +92,10 @@ export class Event {
   endDate: Date;
 
   @ApiProperty()
+  @Column('varchar', { length: 60, nullable: false, name: 'timezone' })
+  timezone: string;
+
+  @ApiProperty()
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
