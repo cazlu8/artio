@@ -67,6 +67,10 @@ export default class CreateEventDTO {
   endDate: Date;
 
   @ApiProperty()
+  @IsNotEmpty()
+  timezone: string;
+
+  @ApiProperty()
   @IsOptional()
   liveUrl?: string;
 

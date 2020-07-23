@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export default class UpdateEventDTO {
   @ApiProperty()
@@ -65,6 +65,10 @@ export default class UpdateEventDTO {
   @ApiProperty()
   @IsOptional()
   endDate?: Date;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  timezone?: string;
 
   @ApiProperty()
   @IsOptional()
