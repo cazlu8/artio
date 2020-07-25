@@ -17,6 +17,7 @@ export default class RedisIoAdapter extends IoAdapter {
     const redisAdapter = redisIoAdapter({
       host: this.host,
       port: this.port,
+      requestsTimeout: 10000,
     });
     server.adapter(redisAdapter);
     return server;

@@ -22,26 +22,28 @@ export class NetworkRoomProcessor {
   }
 
   @Process({ name: 'createRooms', concurrency: numCPUs })
-  async handleTranscode(job, jobDone) {
+  async createRooms(job, jobDone) {
     try {
       const { eventId } = job.data;
-      const clientsAmount = await this.userEventsRepository.count({ eventId });
-      const rooms = Math.ceil(clientsAmount / 3.11);
-      await this.redisClient.set('clientsAmount', clientsAmount);
-      const fn = Array.from(new Array(rooms)).map(() => this.createRoom());
-      parallel(fn, () => jobDone(null), 16);
+      const clientsAmount =
+        (await this.userEventsRepository.count({ eventId })) * 0.2;
+      const rooms = Math.ceil(clientsAmount / 3);
+      const createRoomFns = Array.from(new Array(rooms)).map(() =>
+        this.createRoom(eventId),
+      );
+      parallel(createRoomFns, () => jobDone(null), 8);
     } catch (err) {
-      console.log(err);
+      throw new Error(err);
     }
   }
 
-  async createRoom() {
+  async createRoom(eventId: number) {
     return this.service
       .createRoom()
       .then(
         async ({ uniqueName }) =>
-          await this.redisClient.rpush('rooms', uniqueName),
+          await this.redisClient.rpush(`event-${eventId}:rooms`, uniqueName),
       )
-      .catch(() => Promise.resolve(this.createRoom()));
+      .catch(() => Promise.resolve(this.createRoom(eventId)));
   }
 }
