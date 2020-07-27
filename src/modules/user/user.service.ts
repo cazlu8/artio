@@ -176,10 +176,11 @@ export class UserService {
   }
 
   async bindUserEvent({ req }): Promise<boolean> {
+    const { roleId, userId, eventId } = req;
     const bindFunctions: any = [
-      this.verifyUserRole(req.roleId),
-      this.linkUserToEvent(req.userId, req.eventId).then(id =>
-        this.linkUserAndRoleToEvent(id, req.roleId, req.userId, req.eventId),
+      this.verifyUserRole(roleId),
+      this.linkUserToEvent(userId, eventId).then(id =>
+        this.linkUserAndRoleToEvent(id, roleId, userId, eventId),
       ),
     ];
     await Promise.all(bindFunctions);
@@ -187,13 +188,10 @@ export class UserService {
   }
 
   async bindUserEventCode({ req }): Promise<ObjectLiteral | void> {
-    this.getUserIdByEmail(req.userEmail).then(userId =>
-      this.linkUserAndCodeToEvent(
-        req.ticketCode,
-        userId.id,
-        req.eventId,
-      ).then(id =>
-        this.linkUserAndRoleToEvent(id, req.roleId, userId.id, req.eventId),
+    const { ticketCode, eventId, userEmail } = req;
+    this.getUserIdByEmail(userEmail).then(userId =>
+      this.linkUserAndCodeToEvent(ticketCode, userId.id, eventId).then(id =>
+        this.linkUserAndRoleToEvent(id, 2, userId.id, eventId),
       ),
     );
   }
