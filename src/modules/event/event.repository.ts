@@ -112,7 +112,7 @@ export class EventRepository extends Repository<Event> {
           .select('"eventId"')
           .from('user_events', 'userEvents')
           .where(
-            '"userId" = :userId and event.start_date <= now() and event.end_date >= now()',
+            '"userId" = :userId and event.start_date <= now() and event.end_date >= now() and redeemed = true',
           )
           .getQuery();
         return `id IN ${subQuery}`;
@@ -132,7 +132,7 @@ export class EventRepository extends Repository<Event> {
           .select('"eventId"')
           .from('user_events', 'userEvents')
           .where(
-            '"userId" = :userId and event.start_date > now() and event.end_date > now()',
+            '"userId" = :userId and event.start_date > now() and event.end_date > now() and redeemed = true',
           )
           .skip(skip)
           .take(10)
@@ -154,7 +154,7 @@ export class EventRepository extends Repository<Event> {
           .select('"eventId"')
           .from('user_events', 'userEvents')
           .where(
-            '"userId" = :userId and event.start_date < now() and event.end_date < now()',
+            '"userId" = :userId and event.start_date < now() and event.end_date < now() and redeemed = true',
           )
           .skip(skip)
           .take(10)
