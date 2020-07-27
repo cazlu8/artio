@@ -4,7 +4,7 @@ import { uuid } from 'uuidv4';
 import * as twilio from 'twilio';
 import * as any from 'promise.any';
 import * as util from 'util';
-import { config } from '../../shared/config/Twilio';
+import { config } from '../../shared/config/twilio';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 
 const { AccessToken } = twilio.jwt;

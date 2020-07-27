@@ -26,14 +26,13 @@ export class NetworkRoomProcessor {
     try {
       const { eventId, isRepeat } = job.data;
       const clientsAmount =
-        (await this.userEventsRepository.count({ eventId })) * isRepeat
-          ? 0.2
-          : 0.5;
+        (await this.userEventsRepository.count({ eventId })) *
+        (isRepeat ? 0.2 : 0.5);
       const rooms = Math.ceil(clientsAmount / 3);
       const createRoomFns = Array.from(new Array(rooms)).map(() =>
         this.createRoom(eventId),
       );
-      parallel(createRoomFns, () => jobDone(null), 8);
+      parallel(createRoomFns, () => jobDone(null), 32);
     } catch (err) {
       throw new Error(err);
     }

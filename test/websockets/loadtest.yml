@@ -5,9 +5,9 @@ config:
   ensure:
     maxErrorRate: 1
   phases:
-    - duration: 1
+    - duration: 5
       arrivalRate: 1000
-      rampTo: 2000
+      rampTo: 4050
       name: "Warming up"
 
 scenarios:

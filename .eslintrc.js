@@ -13,7 +13,7 @@ module.exports = {
     'airbnb-typescript-prettier',
     'prettier/@typescript-eslint',
   ],
-  ignorePatterns : ["src/migrations"],
+  ignorePatterns: ['src/migrations'],
   root: true,
   env: {
     node: true,
@@ -23,6 +23,7 @@ module.exports = {
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-unused-expressions': 'off',
     'import/prefer-default-export': 'off',
     'no-useless-constructor': 'off',
     'class-methods-use-this': 'off',
@@ -32,6 +33,7 @@ module.exports = {
     'import/named': 'off',
     '@typescript-eslint/no-var-requires': 'off',
     'no-param-reassign': 'off',
-    'no-plusplus': 'off'
+    'no-plusplus': 'off',
+    'no-unused-expressions': 'off',
   },
 };
