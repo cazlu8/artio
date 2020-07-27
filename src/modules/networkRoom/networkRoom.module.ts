@@ -1,29 +1,20 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { BullModule } from '@nestjs/bull';
-import { ConfigService } from '@nestjs/config';
 import { NetworkRoomService } from './networkRoom.service';
 import { LoggerService } from '../../shared/services/logger.service';
 import { NetworkRoomGateway } from './networkRoom.gateway';
 import { NetworkRoomProcessor } from './networkRoom.processor';
 import { UserEvents } from '../userEvents/userEvents.entity';
+import NetworkRoomQueue from './networkRoom.queue';
 
 @Module({
-  imports: [
-    BullModule.registerQueueAsync({
-      name: 'networkRoom',
-      useFactory: async (configService: ConfigService) => ({
-        redis: configService.get('redis'),
-      }),
-      inject: [ConfigService],
-    }),
-    TypeOrmModule.forFeature([UserEvents]),
-  ],
+  imports: [NetworkRoomQueue, TypeOrmModule.forFeature([UserEvents])],
   providers: [
     NetworkRoomService,
     LoggerService,
     NetworkRoomGateway,
     NetworkRoomProcessor,
   ],
+  exports: [NetworkRoomService, NetworkRoomGateway, NetworkRoomQueue],
 })
 export class NetworkRoomModule {}

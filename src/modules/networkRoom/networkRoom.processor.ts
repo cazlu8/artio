@@ -39,23 +39,6 @@ export class NetworkRoomProcessor {
     }
   }
 
-  @Process({ name: 'clearIntermissionData', concurrency: numCPUs })
-  async clearIntermissionData(job, jobDone) {
-    try {
-      const { eventId } = job.data;
-      const removeAllKeys = [
-        `event-${eventId}:lastRoom`,
-        `event-${eventId}:rooms`,
-        `event-${eventId}:clientsNetworkRoomCounter`,
-        `event-${eventId}`,
-      ].map(key => this.redisClient.del(key));
-      await Promise.all(removeAllKeys);
-      jobDone();
-    } catch (error) {
-      catchError(error);
-    }
-  }
-
   async createRoom(eventId: number) {
     return this.service
       .createRoom()

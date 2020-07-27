@@ -4,8 +4,10 @@ import { uuid } from 'uuidv4';
 import * as twilio from 'twilio';
 import * as any from 'promise.any';
 import * as util from 'util';
+import { RedisService } from 'nestjs-redis';
 import { config } from '../../shared/config/twilio';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
+import { catchError } from '../../shared/utils/errorHandler.utils';
 
 const { AccessToken } = twilio.jwt;
 const { VideoGrant } = AccessToken;
@@ -16,10 +18,13 @@ export class NetworkRoomService {
 
   private readonly twilioConfig: any;
 
-  constructor() {
+  private redisClient: any;
+
+  constructor(private readonly redisService: RedisService) {
     const { clientConfig, twilioConfig } = config();
     this.clientConfig = clientConfig();
     this.twilioConfig = twilioConfig();
+    this.redisClient = this.redisService.getClient();
   }
 
   private catchError(err) {
@@ -96,31 +101,9 @@ export class NetworkRoomService {
     return token.toJwt();
   }
 
-  killRoom(params: { sid: string }): Promise<string | void> {
-    return this.clientConfig.video
-      .rooms(params.sid)
-      .update({ status: 'completed' })
-      .then(room => room.uniqueName)
-      .catch(this.catchError);
-  }
-
-  listAll() {
-    return this.clientConfig.video.rooms
-      .list({ status: 'in-progress' })
-      .then(async rooms => {
-        return rooms.map(r => {
-          return r.sid;
-        });
-      });
-  }
-
-  killAll() {
-    return this.clientConfig.video.rooms
-      .list({ status: 'in-progress' })
-      .then(async rooms => {
-        return rooms.map(r => {
-          return this.killRoom({ sid: r.sid });
-        });
-      });
+  clearExpiredTwillioRooms(eventId: number): void {
+    setTimeout(async () => {
+      await this.redisClient.del(`event-${eventId}:rooms`).catch(catchError);
+    }, 258000);
   }
 }

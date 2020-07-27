@@ -8,6 +8,8 @@ import { ObjectLiteral, UpdateResult } from 'typeorm';
 import * as AWS from 'aws-sdk';
 import { uuid } from 'uuidv4';
 import * as sharp from 'sharp';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { Event } from './event.entity';
 import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
@@ -20,10 +22,19 @@ import UpdateEventDTO from './dto/event.update.dto';
 import { s3Config } from '../../shared/config/AWS';
 import { CreateHeroImage } from './dto/event.create.heroImage.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
+import { catchError } from '../../shared/utils/errorHandler.utils';
+import { NetworkRoomService } from '../networkRoom/networkRoom.service';
+import { NetworkRoomGateway } from '../networkRoom/networkRoom.gateway';
 
 @Injectable()
 export class EventService {
-  constructor(private readonly repository: EventRepository) {}
+  constructor(
+    private readonly repository: EventRepository,
+    private readonly networkRoomService: NetworkRoomService,
+    @InjectQueue('event') private readonly eventQueue: Queue,
+    @InjectQueue('networkRoom') private readonly networkRoomQueue: Queue,
+    private readonly networkRoomGateway: NetworkRoomGateway,
+  ) {}
 
   create(createEventDTO: CreateEventDTO): Promise<void | ObjectLiteral> {
     return this.repository
@@ -104,12 +115,35 @@ export class EventService {
     return this.paginateEvents(getCount, getEvents, skip);
   }
 
-  async startIntermission(eventId) {
-    return eventId;
+  async startIntermission(eventId: number) {
+    try {
+      await this.networkRoomQueue.add(
+        'createRooms',
+        { eventId },
+        {
+          priority: 1,
+        },
+      );
+      this.networkRoomService.clearExpiredTwillioRooms(eventId);
+      this.networkRoomGateway.server.sockets.emit(`startIntermission`, true);
+    } catch (error) {
+      catchError(error);
+    }
   }
 
-  async finishIntermission(eventId) {
-    return eventId;
+  async finishIntermission(eventId: number) {
+    try {
+      await this.eventQueue.add(
+        'clearIntermissionData',
+        { eventId },
+        {
+          priority: 2,
+        },
+      );
+      this.networkRoomGateway.server.sockets.emit(`endIntermission`, true);
+    } catch (error) {
+      catchError(error);
+    }
   }
 
   async finishLive(eventId) {

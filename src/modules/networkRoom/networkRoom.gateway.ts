@@ -16,11 +16,11 @@ import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 @WebSocketGateway(3030, { transports: ['websocket'] })
 export class NetworkRoomGateway {
   @WebSocketServer()
-  server: any;
+  readonly server: any;
 
   private readonly redisClient: any;
 
-  private redlock: any;
+  private readonly redlock: any;
 
   constructor(
     @InjectQueue('networkRoom') private readonly networkRoomQueue: Queue,
@@ -34,32 +34,6 @@ export class NetworkRoomGateway {
       retryCount: Infinity,
     });
     this.redlock.on('clientError', catchError);
-  }
-
-  @SubscribeMessage('triggerIntermission')
-  async triggerIntermission(socket: any, data: { eventId }): Promise<void> {
-    try {
-      await this.networkRoomQueue.add('createRooms', data, {
-        priority: 1,
-        removeOnComplete: true,
-      });
-      this.clearExpiredTwillioRooms(data.eventId);
-      this.server.sockets.emit(`startIntermission`, true);
-    } catch (error) {
-      catchError(error);
-    }
-  }
-
-  @SubscribeMessage('endIntermission')
-  async endIntermission(socket: any, data: { eventId }): Promise<void> {
-    try {
-      await this.networkRoomQueue.add('clearIntermissionData', data, {
-        priority: 1,
-        removeOnComplete: true,
-      });
-    } catch (error) {
-      catchError(error);
-    }
   }
 
   @SubscribeMessage('requestAvailableRoom')
@@ -202,20 +176,14 @@ export class NetworkRoomGateway {
         await this.networkRoomQueue.add(
           'createRooms',
           { eventId, isRepeat: true },
-          { priority: 1, removeOnComplete: true },
+          { priority: 1 },
         );
-        this.clearExpiredTwillioRooms(eventId);
+        this.service.clearExpiredTwillioRooms(eventId);
         msleep(500);
       }
     } catch (error) {
       catchError(error);
     }
-  }
-
-  clearExpiredTwillioRooms(eventId: number): void {
-    setTimeout(async () => {
-      await this.redisClient.del(`event-${eventId}:rooms`).catch(catchError);
-    }, 258000);
   }
 
   leaveRoom(socket: any): void {
