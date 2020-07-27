@@ -10,6 +10,7 @@ function parallel(promises, finish, concurrency) {
   function spawn() {
     function done() {
       if (++processed === length) return finish();
+      // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions,no-sequences
       running--, processed++;
       return spawn();
     }
