@@ -11,6 +11,7 @@ import { msleep } from 'sleep';
 import { LoggerService } from '../../shared/services/logger.service';
 import { NetworkRoomService } from './networkRoom.service';
 import { catchError } from '../../shared/utils/errorHandler.utils';
+import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 
 @WebSocketGateway(3030, { transports: ['websocket'] })
 export class NetworkRoomGateway {
@@ -49,6 +50,18 @@ export class NetworkRoomGateway {
     }
   }
 
+  @SubscribeMessage('endIntermission')
+  async endIntermission(socket: any, data: { eventId }): Promise<void> {
+    try {
+      await this.networkRoomQueue.add('clearIntermissionData', data, {
+        priority: 1,
+        removeOnComplete: true,
+      });
+    } catch (error) {
+      catchError(error);
+    }
+  }
+
   @SubscribeMessage('requestAvailableRoom')
   async requestAvailableRoom(
     socket: any,
@@ -72,7 +85,7 @@ export class NetworkRoomGateway {
     }
   }
 
-  @SubscribeMessage('requestAvailableRoom')
+  @SubscribeMessage('switchRoom')
   async switchRoom(socket: any, data: { currentRoom: string }): Promise<void> {
     try {
       const { currentRoom } = data;
@@ -90,6 +103,7 @@ export class NetworkRoomGateway {
   @SubscribeMessage('requestRoom')
   async requestRoom(socket: any, data: { eventId: number }): Promise<void> {
     try {
+      if (this.preventRepeatedSocket(socket)) return;
       msleep(50);
       const { eventId } = data;
       this.redlock
@@ -104,6 +118,16 @@ export class NetworkRoomGateway {
           await this.send(+counter, eventId);
           return lock.unlock().catch(catchError);
         });
+    } catch (error) {
+      catchError(error);
+    }
+  }
+
+  @SubscribeMessage('requestRoomToken')
+  requestRoomToken(socket: any, data: NetworkRoomTokenDto): void {
+    try {
+      const token = this.service.videoToken(data);
+      socket.emit('roomToken', token);
     } catch (error) {
       catchError(error);
     }
@@ -201,5 +225,10 @@ export class NetworkRoomGateway {
     } catch (error) {
       catchError(error);
     }
+  }
+
+  preventRepeatedSocket(socket: any) {
+    const { rooms } = socket;
+    return rooms === 2;
   }
 }
