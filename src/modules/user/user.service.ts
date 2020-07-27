@@ -186,6 +186,26 @@ export class UserService {
     return true;
   }
 
+  async bindUserEventCode({ req }): Promise<boolean> {
+    const bindCodeFunctions: any = [
+      this.linkUserAndCodeToEvent(
+        req.ticketCode,
+        req.userId,
+        req.eventId,
+      ).then(id =>
+        this.linkUserAndRoleToEvent(id, req.roleId, req.userId, req.eventId),
+      ),
+    ];
+    await Promise.all(bindCodeFunctions);
+    return true;
+  }
+
+  redeemEventCode({ req }): Promise<UpdateResult> {
+    return this.repository
+      .checkCode(req)
+      .then(id => this.repository.redeemEventCode(id));
+  }
+
   private async verifyUserRole(roleId: number): Promise<boolean> {
     return !!(await this.roleRepository
       .findOneOrFail({
@@ -200,8 +220,20 @@ export class UserService {
 
   private async linkUserToEvent(userId: number, eventId: number): Promise<any> {
     return this.userEventsRepository
-      .save({ userId, eventId })
+      .save({ userId, eventId, redeemed: true })
       .then(({ id }) => id);
+  }
+
+  private async linkUserAndCodeToEvent(
+    ticketCode: string,
+    userId: number,
+    eventId: number,
+  ): Promise<any> {
+    return this.userEventsRepository.save({
+      ticketCode,
+      userId,
+      eventId,
+    });
   }
 
   private async linkUserAndRoleToEvent(

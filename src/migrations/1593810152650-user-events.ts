@@ -5,7 +5,7 @@ export class userevents1593810152650 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE TABLE "user_events" ("id" SERIAL NOT NULL, "userId" integer NOT NULL, "eventId" integer NOT NULL, CONSTRAINT "PK_e16aa6bf768bd6b1439cec5c718" PRIMARY KEY ("id", "userId", "eventId"))`,
+      `CREATE TABLE "user_events" ("id" SERIAL NOT NULL, "userId" integer NOT NULL, "eventId" integer NOT NULL,"ticketCode" character varying(255), "redeemed" boolean NOT NULL DEFAULT false, CONSTRAINT "PK_e16aa6bf768bd6b1439cec5c718" PRIMARY KEY ("id", "userId", "eventId"))`,
     );
     await queryRunner.query(
       `ALTER TABLE "user_events" ADD CONSTRAINT "FK_cdc20a262881171de056ae2e5aa" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,

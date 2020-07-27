@@ -4,6 +4,7 @@ import {
   OneToOne,
   JoinColumn,
   PrimaryGeneratedColumn,
+  Column,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Event } from '../event/event.entity';
@@ -22,6 +23,14 @@ export class UserEvents {
   @ApiProperty()
   @PrimaryColumn({ type: 'int', name: 'eventId', primary: true })
   eventId: number;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'ticketCode' })
+  ticketCode: string;
+
+  @ApiProperty()
+  @Column('boolean', { default: false, name: 'redeemed' })
+  redeemed?: boolean;
 
   @OneToOne(() => Event)
   @JoinColumn()
