@@ -188,7 +188,8 @@ export class UserService {
   }
 
   async bindUserEventCode({ req }): Promise<ObjectLiteral | void> {
-    const { ticketCode, eventId, userEmail } = req;
+    const { eventId, userEmail } = req;
+    const ticketCode: string = uuid();
     this.getUserIdByEmail(userEmail).then(userId =>
       this.linkUserAndCodeToEvent(ticketCode, userId.id, eventId).then(id =>
         this.linkUserAndRoleToEvent(id, 2, userId.id, eventId),
