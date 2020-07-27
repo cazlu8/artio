@@ -50,6 +50,18 @@ export class NetworkRoomGateway {
     }
   }
 
+  @SubscribeMessage('endIntermission')
+  async endIntermission(socket: any, data: { eventId }): Promise<void> {
+    try {
+      await this.networkRoomQueue.add('clearIntermissionData', data, {
+        priority: 1,
+        removeOnComplete: true,
+      });
+    } catch (error) {
+      catchError(error);
+    }
+  }
+
   @SubscribeMessage('requestAvailableRoom')
   async requestAvailableRoom(
     socket: any,
