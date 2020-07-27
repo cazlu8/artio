@@ -149,12 +149,13 @@ export class UserController extends BaseWithoutAuthController {
   @Post('linkEventCode')
   async bindUserEventCode(
     @Res() res,
-    @Body() { roleId, ticketCode, userId, eventId },
+    @Body() { roleId, ticketCode, userEmail, eventId },
   ): Promise<void | ObjectLiteral> {
-    const req = { roleId, ticketCode, userId, eventId };
+    const req = { roleId, ticketCode, userEmail, eventId };
     return this.userService
       .bindUserEventCode({ req })
-      .then(() => res.status(201).send());
+      .then(() => res.status(201).send())
+      .catch(() => res.status(404).send());
   }
 
   @ApiCreatedResponse({

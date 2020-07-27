@@ -186,18 +186,16 @@ export class UserService {
     return true;
   }
 
-  async bindUserEventCode({ req }): Promise<boolean> {
-    const bindCodeFunctions: any = [
+  async bindUserEventCode({ req }): Promise<ObjectLiteral | void> {
+    this.getUserIdByEmail(req.userEmail).then(userId =>
       this.linkUserAndCodeToEvent(
         req.ticketCode,
-        req.userId,
+        userId.id,
         req.eventId,
       ).then(id =>
-        this.linkUserAndRoleToEvent(id, req.roleId, req.userId, req.eventId),
+        this.linkUserAndRoleToEvent(id, req.roleId, userId.id, req.eventId),
       ),
-    ];
-    await Promise.all(bindCodeFunctions);
-    return true;
+    );
   }
 
   redeemEventCode({ req }): Promise<UpdateResult> {
@@ -248,6 +246,18 @@ export class UserService {
       userEventsUserId: userId,
       userEventsEventId: eventId,
     });
+  }
+
+  private getUserIdByEmail(email): Promise<User> {
+    return this.repository
+      .findOneOrFail({
+        select: ['id'],
+        where: { email },
+      })
+      .catch(error => {
+        if (error.name === 'EntityNotFound') throw new NotFoundException();
+        throw new InternalServerErrorException(error);
+      });
   }
 
   private update(id: number, userData: Partial<User>): Promise<UpdateResult> {
