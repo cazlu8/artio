@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
 import { ConfigService } from '@nestjs/config';
-import { NetworkRoomController } from './networkRoom.controller';
 import { NetworkRoomService } from './networkRoom.service';
 import { LoggerService } from '../../shared/services/logger.service';
 import { NetworkRoomGateway } from './networkRoom.gateway';
@@ -20,7 +19,6 @@ import { UserEvents } from '../userEvents/userEvents.entity';
     }),
     TypeOrmModule.forFeature([UserEvents]),
   ],
-  controllers: [NetworkRoomController],
   providers: [
     NetworkRoomService,
     LoggerService,

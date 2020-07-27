@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ObjectLiteral, Repository } from 'typeorm';
+import { ObjectLiteral } from 'typeorm';
 import { uuid } from 'uuidv4';
 import * as twilio from 'twilio';
 import * as any from 'promise.any';
 import * as util from 'util';
-import { config } from '../../shared/config/Twilio';
+import { config } from '../../shared/config/twilio';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 
 const { AccessToken } = twilio.jwt;
@@ -41,33 +40,49 @@ export class NetworkRoomService {
       .catch(this.catchError);
   }
 
-  findAvailableRoom(roomSid, roomUniqueName) {
+  findAvailableRoom(
+    roomSid: string,
+    roomUniqueName,
+    roomLength = 3,
+  ): Promise<{ uniqueName: string }> {
     const participants: any = util.promisify(
       this.clientConfig.video.rooms(roomSid).participants,
     );
-    return participants.list({ status: 'connected' }).then(roomParticipant => {
-      if (roomParticipant.length < 4) {
-        return Promise.resolve({ sid: roomSid, uniqueName: roomUniqueName });
+    return participants.list({ status: 'connected' }).then(roomParticipants => {
+      if (
+        roomParticipants.length > 1 &&
+        roomParticipants.length <= roomLength
+      ) {
+        return Promise.resolve({ uniqueName: roomUniqueName });
       }
       return Promise.reject(new Error('no room available'));
     });
   }
 
-  async getRoom(rooms): Promise<any> {
+  async getRoom(
+    rooms,
+    currentRoom = '',
+    roomLength?: number,
+  ): Promise<{ uniqueName: string }> {
     const participants = rooms
-      //   .filter(room => room.uniqueName !== currentRoom)
-      .map(room => this.findAvailableRoom(room.sid, room.uniqueName));
+      .filter(room => room.uniqueName !== currentRoom)
+      .map(room =>
+        this.findAvailableRoom(room.sid, room.uniqueName, roomLength),
+      );
     return await any(participants);
   }
 
-  room(): Promise<ObjectLiteral | void> {
+  getAvailableRoom(
+    currentRoom?: string,
+    roomLength?: number,
+  ): Promise<{ uniqueName: string }> {
     return this.clientConfig.video.rooms
       .list({ status: 'in-progress' })
       .then(async rooms => {
         try {
-          return await this.getRoom(rooms);
+          return await this.getRoom(rooms, currentRoom, roomLength);
         } catch (err) {
-          console.log(err);
+          throw new Error(err);
         }
       });
   }
