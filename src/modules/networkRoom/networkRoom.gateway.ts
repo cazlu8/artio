@@ -61,12 +61,12 @@ export class NetworkRoomGateway {
         `event-${eventId}:clientsNetworkRoomCounter`,
       );
       const getAvailableRoom = this.service.getAvailableRoom();
-      await Promise.all([getAvailableRoom, decreaseCounter]).then(
-        ([availableRoom]) => {
-          if (availableRoom) socket.emit(`AvailableRoom`, availableRoom);
-          else socket.emit(`AvailableRoom`, false);
-        },
-      );
+      const [availableRoom] = await Promise.all([
+        getAvailableRoom,
+        decreaseCounter,
+      ]);
+      if (availableRoom) socket.emit(`AvailableRoom`, availableRoom);
+      else socket.emit(`AvailableRoom`, false);
     } catch (error) {
       catchError(error);
     }
@@ -97,9 +97,11 @@ export class NetworkRoomGateway {
         .then(async lock => {
           const incrementCounter = this.incrementCounter(eventId);
           const bindSocketToRoom = this.bindSocketToRoom(socket, eventId);
-          await Promise.all([incrementCounter, bindSocketToRoom]).then(
-            async ([counter]) => await this.send(+counter, eventId),
-          );
+          const [counter] = await Promise.all([
+            incrementCounter,
+            bindSocketToRoom,
+          ]);
+          await this.send(+counter, eventId);
           return lock.unlock().catch(catchError);
         });
     } catch (error) {
@@ -132,16 +134,13 @@ export class NetworkRoomGateway {
       const incrementLastRoom = this.redisClient.incr(
         `event-${eventId}:lastRoom`,
       );
-      await Promise.all([
+      const [lastRoom, newTwillioRoom] = await Promise.all([
         getLastRoom,
         getNewTwillioRoom,
         incrementLastRoom,
-      ]).then(([lastRoom, newTwillioRoom]) => {
-        this.server
-          .to(`event-${eventId}:room-${+lastRoom}`)
-          .emit(newTwillioRoom);
-        console.log(`${newTwillioRoom}/${process.pid}/${+lastRoom}`);
-      });
+      ]);
+      this.server.to(`event-${eventId}:room-${+lastRoom}`).emit(newTwillioRoom);
+      console.log(`${newTwillioRoom}/${process.pid}/${+lastRoom}`);
     } catch (error) {
       catchError(error);
     }
