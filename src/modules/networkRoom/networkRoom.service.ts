@@ -48,8 +48,11 @@ export class NetworkRoomService {
     const participants: any = util.promisify(
       this.clientConfig.video.rooms(roomSid).participants,
     );
-    return participants.list({ status: 'connected' }).then(roomParticipant => {
-      if (roomParticipant.length === roomLength) {
+    return participants.list({ status: 'connected' }).then(roomParticipants => {
+      if (
+        roomParticipants.length > 1 &&
+        roomParticipants.length <= roomLength
+      ) {
         return Promise.resolve({ uniqueName: roomUniqueName });
       }
       return Promise.reject(new Error('no room available'));

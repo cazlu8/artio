@@ -39,7 +39,7 @@ export class NetworkRoomGateway {
 
   @SubscribeMessage('triggerIntermission')
   async triggerIntermission(socket: any, data: { eventId }) {
-    await this.networkRoomQueue.add('createRooms', data);
+    await this.networkRoomQueue.add('createRooms', data, { priority: 1 });
     this.clearExpiredTwillioRooms(data.eventId);
     this.server.sockets.emit(`triggerIntermission`, true);
   }
@@ -133,7 +133,11 @@ export class NetworkRoomGateway {
       `event-${eventId}:rooms`,
     ));
     if (roomsLength < 4) {
-      await this.networkRoomQueue.add('createRooms', { eventId });
+      await this.networkRoomQueue.add(
+        'createRooms',
+        { eventId, isRepeat: true },
+        { priority: 1 },
+      );
       this.clearExpiredTwillioRooms(eventId);
       msleep(1000);
     }
@@ -142,7 +146,7 @@ export class NetworkRoomGateway {
   clearExpiredTwillioRooms(eventId: number): void {
     setTimeout(async () => {
       await this.redisClient.del(`event-${eventId}:rooms`);
-    }, 240000);
+    }, 258000);
   }
 
   leaveRoom(socket: any): void {

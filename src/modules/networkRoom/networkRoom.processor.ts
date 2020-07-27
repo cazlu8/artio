@@ -24,9 +24,11 @@ export class NetworkRoomProcessor {
   @Process({ name: 'createRooms', concurrency: numCPUs })
   async createRooms(job, jobDone) {
     try {
-      const { eventId } = job.data;
+      const { eventId, isRepeat } = job.data;
       const clientsAmount =
-        (await this.userEventsRepository.count({ eventId })) * 0.2;
+        (await this.userEventsRepository.count({ eventId })) * isRepeat
+          ? 0.2
+          : 0.5;
       const rooms = Math.ceil(clientsAmount / 3);
       const createRoomFns = Array.from(new Array(rooms)).map(() =>
         this.createRoom(eventId),
