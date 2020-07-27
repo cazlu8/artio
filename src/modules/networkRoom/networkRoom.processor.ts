@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { NetworkRoomService } from './networkRoom.service';
 import { parallel } from '../../shared/utils/controlFlow.utils';
 import { UserEvents } from '../userEvents/userEvents.entity';
+import { catchError } from '../../shared/utils/errorHandler.utils';
 
 const numCPUs = require('os').cpus().length;
 
@@ -33,8 +34,25 @@ export class NetworkRoomProcessor {
         this.createRoom(eventId),
       );
       parallel(createRoomFns, () => jobDone(null), 32);
-    } catch (err) {
-      throw new Error(err);
+    } catch (error) {
+      catchError(error);
+    }
+  }
+
+  @Process({ name: 'clearIntermissionData', concurrency: numCPUs })
+  async clearIntermissionData(job, jobDone) {
+    try {
+      const { eventId } = job.data;
+      const removeAllKeys = [
+        `event-${eventId}:lastRoom`,
+        `event-${eventId}:rooms`,
+        `event-${eventId}:clientsNetworkRoomCounter`,
+        `event-${eventId}`,
+      ].map(key => this.redisClient.del(key));
+      await Promise.all(removeAllKeys);
+      jobDone();
+    } catch (error) {
+      catchError(error);
     }
   }
 
