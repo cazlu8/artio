@@ -11,6 +11,10 @@ import { SponsorTier } from '../enums/sponsor.tier.enum';
 export class CreateSponsorDto {
   @ApiProperty()
   @IsNotEmpty()
+  eventId: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
   name?: string;
 
   @IsUrl()
@@ -55,6 +59,7 @@ export class CreateSponsorDto {
   @ApiProperty()
   url360?: string;
 
+  @IsUrl()
   @ApiProperty()
   @IsOptional()
   btnLink?: string;

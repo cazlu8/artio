@@ -3,10 +3,11 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { ObjectLiteral, UpdateResult } from 'typeorm';
+import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
 import * as sharp from 'sharp';
 import * as AWS from 'aws-sdk';
 import { uuid } from 'uuidv4';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Sponsor } from './sponsor.entity';
 import { CreateSponsorDto } from './dto/sponsor.create.dto';
 import { UpdateSponsorDto } from './dto/sponsor.update.dto';
@@ -15,10 +16,15 @@ import { CreateLogoDto } from './dto/sponsor.create.logo.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
 import { SponsorRepository } from './sponsor.repository';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
+import { EventSponsors } from '../eventSponsors/eventSponsors.entity';
 
 @Injectable()
 export class SponsorService {
-  constructor(private readonly repository: SponsorRepository) {}
+  constructor(
+    private readonly repository: SponsorRepository,
+    @InjectRepository(EventSponsors)
+    private readonly eventSponsorRepository: Repository<EventSponsors>,
+  ) {}
 
   findOne(guid: string): Promise<Partial<Sponsor> | void> {
     return this.repository.findOneOrFail({ guid }).catch(error => {
@@ -27,7 +33,7 @@ export class SponsorService {
     });
   }
 
-  updateUserInfo(
+  updateSponsorInfo(
     id: number,
     updateSponsorDto: UpdateSponsorDto,
   ): Promise<UpdateResult> {
@@ -37,23 +43,29 @@ export class SponsorService {
   create(createSponsorDto: CreateSponsorDto): Promise<void | ObjectLiteral> {
     return this.repository
       .save(createSponsorDto)
+      .then(id =>
+        this.eventSponsorRepository.save({
+          sponsorId: id.id,
+          eventId: createSponsorDto.eventId,
+        }),
+      )
       .catch(err => validateEntityUserException.check(err));
   }
 
-  async createAvatar(
+  async uploadLogo(
     createLogoDto: CreateLogoDto,
   ): Promise<void | ObjectLiteral> {
     try {
-      const { logo, id: userId } = createLogoDto;
-      const avatarId: string = uuid();
-      const { user, sharpedImage } = await this.processAvatarImage(
+      const { logo, id: sponsorId } = createLogoDto;
+      const logoId: string = uuid();
+      const { entity, sharpedImage } = await this.processLogoImage(
         logo,
-        userId,
-        avatarId,
+        sponsorId,
+        logoId,
       );
       const params = {
-        Bucket: process.env.S3_BUCKET_AVATAR,
-        Key: `${avatarId}.png`,
+        Bucket: process.env.S3_BUCKET_SPONSOR,
+        Key: `${logoId}.png`,
         Body: sharpedImage,
         ACL: 'private',
         ContentEncoding: 'base64',
@@ -62,37 +74,37 @@ export class SponsorService {
       const { Bucket } = params;
       const s3 = new AWS.S3(s3Config());
       const functions: any = [
-        ...this.updateAvatarImage(s3, params, userId, avatarId),
-        this.deleteAvatar(user, s3, Bucket),
+        ...this.updateLogoImage(s3, params, sponsorId, logoId),
+        this.deleteLogo(entity, s3, Bucket),
       ];
       await Promise.all(functions);
       return {
-        url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
+        url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${logoId}.png`,
       };
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
   }
 
-  private async processAvatarImage(
-    avatarImgUrl: string,
-    userId: number,
-    avatarId: string,
+  private async processLogoImage(
+    logo: string,
+    sponsorId: number,
+    logoId: string,
   ): Promise<any> {
-    const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
+    const base64Data = Buffer.from(handleBase64(logo), 'base64');
     const sharpedImage = await sharp(base64Data)
       .resize(400, 400)
       .png();
-    const user: any = await this.repository.get({
+    const entity: any = await this.repository.get({
       select: ['logo'],
-      where: { id: userId },
+      where: { id: sponsorId },
     });
-    return { sharpedImage, user, avatarId };
+    return { sharpedImage, entity, logoId };
   }
 
-  private deleteAvatar(user: any, s3: AWS.S3, Bucket: string) {
-    if (user?.avatarImgUrl) {
-      const { avatarImgUrl: formerUrl } = user;
+  private deleteLogo(entity: any, s3: AWS.S3, Bucket: string) {
+    if (entity?.logo) {
+      const { logo: formerUrl } = entity;
       const lastIndex = formerUrl.lastIndexOf('/');
       const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
       return s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
@@ -100,28 +112,28 @@ export class SponsorService {
     return Promise.resolve();
   }
 
-  private updateAvatarImage(
+  private updateLogoImage(
     s3: AWS.S3,
     params: any,
-    userId: number,
-    avatarId: string,
+    sponsorId: number,
+    logoId: string,
   ) {
     return [
       s3.upload(params).promise(),
-      this.update(userId, {
-        logo: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
+      this.update(sponsorId, {
+        logo: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${logoId}.png`,
       }),
     ];
   }
 
-  getAvatarUrl(id): Promise<Partial<Sponsor> | void> {
+  getlogoUrl(id): Promise<Partial<Sponsor> | void> {
     return this.repository.findOne({
       select: ['logo'],
       where: { id },
     });
   }
 
-  getUserByEmail(email): Promise<Sponsor | void> {
+  getSponsorByEmail(email): Promise<Sponsor | void> {
     return this.repository
       .findOneOrFail({
         where: { email },
@@ -132,21 +144,21 @@ export class SponsorService {
       });
   }
 
-  async removeAvatar(id: number) {
-    const user: any = await this.repository.get({
-      select: ['avatarImgUrl'],
+  async removeLogo(id: number) {
+    const entity: any = await this.repository.get({
+      select: ['logo'],
       where: { id },
     });
-    await this.repository.removeAvatarUrl(id);
+    await this.repository.removeLogoUrl(id);
     const s3 = new AWS.S3(s3Config());
-    const Bucket = process.env.S3_BUCKET_AVATAR;
-    await this.deleteAvatar(user, s3, Bucket);
+    const Bucket = process.env.S3_BUCKET_SPONSOR;
+    await this.deleteLogo(entity, s3, Bucket);
   }
 
   private update(
     id: number,
-    userData: Partial<Sponsor>,
+    entityData: Partial<Sponsor>,
   ): Promise<UpdateResult> {
-    return this.repository.update(id, userData);
+    return this.repository.update(id, entityData);
   }
 }

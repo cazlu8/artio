@@ -7,7 +7,7 @@ export class SponsorRepository extends Repository<Sponsor> {
     return this.findOne({ select, where });
   }
 
-  removeAvatarUrl(id: any) {
+  removeLogoUrl(id: any) {
     return this.createQueryBuilder()
       .update(Sponsor)
       .set({ logo: null })
