@@ -29,7 +29,7 @@ export class Sponsor {
   banner?: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: false, name: 'logo' })
+  @Column('varchar', { length: 255, nullable: true, name: 'logo' })
   logo?: string;
 
   @ApiProperty()
@@ -62,12 +62,16 @@ export class Sponsor {
   inShowRoom?: boolean;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: false, name: 'media_url' })
+  @Column('varchar', { length: 255, nullable: true, name: 'media_url' })
   mediaUrl?: string;
 
   @ApiProperty()
   @Column('varchar', { length: 255, nullable: true, name: 'url_360' })
   url360?: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 60, nullable: true, name: 'text_url360' })
+  textUrl360?: string;
 
   @ApiProperty()
   @Column('varchar', { length: 255, nullable: true, name: 'btn_link' })
