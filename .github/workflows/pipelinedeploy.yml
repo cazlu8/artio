@@ -53,7 +53,7 @@ jobs:
         aws_access_key: ${{secrets.AWS_ACCESS_KEY_ID}}
         aws_secret_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
         application_name: artio-api-staging
-        environment_name: artio-api-staging-dev1
+        environment_name: artio-api-staging-dev
         region: us-west-1
         version_label: "my-app-${{ steps.format-time.outputs.replaced }}"
         deployment_package: deploy.zip
