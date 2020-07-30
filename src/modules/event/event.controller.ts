@@ -271,7 +271,7 @@ export class EventController extends BaseWithoutAuthController {
     type: Event,
     description: 'get the amount of subscribers on events',
   })
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(AuthGuard)
   @Get('/subscribed/:eventId')
   async getSubscribed(
     @Param('eventId', ParseIntPipe) eventId: number,
