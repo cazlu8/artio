@@ -33,29 +33,29 @@ export class SponsorController extends BaseWithoutAuthController {
     description: 'the sponsor has been successfully created',
   })
   @Post()
-  async create(@Body() createUserDto: CreateSponsorDto) {
-    return await this.sponsorService.create(createUserDto);
+  async create(@Body() createSponsorDto: CreateSponsorDto) {
+    return await this.sponsorService.create(createSponsorDto);
   }
 
   @ApiCreatedResponse({
     type: CreateLogoDto,
-    description: 'the avatar has been successfully created',
+    description: 'the logo has been successfully created',
   })
   @UseGuards(AuthGuard)
-  @Post('/create-avatar')
-  async createAvatar(@Body() createLogoDto: CreateLogoDto) {
-    return this.sponsorService.createAvatar(createLogoDto);
+  @Post('/uploadLogo')
+  async uploadLogo(@Body() createLogoDto: CreateLogoDto) {
+    return this.sponsorService.uploadLogo(createLogoDto);
   }
 
   @ApiCreatedResponse({
     type: Sponsor,
-    description: 'get sponsor avatar by id',
+    description: 'get sponsor logo by id',
   })
   @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
-  @Get('/avatar/:id')
-  async getAvatarUrl(@Param('id') id): Promise<Partial<Sponsor> | void> {
-    return this.sponsorService.getAvatarUrl(id);
+  @Get('/logo/:id')
+  async getlogoUrl(@Param('id') id): Promise<Partial<Sponsor> | void> {
+    return this.sponsorService.getlogoUrl(id);
   }
 
   @ApiCreatedResponse({
@@ -66,7 +66,7 @@ export class SponsorController extends BaseWithoutAuthController {
   @UseGuards(AdminAuthGuard)
   @Get('/email/:email')
   async getSponsorByEmail(@Param('email') email): Promise<Sponsor | void> {
-    return this.sponsorService.getUserByEmail(email);
+    return this.sponsorService.getSponsorByEmail(email);
   }
 
   @ApiCreatedResponse({
@@ -82,7 +82,7 @@ export class SponsorController extends BaseWithoutAuthController {
     @Body() updateSponsorDto: UpdateSponsorDto,
   ): Promise<void | UpdateResult> {
     return this.sponsorService
-      .updateUserInfo(id, updateSponsorDto)
+      .updateSponsorInfo(id, updateSponsorDto)
       .then(() => res.status(204).send());
   }
 
@@ -99,12 +99,12 @@ export class SponsorController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Sponsor,
-    description: 'delete avatar image by sponsor id',
+    description: 'delete logo image by sponsor id',
   })
   @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
-  @Delete('removeAvatar/:id')
-  async removeAvatar(@Param('id', ParseIntPipe) id: number) {
-    return this.sponsorService.removeAvatar(id);
+  @Delete('removeLogo/:id')
+  async removeLogo(@Param('id', ParseIntPipe) id: number) {
+    return this.sponsorService.removeLogo(id);
   }
 }
