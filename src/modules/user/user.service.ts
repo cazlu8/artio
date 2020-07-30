@@ -161,58 +161,50 @@ export class UserService {
   }
 
   async removeAvatar(id: number) {
-    const user: any = await this.repository.get({
+    const getUserFromAvatar: any = this.repository.get({
       select: ['avatarImgUrl'],
       where: { id },
     });
-    await this.repository.removeAvatarUrl(id);
+    const updateAvatarUrl = this.repository.removeAvatarUrl(id);
     const s3 = new AWS.S3(s3Config());
     const Bucket = process.env.S3_BUCKET_AVATAR;
-    await this.deleteAvatar(user, s3, Bucket);
+    await Promise.all([getUserFromAvatar, updateAvatarUrl]).then(
+      async ([user]) => await this.deleteAvatar(user, s3, Bucket),
+    );
   }
 
   async getEventsByUserId(id: number) {
     return this.repository.getEventsByUserId(id);
   }
 
-  async bindUserEvent({ req }): Promise<boolean> {
+  async bindUserEvent({ req }): Promise<unknown[]> {
     const { roleId, userId, eventId } = req;
-    const bindFunctions: any = [
-      this.verifyUserRole(roleId),
-      this.linkUserToEvent(userId, eventId).then(id =>
-        this.linkUserAndRoleToEvent(id, roleId, userId, eventId),
-      ),
-    ];
-    await Promise.all(bindFunctions);
-    return true;
-  }
-
-  async bindUserEventCode({ req }): Promise<ObjectLiteral | void> {
-    const { eventId, userEmail } = req;
-    const ticketCode: string = uuid();
-    this.getUserIdByEmail(userEmail).then(userId =>
-      this.linkUserAndCodeToEvent(ticketCode, userId.id, eventId).then(id =>
-        this.linkUserAndRoleToEvent(id, 2, userId.id, eventId),
-      ),
+    const bindUserToEvent = this.linkUserToEvent(userId, eventId).then(id =>
+      this.linkUserAndRoleToEvent(id, roleId, userId, eventId),
     );
+    const isRoleValid = await this.verifyUserRole(roleId);
+    return isRoleValid && (await bindUserToEvent);
   }
 
-  redeemEventCode({ req }): Promise<UpdateResult> {
-    return this.repository
-      .checkCode(req)
-      .then(id => this.repository.redeemEventCode(id));
+  async bindUserEventCode(data): Promise<ObjectLiteral | void> {
+    const { eventId, userEmail } = data;
+    const ticketCode: string = uuid();
+    const { id: userId } = await this.getUserIdByEmail(userEmail);
+    const { id } = await this.linkUserAndCodeToEvent(
+      ticketCode,
+      userId,
+      eventId,
+    );
+    return await this.linkUserAndRoleToEvent(id, 2, userId, eventId);
   }
 
-  private async verifyUserRole(roleId: number): Promise<boolean> {
-    return !!(await this.roleRepository
-      .findOneOrFail({
-        select: ['name'],
-        where: { id: roleId },
-      })
-      .catch(error => {
-        if (error.name === 'EntityNotFound') throw new NotFoundException();
-        throw new InternalServerErrorException(error);
-      }));
+  async redeemEventCode(data): Promise<UpdateResult> {
+    const id = await this.repository.checkCode(data);
+    return await this.repository.redeemEventCode(id);
+  }
+
+  private async verifyUserRole(id: number): Promise<boolean> {
+    return !!(await this.roleRepository.count({ where: { id } }));
   }
 
   private async linkUserToEvent(userId: number, eventId: number): Promise<any> {

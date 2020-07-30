@@ -32,6 +32,8 @@ async function bootstrap() {
   );
   app.enableShutdownHooks();
   app.register(fastifyHealthCheck);
+  // eslint-disable-next-line global-require
+  app.register(require('fastify-file-upload'));
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

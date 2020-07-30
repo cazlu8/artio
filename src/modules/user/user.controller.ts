@@ -9,9 +9,12 @@ import {
   Put,
   Res,
   ParseIntPipe,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { UpdateResult, ObjectLiteral } from 'typeorm';
+import * as AWS from 'aws-sdk';
+import { uuid } from 'uuidv4';
 import { CreateUserDto } from './dto/user.create.dto';
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
 import { UserService } from './user.service';
@@ -24,6 +27,7 @@ import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
 import { AdminAuthGuard } from '../../shared/guards/admin-auth.guard';
 import { OrganizerAuthGuard } from '../../shared/guards/organizer-auth.guard';
+import { s3Config } from '../../shared/config/AWS';
 
 @ApiTags('Users')
 @Controller('users')
@@ -151,9 +155,9 @@ export class UserController extends BaseWithoutAuthController {
     @Res() res,
     @Body() { userEmail, eventId },
   ): Promise<void | ObjectLiteral> {
-    const req = { userEmail, eventId };
+    const data = { userEmail, eventId };
     return this.userService
-      .bindUserEventCode({ req })
+      .bindUserEventCode(data)
       .then(() => res.status(201).send())
       .catch(() => res.status(404).send());
   }
@@ -169,9 +173,9 @@ export class UserController extends BaseWithoutAuthController {
     @Res() res,
     @Body() { userId, ticketCode },
   ): Promise<void | ObjectLiteral> {
-    const req = { userId, ticketCode };
+    const data = { userId, ticketCode };
     return this.userService
-      .redeemEventCode({ req })
+      .redeemEventCode(data)
       .then(() => res.status(200).send())
       .catch(() => res.status(404).send());
   }
@@ -185,5 +189,31 @@ export class UserController extends BaseWithoutAuthController {
   @Delete('removeAvatar/:id')
   async removeAvatar(@Param('id', ParseIntPipe) id: number) {
     return this.userService.removeAvatar(id);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('uploadUsers/:eventId')
+  async processCSVUsers(
+    @Req() req,
+    @Res() res,
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ) {
+    try {
+      const { file } = req.raw.files;
+      const s3 = new AWS.S3(s3Config());
+      const id = uuid();
+      const params = {
+        Bucket: process.env.S3_BUCKET_CSV_USERS,
+        Key: `${id}.csv`,
+        Body: file.data,
+        ACL: 'private',
+        ContentEncoding: 'utf-8',
+        ContentType: `text/csv`,
+      };
+      await s3.upload(params).promise();
+      res.status(201).send();
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 }

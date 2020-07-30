@@ -117,32 +117,44 @@ export class EventService {
 
   async startIntermission(eventId: number) {
     try {
-      await this.networkRoomQueue.add(
+      const addCreateRoomsOnQueue = this.networkRoomQueue.add(
         'createRooms',
         { eventId },
         {
           priority: 1,
         },
       );
-      this.networkRoomService.clearExpiredTwillioRooms(eventId);
-      this.networkRoomGateway.server.sockets.emit(`startIntermission`, true);
+      const clearExpiredRooms = () =>
+        this.networkRoomService.clearExpiredTwillioRooms(eventId);
+      const emitStartIntermissionToAllSockets = () =>
+        this.networkRoomGateway.server.sockets.emit(`startIntermission`, true);
+      return await Promise.all([
+        addCreateRoomsOnQueue,
+        clearExpiredRooms,
+        emitStartIntermissionToAllSockets,
+      ]);
     } catch (error) {
-      catchError(error);
+      return new InternalServerErrorException(error);
     }
   }
 
   async finishIntermission(eventId: number) {
     try {
-      await this.eventQueue.add(
+      const addClearIntermissionDataOnQueue = this.eventQueue.add(
         'clearIntermissionData',
         { eventId },
         {
           priority: 2,
         },
       );
-      this.networkRoomGateway.server.sockets.emit(`endIntermission`, true);
+      const emitSendIntermissionToAllSockets = () =>
+        this.networkRoomGateway.server.sockets.emit(`endIntermission`, true);
+      return await Promise.all([
+        addClearIntermissionDataOnQueue,
+        emitSendIntermissionToAllSockets,
+      ]);
     } catch (error) {
-      catchError(error);
+      return new InternalServerErrorException(error);
     }
   }
 

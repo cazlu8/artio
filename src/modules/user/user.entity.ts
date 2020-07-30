@@ -69,7 +69,11 @@ export class User {
   currentPosition?: string;
 
   @ApiProperty()
-  @Column('json', { nullable: true, name: 'social_urls' })
+  @Column('json', {
+    nullable: true,
+    name: 'social_urls',
+    default: new Array(0),
+  })
   socialUrls?: string;
 
   @ApiProperty()
