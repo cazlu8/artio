@@ -5,6 +5,7 @@ import { BaseModule } from '../../shared/modules/base.module';
 import { EventService } from './event.service';
 import { EventRepository } from './event.repository';
 import { NetworkRoomModule } from '../networkRoom/networkRoom.module';
+import { UserEvents } from '../userEvents/userEvents.entity';
 import EventQueue from './event.queue';
 
 @Module({
@@ -12,7 +13,7 @@ import EventQueue from './event.queue';
     EventQueue,
     NetworkRoomModule,
     BaseModule,
-    TypeOrmModule.forFeature([EventRepository]),
+    TypeOrmModule.forFeature([EventRepository, UserEvents]),
   ],
   controllers: [EventController],
   providers: [EventService],

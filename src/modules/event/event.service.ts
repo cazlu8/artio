@@ -4,12 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
-import { ObjectLiteral, UpdateResult } from 'typeorm';
+import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
 import * as AWS from 'aws-sdk';
 import { uuid } from 'uuidv4';
 import * as sharp from 'sharp';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './event.entity';
 import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
@@ -25,6 +26,7 @@ import { handleBase64 } from '../../shared/utils/image.utils';
 import { catchError } from '../../shared/utils/errorHandler.utils';
 import { NetworkRoomService } from '../networkRoom/networkRoom.service';
 import { NetworkRoomGateway } from '../networkRoom/networkRoom.gateway';
+import { UserEvents } from '../userEvents/userEvents.entity';
 
 @Injectable()
 export class EventService {
@@ -34,6 +36,8 @@ export class EventService {
     @InjectQueue('event') private readonly eventQueue: Queue,
     @InjectQueue('networkRoom') private readonly networkRoomQueue: Queue,
     private readonly networkRoomGateway: NetworkRoomGateway,
+    @InjectRepository(UserEvents)
+    private readonly userEventsRepository: Repository<UserEvents>,
   ) {}
 
   create(createEventDTO: CreateEventDTO): Promise<void | ObjectLiteral> {
@@ -144,6 +148,12 @@ export class EventService {
     } catch (error) {
       catchError(error);
     }
+  }
+
+  getSubscribed(eventId) {
+    return this.userEventsRepository.count({
+      where: { eventId: `${eventId}` },
+    });
   }
 
   async finishLive(eventId) {

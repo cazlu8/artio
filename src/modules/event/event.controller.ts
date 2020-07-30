@@ -265,4 +265,17 @@ export class EventController extends BaseWithoutAuthController {
   async removeHeroImage(@Param('id', ParseIntPipe) id: number) {
     return this.service.removeHeroImage(id);
   }
+
+  @ApiParam({ name: 'eventId', type: 'number' })
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'get the amount of subscribers on events',
+  })
+  @UseGuards(AdminAuthGuard)
+  @Get('/subscribed/:eventId')
+  async getSubscribed(
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ): Promise<any> {
+    return await this.service.getSubscribed(eventId);
+  }
 }
