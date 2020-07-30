@@ -19,7 +19,7 @@ import { Sponsor } from './sponsor.entity';
 import { UpdateSponsorDto } from './dto/sponsor.update.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
 import { AuthGuard } from '../../shared/guards/auth.guard';
-import { AdminAuthGuard } from '../../shared/guards/admin-auth.guard';
+import { AdminAuthGuard } from '../../shared/guards/adminAuth.guard';
 
 @ApiTags('Sponsor')
 @Controller('sponsors')

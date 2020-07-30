@@ -1,5 +1,12 @@
-function catchError (error) {
-  throw new Error(error);
+import { InternalServerErrorException } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
+
+function catchError(error: Error) {
+  throw new InternalServerErrorException(error);
 }
 
-export { catchError };
+function catchErrorWs(error: Error) {
+  throw new WsException(error);
+}
+
+export { catchError, catchErrorWs };

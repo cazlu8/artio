@@ -19,9 +19,10 @@ const numCPUs = os.cpus().length;
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // @ts-ignore
     new FastifyAdapter({
       bodyLimit: +process.env.BODY_LIMIT,
-      logger: process.env.SERVER_LOGGER,
     }),
   );
   app.enableCors({
@@ -31,6 +32,8 @@ async function bootstrap() {
     new RedisIoAdapter(app, process.env.REDIS_HOST, +process.env.REDIS_PORT),
   );
   app.enableShutdownHooks();
+  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+  // @ts-ignore
   app.register(fastifyHealthCheck);
   // eslint-disable-next-line global-require
   app.register(require('fastify-file-upload'));
@@ -52,7 +55,7 @@ async function bootstrap() {
     permittedPolicies: 'none',
   });
 
-  app.register(fastifyCompress);
+  app.register(fastifyCompress, { encodings: ['gzip', 'deflate'] });
 
   const swaggerOptions = new DocumentBuilder()
     .setTitle('Engage API')

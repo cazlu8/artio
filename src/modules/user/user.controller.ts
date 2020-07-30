@@ -25,7 +25,7 @@ import { BaseWithoutAuthController } from '../../shared/controllers/base.without
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
-import { AdminAuthGuard } from '../../shared/guards/admin-auth.guard';
+import { AdminAuthGuard } from '../../shared/guards/adminAuth.guard';
 import { OrganizerAuthGuard } from '../../shared/guards/organizer-auth.guard';
 import { s3Config } from '../../shared/config/AWS';
 

@@ -22,7 +22,7 @@ import { BaseWithoutAuthController } from '../../shared/controllers/base.without
 import { Event } from './event.entity';
 import UpdateEventDTO from './dto/event.update.dto';
 import { AuthGuard } from '../../shared/guards/auth.guard';
-import { AdminAuthGuard } from '../../shared/guards/admin-auth.guard';
+import { AdminAuthGuard } from '../../shared/guards/adminAuth.guard';
 import { CreateHeroImage } from './dto/event.create.heroImage.dto';
 
 @ApiTags('Events')

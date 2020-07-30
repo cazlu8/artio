@@ -121,20 +121,13 @@ export class EventService {
 
   async startIntermission(eventId: number) {
     try {
-      const addCreateRoomsOnQueue = this.networkRoomQueue.add(
-        'createRooms',
-        { eventId },
-        {
-          priority: 1,
-        },
+      const addCreateRoomOnQueue = this.networkRoomService.addCreateRoomOnQueue(
+        eventId,
       );
-      const clearExpiredRooms = () =>
-        this.networkRoomService.clearExpiredTwillioRooms(eventId);
       const emitStartIntermissionToAllSockets = () =>
         this.networkRoomGateway.server.sockets.emit(`startIntermission`, true);
       return await Promise.all([
-        addCreateRoomsOnQueue,
-        clearExpiredRooms,
+        addCreateRoomOnQueue,
         emitStartIntermissionToAllSockets,
       ]);
     } catch (error) {

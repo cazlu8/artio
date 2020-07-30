@@ -11,8 +11,10 @@ import { AuthMiddleware } from './shared/middlewares/auth.middleware';
 import { loadModules } from './modules';
 import * as ormconfig from './ormconfig';
 import redisConfig from './shared/config/redis';
+import { JwtService } from './shared/services/jwt.service';
 // read all modules folders and load all available modules
 const modules: DynamicModule[] = loadModules();
+const providers = [JwtService];
 
 @Module({
   imports: [
@@ -29,6 +31,7 @@ const modules: DynamicModule[] = loadModules();
     }),
     ...modules,
   ],
+  providers,
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

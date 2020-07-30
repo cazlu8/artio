@@ -5,6 +5,8 @@ import * as twilio from 'twilio';
 import * as any from 'promise.any';
 import * as util from 'util';
 import { RedisService } from 'nestjs-redis';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { config } from '../../shared/config/twilio';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 import { catchError } from '../../shared/utils/errorHandler.utils';
@@ -20,15 +22,14 @@ export class NetworkRoomService {
 
   private redisClient: any;
 
-  constructor(private readonly redisService: RedisService) {
+  constructor(
+    @InjectQueue('networkRoom') private readonly networkRoomQueue: Queue,
+    private readonly redisService: RedisService,
+  ) {
     const { clientConfig, twilioConfig } = config();
     this.clientConfig = clientConfig();
     this.twilioConfig = twilioConfig();
     this.redisClient = this.redisService.getClient();
-  }
-
-  private catchError(err) {
-    throw new Error(err);
   }
 
   async createRoom(): Promise<any> {
@@ -39,10 +40,7 @@ export class NetworkRoomService {
         type: 'group-small',
         uniqueName: uid,
       })
-      .then(room => {
-        return { sid: room.sid, uniqueName: room.uniqueName };
-      })
-      .catch(this.catchError);
+      .then(room => ({ sid: room.sid, uniqueName: room.uniqueName }));
   }
 
   findAvailableRoom(
@@ -104,6 +102,16 @@ export class NetworkRoomService {
   clearExpiredTwillioRooms(eventId: number): void {
     setTimeout(async () => {
       await this.redisClient.del(`event-${eventId}:rooms`).catch(catchError);
+      await this.addCreateRoomOnQueue(eventId, true);
     }, 258000);
+  }
+
+  async addCreateRoomOnQueue(eventId: number, isRepeat = false) {
+    await this.networkRoomQueue.add(
+      'createRooms',
+      { eventId, isRepeat },
+      { priority: 1 },
+    );
+    this.clearExpiredTwillioRooms(eventId);
   }
 }

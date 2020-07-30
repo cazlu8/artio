@@ -6,6 +6,7 @@ import { NetworkRoomGateway } from './networkRoom.gateway';
 import { NetworkRoomProcessor } from './networkRoom.processor';
 import { UserEvents } from '../userEvents/userEvents.entity';
 import NetworkRoomQueue from './networkRoom.queue';
+import { JwtService } from '../../shared/services/jwt.service';
 
 @Module({
   imports: [NetworkRoomQueue, TypeOrmModule.forFeature([UserEvents])],
@@ -14,6 +15,7 @@ import NetworkRoomQueue from './networkRoom.queue';
     LoggerService,
     NetworkRoomGateway,
     NetworkRoomProcessor,
+    JwtService,
   ],
   exports: [NetworkRoomService, NetworkRoomGateway, NetworkRoomQueue],
 })
