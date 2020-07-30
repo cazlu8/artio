@@ -177,13 +177,17 @@ export class UserService {
     return this.repository.getEventsByUserId(id);
   }
 
-  async bindUserEvent({ req }): Promise<unknown[]> {
-    const { roleId, userId, eventId } = req;
+  async bindUserEvent(data: {
+    roleId: number;
+    userId: number;
+    eventId: number;
+  }): Promise<boolean | void> {
+    const { roleId, userId, eventId } = data;
     const bindUserToEvent = this.linkUserToEvent(userId, eventId).then(id =>
       this.linkUserAndRoleToEvent(id, roleId, userId, eventId),
     );
-    const isRoleValid = await this.verifyUserRole(roleId);
-    return isRoleValid && (await bindUserToEvent);
+    const isRoleValid = this.verifyUserRole(roleId).then(haveRole => haveRole);
+    return (await isRoleValid) && (await bindUserToEvent);
   }
 
   async bindUserEventCode(data): Promise<ObjectLiteral | void> {

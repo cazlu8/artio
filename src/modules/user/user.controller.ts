@@ -138,9 +138,9 @@ export class UserController extends BaseWithoutAuthController {
     @Res() res,
     @Body() { roleId, userId, eventId },
   ): Promise<void | ObjectLiteral> {
-    const req = { roleId, userId, eventId };
+    const data = { roleId, userId, eventId };
     return this.userService
-      .bindUserEvent({ req })
+      .bindUserEvent(data)
       .then(() => res.status(201).send());
   }
 
