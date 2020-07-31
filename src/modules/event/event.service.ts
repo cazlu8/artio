@@ -23,7 +23,6 @@ import UpdateEventDTO from './dto/event.update.dto';
 import { s3Config } from '../../shared/config/AWS';
 import { CreateHeroImage } from './dto/event.create.heroImage.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
-import { catchError } from '../../shared/utils/errorHandler.utils';
 import { NetworkRoomService } from '../networkRoom/networkRoom.service';
 import { NetworkRoomGateway } from '../networkRoom/networkRoom.gateway';
 import { UserEvents } from '../userEvents/userEvents.entity';
@@ -231,7 +230,7 @@ export class EventService {
   ): Promise<any> {
     const base64Data = Buffer.from(handleBase64(heroImageUrl), 'base64');
     const sharpedImage = await sharp(base64Data)
-      .resize(600, 375)
+      .resize(800, 600)
       .png();
     const user: any = await this.repository.get({
       select: ['heroImgUrl'],
