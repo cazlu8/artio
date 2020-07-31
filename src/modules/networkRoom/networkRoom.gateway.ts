@@ -93,7 +93,7 @@ export class NetworkRoomGateway {
   @SubscribeMessage('requestRoomToken')
   requestRoomToken(socket: any, data: NetworkRoomTokenDto): void {
     const token = this.service.videoToken(data);
-    socket.emit('roomToken', token);
+    socket.emit('requestRoomToken', token);
   }
 
   async bindSocketToRoom(socket: any, eventId: number): Promise<void> {
@@ -117,7 +117,9 @@ export class NetworkRoomGateway {
       getNewTwillioRoom,
       incrementLastRoom,
     ]);
-    this.server.to(`event-${eventId}:room-${+lastRoom}`).emit(newTwillioRoom);
+    this.server
+      .to(`event-${eventId}:room-${+lastRoom}`)
+      .emit('requestRoom', newTwillioRoom.uniqueName);
     console.log(`${newTwillioRoom}/${process.pid}/${+lastRoom}`);
   }
 
@@ -128,10 +130,10 @@ export class NetworkRoomGateway {
     );
   }
 
-  async getNewTwillioRoom(eventId: number): Promise<string | void> {
+  async getNewTwillioRoom(eventId: number): Promise<{ uniqueName: string }> {
     await this.requestToCreateNewRooms(eventId);
     const newRoom = await this.redisClient.lpop(`event-${eventId}:rooms`);
-    return newRoom || (await this.service.createRoom());
+    return { uniqueName: newRoom } || (await this.service.createRoom());
   }
 
   private async requestToCreateNewRooms(eventId: number): Promise<void> {
