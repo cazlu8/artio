@@ -52,11 +52,12 @@ export class NetworkRoomGateway {
     const decreaseCounter = this.redisClient.decr(
       `event-${eventId}:clientsNetworkRoomCounter`,
     );
-    const getAvailableRoom = this.service.getAvailableRoom();
+    const getAvailableRoom = this.service.getAvailableRoom().catch(console.log);
+    // @ts-ignore
     const [availableRoom] = await Promise.all([
       getAvailableRoom,
       decreaseCounter,
-    ]);
+    ]).catch(console.log);
     if (availableRoom) socket.emit(`AvailableRoom`, availableRoom);
     else socket.emit(`AvailableRoom`, false);
   }
