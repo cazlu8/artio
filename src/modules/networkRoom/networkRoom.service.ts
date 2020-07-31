@@ -85,7 +85,7 @@ export class NetworkRoomService {
         try {
           return await this.getRoom(rooms, currentRoom, roomLength);
         } catch (err) {
-          throw new Error(err);
+          throw new Error('no available room');
         }
       });
   }

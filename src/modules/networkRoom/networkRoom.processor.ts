@@ -34,7 +34,9 @@ export class NetworkRoomProcessor {
         this.createRoom(eventId),
       );
       parallel(createRoomFns, () => jobDone(null), 32);
+      console.log('processou paaa');
     } catch (error) {
+      console.log('deu pau', error);
       catchError(error);
     }
   }
