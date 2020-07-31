@@ -19,8 +19,6 @@ const numCPUs = os.cpus().length;
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
     new FastifyAdapter({
       bodyLimit: +process.env.BODY_LIMIT,
     }),
@@ -35,6 +33,7 @@ async function bootstrap() {
   // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
   // @ts-ignore
   app.register(fastifyHealthCheck);
+
   // eslint-disable-next-line global-require
   app.register(require('fastify-file-upload'));
   app.useGlobalPipes(
