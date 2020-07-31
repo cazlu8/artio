@@ -53,6 +53,7 @@ export class NetworkRoomGateway {
       `event-${eventId}:clientsNetworkRoomCounter`,
     );
     const getAvailableRoom = this.service.getAvailableRoom().catch(console.log);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore
     const [availableRoom] = await Promise.all([
       getAvailableRoom,
