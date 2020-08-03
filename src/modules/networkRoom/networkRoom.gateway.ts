@@ -19,7 +19,7 @@ import { ErrorsInterceptor } from '../../shared/interceptors/errors.interceptor'
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
-@WebSocketGateway(3030, { transports: ['websocket'] })
+@WebSocketGateway(3030, { transports: ['websocket'], upgrade: false })
 export class NetworkRoomGateway {
   @WebSocketServer()
   readonly server: any;
@@ -57,8 +57,9 @@ export class NetworkRoomGateway {
       getAvailableRoom,
       decreaseCounter,
     ]);
-    if (availableRoom?.uniqueName) socket.emit(`AvailableRoom`, availableRoom);
-    else socket.emit(`AvailableRoom`, false);
+    if (availableRoom?.uniqueName)
+      socket.emit(`requestAvailableRoom`, availableRoom);
+    else socket.emit(`requestAvailableRoom`, false);
   }
 
   @SubscribeMessage('switchRoom')
