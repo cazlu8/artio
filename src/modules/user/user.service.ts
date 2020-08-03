@@ -8,7 +8,7 @@ import { ObjectLiteral, UpdateResult, Repository } from 'typeorm';
 import * as sharp from 'sharp';
 import * as AWS from 'aws-sdk';
 import { uuid } from 'uuidv4';
-import { DataStream, StringStream } from 'scramjet';
+import { StringStream } from 'scramjet';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';
@@ -208,7 +208,7 @@ export class UserService {
     return await this.repository.redeemEventCode(id);
   }
 
-  async processCsvFile(file, eventId) {
+  async processCsvFile(file) {
     try {
       const s3 = new AWS.S3(s3Config());
       const id = uuid();

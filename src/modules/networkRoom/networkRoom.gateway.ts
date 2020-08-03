@@ -120,7 +120,7 @@ export class NetworkRoomGateway {
     this.server
       .to(`event-${eventId}:room-${+lastRoom}`)
       .emit('requestRoom', newTwillioRoom.uniqueName);
-    console.log(`${newTwillioRoom}/${process.pid}/${+lastRoom}`);
+    console.log(`${newTwillioRoom.uniqueName}/${process.pid}/${+lastRoom}`);
   }
 
   async incrementCounter(eventId: number): Promise<number | void> {
