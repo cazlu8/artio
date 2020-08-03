@@ -55,7 +55,7 @@ export class NetworkRoomService {
         roomParticipants.length > 1 &&
         roomParticipants.length <= roomLength
       ) {
-        return Promise.resolve({ uniqueName: roomUniqueName });
+        return Promise.resolve({ uniqueName: roomUniqueName, sid: roomSid });
       }
       return Promise.reject(new Error('no room available'));
     });
@@ -77,7 +77,7 @@ export class NetworkRoomService {
   getAvailableRoom(
     currentRoom?: string,
     roomLength?: number,
-  ): Promise<{ uniqueName: string }> {
+  ): Promise<{ uniqueName: string; sid: string }> {
     return this.clientConfig.video.rooms
       .list({ status: 'in-progress' })
       .then(async rooms => {
