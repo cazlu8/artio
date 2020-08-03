@@ -9,13 +9,13 @@ import { Queue } from 'bull';
 import { RedisService } from 'nestjs-redis';
 import * as Redlock from 'redlock';
 import { UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import * as sleep from 'sleep';
 import { LoggerService } from '../../shared/services/logger.service';
 import { NetworkRoomService } from './networkRoom.service';
 import { catchErrorWs } from '../../shared/utils/errorHandler.utils';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 import { WsAuthGuard } from '../../shared/guards/wsAuth.guard';
 import { ErrorsInterceptor } from '../../shared/interceptors/errors.interceptor';
-
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
@@ -50,9 +50,10 @@ export class NetworkRoomGateway {
     const { eventId } = data;
     this.leaveRoom(socket);
     const availableRoom = await this.service.getAvailableRoom();
-    if (availableRoom?.uniqueName)
+    if (availableRoom?.uniqueName) {
       socket.emit(`requestAvailableRoom`, availableRoom);
-    else {
+      console.log(`requestAvailableRoom`, availableRoom);
+    } else {
       await this.redisClient.decr(`event-${eventId}:clientsNetworkRoomCounter`);
       socket.emit(`requestAvailableRoom`, false);
     }
@@ -69,6 +70,7 @@ export class NetworkRoomGateway {
 
   @SubscribeMessage('requestRoom')
   async requestRoom(socket: any, data: { eventId: number }): Promise<void> {
+    sleep.msleep(100);
     if (this.preventRepeatedSocket(socket)) return;
     const { eventId } = data;
     this.redlock
