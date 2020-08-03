@@ -6,8 +6,11 @@ export default BullModule.registerQueueAsync({
   useFactory: async (configService: ConfigService) => ({
     redis: configService.get('redis'),
     defaultJobOptions: {
+      priority: 1,
       removeOnComplete: true,
       removeOnFail: true,
+      attempts: 3,
+      timeout: 300000,
     },
   }),
   inject: [ConfigService],

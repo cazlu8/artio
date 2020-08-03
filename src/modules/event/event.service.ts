@@ -140,9 +140,6 @@ export class EventService {
       const addClearIntermissionDataOnQueue = this.eventQueue.add(
         'clearIntermissionData',
         { eventId },
-        {
-          priority: 2,
-        },
       );
       const emitSendIntermissionToAllSockets = () =>
         this.networkRoomGateway.server.sockets.emit(`endIntermission`, true);

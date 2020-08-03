@@ -100,15 +100,11 @@ export class NetworkRoomService {
   }
 
   async addCreateRoomOnQueue(eventId: number, isRepeat = false) {
-    await this.networkRoomQueue.add(
-      'createRooms',
-      { eventId, isRepeat },
-      { priority: 1 },
-    );
+    await this.networkRoomQueue.add('createRooms', { eventId, isRepeat });
     await this.networkRoomQueue.add(
       `clearExpiredRooms`,
       { eventId },
-      { priority: 1, delay: 270000 },
+      { delay: 270000 },
     );
   }
 }

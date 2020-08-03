@@ -48,15 +48,14 @@ export class NetworkRoomProcessor {
     try {
       const { eventId } = job.data;
       await this.redisClient.del(`event-${eventId}:rooms`).catch(catchError);
-      await this.networkRoomQueue.add(
-        'createRooms',
-        { eventId, isRepeat: true },
-        { priority: 1 },
-      );
+      await this.networkRoomQueue.add('createRooms', {
+        eventId,
+        isRepeat: true,
+      });
       await this.networkRoomQueue.add(
         `clearExpiredRooms`,
         { eventId },
-        { priority: 1, delay: 270000 },
+        { delay: 270000 },
       );
       console.log(`matou as rooms`);
       jobDone();
