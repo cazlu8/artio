@@ -208,8 +208,9 @@ export class UserService {
     return await this.repository.redeemEventCode(id);
   }
 
-  async processCsvFile(file) {
+  async processCsvFile(file, eventId) {
     try {
+      console.log(eventId);
       const s3 = new AWS.S3(s3Config());
       const id = uuid();
       const params = {
