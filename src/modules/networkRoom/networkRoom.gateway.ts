@@ -49,17 +49,13 @@ export class NetworkRoomGateway {
   ): Promise<void> {
     const { eventId } = data;
     this.leaveRoom(socket);
-    const decreaseCounter = this.redisClient.decr(
-      `event-${eventId}:clientsNetworkRoomCounter`,
-    );
-    const getAvailableRoom = this.service.getAvailableRoom();
-    const [availableRoom] = await Promise.all([
-      getAvailableRoom,
-      decreaseCounter,
-    ]);
+    const availableRoom = await this.service.getAvailableRoom();
     if (availableRoom?.uniqueName)
       socket.emit(`requestAvailableRoom`, availableRoom);
-    else socket.emit(`requestAvailableRoom`, false);
+    else {
+      await this.redisClient.decr(`event-${eventId}:clientsNetworkRoomCounter`);
+      socket.emit(`requestAvailableRoom`, false);
+    }
   }
 
   @SubscribeMessage('switchRoom')
