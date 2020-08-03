@@ -165,7 +165,7 @@ export class NetworkRoomGateway {
   }
 
   private preventRepeatedSocket(socket: any): boolean {
-    const { rooms } = socket;
-    return rooms === 2;
+    const roomsArray = Object.keys(socket.rooms);
+    return roomsArray.length === 2;
   }
 }
