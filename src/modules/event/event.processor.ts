@@ -28,6 +28,7 @@ export class EventProcessor {
       ].map(key => this.redisClient.del(key));
       await Promise.all(removeAllKeys);
       jobDone();
+      console.log(`clearIntermission`);
     } catch (error) {
       catchError(error);
     }
