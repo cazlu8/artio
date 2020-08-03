@@ -77,7 +77,7 @@ export class NetworkRoomService {
   getAvailableRoom(
     currentRoom?: string,
     roomLength?: number,
-  ): Promise<{ uniqueName: string }> {
+  ): Promise<{ uniqueName: string; sid: string }> {
     return this.clientConfig.video.rooms
       .list({ status: 'in-progress' })
       .then(async rooms => {

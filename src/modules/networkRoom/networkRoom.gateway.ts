@@ -52,12 +52,12 @@ export class NetworkRoomGateway {
     const decreaseCounter = this.redisClient.decr(
       `event-${eventId}:clientsNetworkRoomCounter`,
     );
-    const getAvailableRoom = this.service.getAvailableRoom().catch(console.log);
+    const getAvailableRoom = this.service.getAvailableRoom();
     const [availableRoom] = await Promise.all([
       getAvailableRoom,
       decreaseCounter,
     ]);
-    if (availableRoom) socket.emit(`AvailableRoom`, availableRoom);
+    if (availableRoom?.uniqueName) socket.emit(`AvailableRoom`, availableRoom);
     else socket.emit(`AvailableRoom`, false);
   }
 
@@ -93,6 +93,11 @@ export class NetworkRoomGateway {
     console.log(`requestRoomToken`, data);
     const token = this.service.videoToken(data);
     socket.emit('requestRoomToken', token);
+  }
+
+  @SubscribeMessage('leaveRoom')
+  leaveRoomTwillio(socket: any): void {
+    this.leaveRoom(socket);
   }
 
   async bindSocketToRoom(socket: any, eventId: number): Promise<void> {
