@@ -70,8 +70,11 @@ export class NetworkRoomProcessor {
     return this.service
       .createRoom()
       .then(
-        async ({ uniqueName }) =>
-          await this.redisClient.rpush(`event-${eventId}:rooms`, uniqueName),
+        async data =>
+          await this.redisClient.rpush(
+            `event-${eventId}:rooms`,
+            JSON.stringify(data),
+          ),
       )
       .catch(() => Promise.resolve(this.createRoom(eventId)));
   }

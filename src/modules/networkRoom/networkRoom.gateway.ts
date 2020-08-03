@@ -92,6 +92,7 @@ export class NetworkRoomGateway {
 
   @SubscribeMessage('requestRoomToken')
   requestRoomToken(socket: any, data: NetworkRoomTokenDto): void {
+    console.log(`requestRoomToken`, data);
     const token = this.service.videoToken(data);
     socket.emit('requestRoomToken', token);
   }
@@ -119,7 +120,7 @@ export class NetworkRoomGateway {
     ]);
     this.server
       .to(`event-${eventId}:room-${+lastRoom}`)
-      .emit('requestRoom', newTwillioRoom.uniqueName);
+      .emit('requestRoom', newTwillioRoom);
     console.log(`${newTwillioRoom.uniqueName}/${process.pid}/${+lastRoom}`);
   }
 
@@ -132,8 +133,10 @@ export class NetworkRoomGateway {
 
   async getNewTwillioRoom(eventId: number): Promise<{ uniqueName: string }> {
     await this.requestToCreateNewRooms(eventId);
-    const newRoom = await this.redisClient.lpop(`event-${eventId}:rooms`);
-    return newRoom ? { uniqueName: newRoom } : await this.service.createRoom();
+    const newRoom = JSON.parse(
+      await this.redisClient.lpop(`event-${eventId}:rooms`),
+    );
+    return newRoom || (await this.createRoom());
   }
 
   private async requestToCreateNewRooms(eventId: number): Promise<void> {
@@ -153,7 +156,7 @@ export class NetworkRoomGateway {
   createRoom() {
     return this.service
       .createRoom()
-      .then(({ uniqueName }) => uniqueName)
+      .then(data => data)
       .catch(() => Promise.resolve(this.createRoom()));
   }
 
