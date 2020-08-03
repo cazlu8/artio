@@ -93,7 +93,7 @@ export class SponsorService {
   ): Promise<any> {
     const base64Data = Buffer.from(handleBase64(logo), 'base64');
     const sharpedImage = await sharp(base64Data)
-      .resize(400, 400)
+      .resize(440, 240)
       .png();
     const entity: any = await this.repository.get({
       select: ['logo'],
