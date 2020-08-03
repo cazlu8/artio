@@ -9,7 +9,6 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { config } from '../../shared/config/twilio';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
-import { catchError } from '../../shared/utils/errorHandler.utils';
 
 const { AccessToken } = twilio.jwt;
 const { VideoGrant } = AccessToken;

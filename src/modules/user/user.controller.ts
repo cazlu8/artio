@@ -198,22 +198,7 @@ export class UserController extends BaseWithoutAuthController {
     @Res() res,
     @Param('eventId', ParseIntPipe) eventId: number,
   ) {
-    try {
-      const { file } = req.raw.files;
-      const s3 = new AWS.S3(s3Config());
-      const id = uuid();
-      const params = {
-        Bucket: process.env.S3_BUCKET_CSV_USERS,
-        Key: `${id}.csv`,
-        Body: file.data,
-        ACL: 'private',
-        ContentEncoding: 'utf-8',
-        ContentType: `text/csv`,
-      };
-      await s3.upload(params).promise();
-      res.status(201).send();
-    } catch (error) {
-      throw new Error(error);
-    }
+    const { file } = req.raw.files;
+    await this.userService.processCsvFile(file, eventId);
   }
 }
