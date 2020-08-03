@@ -55,7 +55,7 @@ export class NetworkRoomService {
         roomParticipants.length > 1 &&
         roomParticipants.length <= roomLength
       ) {
-        return Promise.resolve({ uniqueName: roomUniqueName });
+        return Promise.resolve({ uniqueName: roomUniqueName, sid: roomSid });
       }
       return Promise.reject(new Error('no room available'));
     });

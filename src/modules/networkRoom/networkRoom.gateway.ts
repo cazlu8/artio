@@ -65,10 +65,8 @@ export class NetworkRoomGateway {
   async switchRoom(socket: any, data: { currentRoom: string }): Promise<void> {
     const { currentRoom } = data;
     this.leaveRoom(socket);
-    const { uniqueName: newRoom } = await this.service.getAvailableRoom(
-      currentRoom,
-    );
-    if (newRoom) socket.emit(`switchRoom`, newRoom);
+    const newRoom = await this.service.getAvailableRoom(currentRoom);
+    if (newRoom?.uniqueName) socket.emit(`switchRoom`, newRoom);
     else socket.emit(`switchRoom`, false);
   }
 
