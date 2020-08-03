@@ -99,19 +99,16 @@ export class NetworkRoomService {
     return token.toJwt();
   }
 
-  clearExpiredTwillioRooms(eventId: number): void {
-    setTimeout(async () => {
-      await this.redisClient.del(`event-${eventId}:rooms`).catch(catchError);
-      await this.addCreateRoomOnQueue(eventId, true);
-    }, 258000);
-  }
-
   async addCreateRoomOnQueue(eventId: number, isRepeat = false) {
     await this.networkRoomQueue.add(
       'createRooms',
       { eventId, isRepeat },
       { priority: 1 },
     );
-    this.clearExpiredTwillioRooms(eventId);
+    await this.networkRoomQueue.add(
+      `clearExpiredRooms`,
+      { eventId },
+      { priority: 1, delay: 270000 },
+    );
   }
 }

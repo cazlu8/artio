@@ -53,12 +53,10 @@ export class NetworkRoomGateway {
       `event-${eventId}:clientsNetworkRoomCounter`,
     );
     const getAvailableRoom = this.service.getAvailableRoom().catch(console.log);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
     const [availableRoom] = await Promise.all([
       getAvailableRoom,
       decreaseCounter,
-    ]).catch(console.log);
+    ]);
     if (availableRoom) socket.emit(`AvailableRoom`, availableRoom);
     else socket.emit(`AvailableRoom`, false);
   }
@@ -135,7 +133,7 @@ export class NetworkRoomGateway {
   async getNewTwillioRoom(eventId: number): Promise<{ uniqueName: string }> {
     await this.requestToCreateNewRooms(eventId);
     const newRoom = await this.redisClient.lpop(`event-${eventId}:rooms`);
-    return { uniqueName: newRoom } || (await this.service.createRoom());
+    return newRoom ? { uniqueName: newRoom } : await this.service.createRoom();
   }
 
   private async requestToCreateNewRooms(eventId: number): Promise<void> {
