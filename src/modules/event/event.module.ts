@@ -7,12 +7,14 @@ import { EventRepository } from './event.repository';
 import { NetworkRoomModule } from '../networkRoom/networkRoom.module';
 import { UserEvents } from '../userEvents/userEvents.entity';
 import EventQueue from './event.queue';
+import { EventProcessor } from './event.processor';
 
 @Module({
   imports: [
     EventQueue,
     NetworkRoomModule,
     BaseModule,
+    EventProcessor,
     TypeOrmModule.forFeature([EventRepository, UserEvents]),
   ],
   controllers: [EventController],

@@ -147,7 +147,7 @@ export class EventService {
         emitSendIntermissionToAllSockets,
       ]);
     } catch (error) {
-      return new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error);
     }
   }
 
