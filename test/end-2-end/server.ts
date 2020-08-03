@@ -14,7 +14,6 @@ import { AppModule } from '../../src/app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    // @ts-ignore
     new FastifyAdapter({
       bodyLimit: +process.env.BODY_LIMIT,
     }),
@@ -23,8 +22,6 @@ async function bootstrap() {
     origin: true,
   });
   app.enableShutdownHooks();
-  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-  // @ts-ignore
   app.register(fastifyHealthCheck);
   app.useGlobalPipes(
     new ValidationPipe({

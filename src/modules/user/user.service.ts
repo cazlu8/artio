@@ -8,6 +8,7 @@ import { ObjectLiteral, UpdateResult, Repository } from 'typeorm';
 import * as sharp from 'sharp';
 import * as AWS from 'aws-sdk';
 import { uuid } from 'uuidv4';
+import { DataStream, StringStream } from 'scramjet';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';
@@ -205,6 +206,36 @@ export class UserService {
   async redeemEventCode(data): Promise<UpdateResult> {
     const id = await this.repository.checkCode(data);
     return await this.repository.redeemEventCode(id);
+  }
+
+  async processCsvFile(file, eventId) {
+    try {
+      const s3 = new AWS.S3(s3Config());
+      const id = uuid();
+      const params = {
+        Bucket: process.env.S3_BUCKET_CSV_USERS,
+        Key: `${id}.csv`,
+        Body: file.data,
+        ACL: 'private',
+        ContentEncoding: 'utf-8',
+        ContentType: `text/csv`,
+      };
+      await s3.upload(params).promise();
+      const readSTream = s3
+        .getObject({
+          Bucket: params.Bucket,
+          Key: `${id}.csv`,
+        })
+        .createReadStream();
+      StringStream.from(readSTream)
+        .lines()
+        .CSVParse()
+        .do(async function(data) {
+          console.log(data);
+        });
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
   private async verifyUserRole(id: number): Promise<boolean> {

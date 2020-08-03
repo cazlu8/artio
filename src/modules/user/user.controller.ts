@@ -13,8 +13,6 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { UpdateResult, ObjectLiteral } from 'typeorm';
-import * as AWS from 'aws-sdk';
-import { uuid } from 'uuidv4';
 import { CreateUserDto } from './dto/user.create.dto';
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
 import { UserService } from './user.service';
@@ -27,7 +25,6 @@ import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
 import { AdminAuthGuard } from '../../shared/guards/adminAuth.guard';
 import { OrganizerAuthGuard } from '../../shared/guards/organizer-auth.guard';
-import { s3Config } from '../../shared/config/AWS';
 
 @ApiTags('Users')
 @Controller('users')
@@ -198,22 +195,7 @@ export class UserController extends BaseWithoutAuthController {
     @Res() res,
     @Param('eventId', ParseIntPipe) eventId: number,
   ) {
-    try {
-      const { file } = req.raw.files;
-      const s3 = new AWS.S3(s3Config());
-      const id = uuid();
-      const params = {
-        Bucket: process.env.S3_BUCKET_CSV_USERS,
-        Key: `${id}.csv`,
-        Body: file.data,
-        ACL: 'private',
-        ContentEncoding: 'utf-8',
-        ContentType: `text/csv`,
-      };
-      await s3.upload(params).promise();
-      res.status(201).send();
-    } catch (error) {
-      throw new Error(error);
-    }
+    const { file } = req.raw.files;
+    await this.userService.processCsvFile(file, eventId);
   }
 }

@@ -9,7 +9,6 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { config } from '../../shared/config/twilio';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
-import { catchError } from '../../shared/utils/errorHandler.utils';
 
 const { AccessToken } = twilio.jwt;
 const { VideoGrant } = AccessToken;
@@ -99,19 +98,12 @@ export class NetworkRoomService {
     return token.toJwt();
   }
 
-  clearExpiredTwillioRooms(eventId: number): void {
-    setTimeout(async () => {
-      await this.redisClient.del(`event-${eventId}:rooms`).catch(catchError);
-      await this.addCreateRoomOnQueue(eventId, true);
-    }, 258000);
-  }
-
   async addCreateRoomOnQueue(eventId: number, isRepeat = false) {
+    await this.networkRoomQueue.add('createRooms', { eventId, isRepeat });
     await this.networkRoomQueue.add(
-      'createRooms',
-      { eventId, isRepeat },
-      { priority: 1 },
+      `clearExpiredRooms`,
+      { eventId },
+      { delay: 270000 },
     );
-    this.clearExpiredTwillioRooms(eventId);
   }
 }
