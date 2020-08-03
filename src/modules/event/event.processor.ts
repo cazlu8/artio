@@ -1,18 +1,14 @@
 import { Process, Processor } from '@nestjs/bull';
 import { RedisService } from 'nestjs-redis';
-import { NetworkRoomService } from '../networkRoom/networkRoom.service';
 import { catchError } from '../../shared/utils/errorHandler.utils';
 
 const numCPUs = require('os').cpus().length;
 
-@Processor('networkRoom')
+@Processor('event')
 export class EventProcessor {
   private readonly redisClient: any;
 
-  constructor(
-    private readonly networkRoomService: NetworkRoomService,
-    private readonly redisService: RedisService,
-  ) {
+  constructor(private readonly redisService: RedisService) {
     this.redisClient = this.redisService.getClient();
   }
 
