@@ -8,16 +8,17 @@ import { NetworkRoomModule } from '../networkRoom/networkRoom.module';
 import { UserEvents } from '../userEvents/userEvents.entity';
 import EventQueue from './event.queue';
 import { EventProcessor } from './event.processor';
+import { EventGateway } from './event.gateway';
+import { JwtService } from '../../shared/services/jwt.service';
 
 @Module({
   imports: [
     EventQueue,
     NetworkRoomModule,
     BaseModule,
-    EventProcessor,
     TypeOrmModule.forFeature([EventRepository, UserEvents]),
   ],
   controllers: [EventController],
-  providers: [EventService],
+  providers: [EventService, EventGateway, EventProcessor, JwtService],
 })
 export class EventModule {}

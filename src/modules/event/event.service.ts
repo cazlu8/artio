@@ -24,8 +24,9 @@ import { s3Config } from '../../shared/config/AWS';
 import { CreateHeroImage } from './dto/event.create.heroImage.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
 import { NetworkRoomService } from '../networkRoom/networkRoom.service';
-import { NetworkRoomGateway } from '../networkRoom/networkRoom.gateway';
 import { UserEvents } from '../userEvents/userEvents.entity';
+import EventStartIntermissionDto from './dto/event.startIntermission.dto';
+import { EventGateway } from './event.gateway';
 
 @Injectable()
 export class EventService {
@@ -33,8 +34,7 @@ export class EventService {
     private readonly repository: EventRepository,
     private readonly networkRoomService: NetworkRoomService,
     @InjectQueue('event') private readonly eventQueue: Queue,
-    @InjectQueue('networkRoom') private readonly networkRoomQueue: Queue,
-    private readonly networkRoomGateway: NetworkRoomGateway,
+    private readonly eventGateway: EventGateway,
     @InjectRepository(UserEvents)
     private readonly userEventsRepository: Repository<UserEvents>,
   ) {}
@@ -118,34 +118,31 @@ export class EventService {
     return this.paginateEvents(getCount, getEvents, skip);
   }
 
-  async startIntermission(eventId: number) {
+  async startIntermission(
+    eventStartIntermissionDto: EventStartIntermissionDto,
+  ) {
     try {
+      const { eventId, intermissionTime } = eventStartIntermissionDto;
       const addCreateRoomOnQueue = this.networkRoomService.addCreateRoomOnQueue(
         eventId,
       );
-      const emitStartIntermissionToAllSockets = () =>
-        this.networkRoomGateway.server.sockets.emit(`startIntermission`, true);
-      return await Promise.all([
-        addCreateRoomOnQueue,
-        emitStartIntermissionToAllSockets,
-      ]);
+      const addFinishIntermissionToQueue = this.finishIntermission(
+        eventId,
+        intermissionTime,
+      );
+      await Promise.all([addCreateRoomOnQueue, addFinishIntermissionToQueue]);
     } catch (error) {
-      return new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error);
     }
   }
 
-  async finishIntermission(eventId: number) {
+  async finishIntermission(eventId: number, intermissionTime = 0) {
     try {
-      const addClearIntermissionDataOnQueue = this.eventQueue.add(
+      await this.eventQueue.add(
         'clearIntermissionData',
         { eventId },
+        { delay: intermissionTime * 60000 },
       );
-      const emitSendIntermissionToAllSockets = () =>
-        this.networkRoomGateway.server.sockets.emit(`endIntermission`, true);
-      return await Promise.all([
-        addClearIntermissionDataOnQueue,
-        emitSendIntermissionToAllSockets,
-      ]);
     } catch (error) {
       throw new InternalServerErrorException(error);
     }

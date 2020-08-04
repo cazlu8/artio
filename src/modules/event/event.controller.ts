@@ -24,6 +24,7 @@ import UpdateEventDTO from './dto/event.update.dto';
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { AdminAuthGuard } from '../../shared/guards/adminAuth.guard';
 import { CreateHeroImage } from './dto/event.create.heroImage.dto';
+import EventStartIntermissionDto from './dto/event.startIntermission.dto';
 
 @ApiTags('Events')
 @Controller('events')
@@ -193,11 +194,11 @@ export class EventController extends BaseWithoutAuthController {
   @UseGuards(AuthGuard)
   @Put('/startIntermission/:eventId')
   startIntermission(
-    @Param('eventId', ParseIntPipe) eventId: number,
+    @Body() eventStartIntermissionDto: EventStartIntermissionDto,
     @Res() res,
   ): Promise<void | UpdateResult> {
     return this.service
-      .startIntermission(eventId)
+      .startIntermission(eventStartIntermissionDto)
       .then(() => res.status(204).send());
   }
 
