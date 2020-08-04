@@ -158,11 +158,15 @@ export class EventService {
   }
 
   async finishLive(eventId) {
-    return eventId;
+    const eventToUpdate = await this.repository.findOne(eventId);
+    eventToUpdate.onLive = false;
+    return await this.repository.save(eventToUpdate);
   }
 
   async startLive(eventId) {
-    return eventId;
+    const eventToUpdate = await this.repository.findOne(eventId);
+    eventToUpdate.onLive = true;
+    return await this.repository.save(eventToUpdate);
   }
 
   async removeHeroImage(id: number) {
