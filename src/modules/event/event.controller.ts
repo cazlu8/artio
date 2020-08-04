@@ -192,7 +192,7 @@ export class EventController extends BaseWithoutAuthController {
   })
   @ApiParam({ name: 'startIntermission' })
   @UseGuards(AuthGuard)
-  @Put('/startIntermission/:eventId')
+  @Put('/startIntermission')
   startIntermission(
     @Body() eventStartIntermissionDto: EventStartIntermissionDto,
     @Res() res,
