@@ -27,7 +27,7 @@ export class EventProcessor {
         `event-${eventId}`,
       ].map(key => this.redisClient.del(key));
       await Promise.all(removeAllKeys);
-      this.eventGateway.server.sockets.emit(`endIntermission`, true);
+      this.eventGateway.server.emit(`endIntermission`, true);
       jobDone();
       console.log(`clearIntermission`);
     } catch (error) {
