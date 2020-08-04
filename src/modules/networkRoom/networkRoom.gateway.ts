@@ -47,13 +47,13 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   }
 
   async handleConnection(socket: any) {
-    /* try {
+    try {
       const { token } = socket.handshake.query;
       const { sub } = await this.jwtService.validateToken(token);
       socket.userId = sub;
     } catch (err) {
       socket.disconnect();
-    } */
+    }
   }
 
   @SubscribeMessage('requestAvailableRoom')
