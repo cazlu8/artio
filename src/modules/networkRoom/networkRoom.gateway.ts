@@ -1,5 +1,6 @@
 import {
   BaseWsExceptionFilter,
+  OnGatewayConnection,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -9,20 +10,22 @@ import { Queue } from 'bull';
 import { RedisService } from 'nestjs-redis';
 import * as Redlock from 'redlock';
 import { UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
-import * as sleep from 'sleep';
+import { Server, Socket } from 'socket.io';
 import { LoggerService } from '../../shared/services/logger.service';
 import { NetworkRoomService } from './networkRoom.service';
 import { catchErrorWs } from '../../shared/utils/errorHandler.utils';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 import { WsAuthGuard } from '../../shared/guards/wsAuth.guard';
 import { ErrorsInterceptor } from '../../shared/interceptors/errors.interceptor';
+import { JwtService } from '../../shared/services/jwt.service';
+
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
 @WebSocketGateway(3030, { transports: ['websocket'], upgrade: false })
-export class NetworkRoomGateway {
+export class NetworkRoomGateway implements OnGatewayConnection {
   @WebSocketServer()
-  readonly server: any;
+  readonly server: Server;
 
   private readonly redisClient: any;
 
@@ -33,6 +36,7 @@ export class NetworkRoomGateway {
     private readonly loggerService: LoggerService,
     private readonly redisService: RedisService,
     private readonly service: NetworkRoomService,
+    private readonly jwtService: JwtService,
   ) {
     this.redisClient = this.redisService.getClient();
     this.redlock = new Redlock([this.redisClient], {
@@ -42,19 +46,24 @@ export class NetworkRoomGateway {
     this.redlock.on('clientError', catchErrorWs);
   }
 
+  async handleConnection(socket: any) {
+    try {
+      const { token } = socket.handshake.query;
+      const { sub } = await this.jwtService.validateToken(token);
+      socket.userId = sub;
+    } catch (err) {
+      socket.disconnect();
+    }
+  }
+
   @SubscribeMessage('requestAvailableRoom')
-  async requestAvailableRoom(
-    socket: any,
-    data: { eventId: number },
-  ): Promise<void> {
-    const { eventId } = data;
+  async requestAvailableRoom(socket: any): Promise<void> {
     this.leaveRoom(socket);
     const availableRoom = await this.service.getAvailableRoom();
     if (availableRoom?.uniqueName) {
       socket.emit(`requestAvailableRoom`, availableRoom);
       console.log(`requestAvailableRoom`, availableRoom);
     } else {
-      await this.redisClient.decr(`event-${eventId}:clientsNetworkRoomCounter`);
       socket.emit(`requestAvailableRoom`, false);
     }
   }
@@ -70,9 +79,8 @@ export class NetworkRoomGateway {
 
   @SubscribeMessage('requestRoom')
   async requestRoom(socket: any, data: { eventId: number }): Promise<void> {
-    sleep.msleep(100);
-    if (this.preventRepeatedSocket(socket)) return;
     const { eventId } = data;
+    if (await this.preventRequestRoom(socket)) return;
     this.redlock
       .lock(`event-${eventId}:locks:clientsNetworkRoomCounter`, 3000)
       .then(async lock => {
@@ -83,6 +91,7 @@ export class NetworkRoomGateway {
           bindSocketToRoom,
         ]);
         await this.send(+counter, eventId);
+        await this.redisClient.set(socket.userId, 1, 'NX', 'EX', 380);
         return lock.unlock().catch(catchErrorWs);
       });
   }
@@ -155,10 +164,10 @@ export class NetworkRoomGateway {
     }
   }
 
-  private leaveRoom(socket: any): void {
-    const roomsArray = Object.keys(socket.rooms);
-    const formerRoom: string | undefined = roomsArray[1];
-    formerRoom && socket.leaveRoom(formerRoom);
+  private leaveRoom(socket: Socket): void {
+    const roomsArray: string[] = Object.keys(socket.rooms);
+    const formerRoom: string = roomsArray[1];
+    formerRoom && socket.leave(formerRoom);
   }
 
   createRoom() {
@@ -168,8 +177,7 @@ export class NetworkRoomGateway {
       .catch(() => Promise.resolve(this.createRoom()));
   }
 
-  private preventRepeatedSocket(socket: any): boolean {
-    const roomsArray = Object.keys(socket.rooms);
-    return roomsArray.length > 1;
+  private async preventRequestRoom(socket: any): Promise<boolean> {
+    return (await this.redisClient.get(socket.userId)) !== null;
   }
 }

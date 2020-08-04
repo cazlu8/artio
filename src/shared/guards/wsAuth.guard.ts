@@ -19,6 +19,8 @@ export class WsAuthGuard implements CanActivate {
       await this.tokenIsValid(token);
       return true;
     } catch (error) {
+      const socket = context.switchToWs().getClient();
+      socket.disconnect();
       return false;
     }
   }
