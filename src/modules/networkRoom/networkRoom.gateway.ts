@@ -1,6 +1,7 @@
 import {
   BaseWsExceptionFilter,
   OnGatewayConnection,
+  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -23,7 +24,8 @@ import { JwtService } from '../../shared/services/jwt.service';
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
 @WebSocketGateway(3030, { namespace: 'networkRoom', transports: ['websocket'] })
-export class NetworkRoomGateway implements OnGatewayConnection {
+export class NetworkRoomGateway
+  implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   readonly server: Server;
 
@@ -44,6 +46,10 @@ export class NetworkRoomGateway implements OnGatewayConnection {
       retryCount: Infinity,
     });
     this.redlock.on('clientError', catchErrorWs);
+  }
+
+  async handleDisconnect(socket: any) {
+    await this.redisClient.del(socket.userId);
   }
 
   async handleConnection(socket: any) {
