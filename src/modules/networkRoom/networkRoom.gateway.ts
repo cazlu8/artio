@@ -22,7 +22,7 @@ import { JwtService } from '../../shared/services/jwt.service';
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
-@WebSocketGateway(3030, { transports: ['websocket'], upgrade: false })
+@WebSocketGateway(3030, { transports: ['websocket'] })
 export class NetworkRoomGateway implements OnGatewayConnection {
   @WebSocketServer()
   readonly server: Server;
@@ -82,7 +82,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     const { eventId } = data;
     if (await this.preventRequestRoom(socket)) return;
     this.redlock
-      .lock(`event-${eventId}:locks:clientsNetworkRoomCounter`, 3000)
+      .lock(`event-${eventId}:locks:clientsNetworkRoomCounter`, 5000)
       .then(async lock => {
         const incrementCounter = this.incrementCounter(eventId);
         const bindSocketToRoom = this.bindSocketToRoom(socket, eventId);
@@ -149,17 +149,15 @@ export class NetworkRoomGateway implements OnGatewayConnection {
 
   async getNewTwillioRoom(eventId: number): Promise<{ uniqueName: string }> {
     await this.requestToCreateNewRooms(eventId);
-    const newRoom = JSON.parse(
-      await this.redisClient.lpop(`event-${eventId}:rooms`),
-    );
-    return newRoom || (await this.createRoom());
+    const newRoom = await this.redisClient.lpop(`event-${eventId}:rooms`);
+    return newRoom ? { uniqueName: newRoom } : await this.createRoom();
   }
 
   private async requestToCreateNewRooms(eventId: number): Promise<void> {
     const roomsLength = +(await this.redisClient.llen(
       `event-${eventId}:rooms`,
     ));
-    if (roomsLength < 12) {
+    if (roomsLength < 4) {
       await this.service.addCreateRoomOnQueue(eventId, true);
     }
   }
@@ -173,7 +171,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   createRoom() {
     return this.service
       .createRoom()
-      .then(data => data)
+      .then(({ uniqueName }) => ({ uniqueName }))
       .catch(() => Promise.resolve(this.createRoom()));
   }
 

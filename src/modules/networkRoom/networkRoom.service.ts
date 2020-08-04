@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ObjectLiteral } from 'typeorm';
-import { uuid } from 'uuidv4';
 import * as twilio from 'twilio';
 import * as any from 'promise.any';
 import * as util from 'util';
 import { RedisService } from 'nestjs-redis';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import * as short from 'short-uuid';
 import { config } from '../../shared/config/twilio';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 
@@ -32,7 +32,7 @@ export class NetworkRoomService {
   }
 
   async createRoom(): Promise<any> {
-    const uid = uuid();
+    const uid = short.generate();
     return await this.clientConfig.video.rooms
       .create({
         recordParticipantsOnConnect: true,

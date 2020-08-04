@@ -30,13 +30,13 @@ export class NetworkRoomProcessor {
       const { eventId, isRepeat } = job.data;
       const clientsAmount =
         (await this.userEventsRepository.count({ eventId })) *
-        (isRepeat ? 0.3 : 0.8);
+        (isRepeat ? 0.2 : 0.8);
       const rooms = Math.ceil(clientsAmount / 3);
       const createRoomFns = Array.from(new Array(rooms)).map(() =>
         this.createRoom(eventId),
       );
       parallel(createRoomFns, () => jobDone(null), 32);
-      console.log('processou paaa');
+      console.log('createRooms');
     } catch (error) {
       console.log('deu pau', error);
       catchError(error);
@@ -69,13 +69,9 @@ export class NetworkRoomProcessor {
   async createRoom(eventId: number) {
     return this.service
       .createRoom()
-      .then(
-        async data =>
-          await this.redisClient.rpush(
-            `event-${eventId}:rooms`,
-            JSON.stringify(data),
-          ),
-      )
+      .then(async ({ uniqueName }) => {
+        await this.redisClient.rpush(`event-${eventId}:rooms`, uniqueName);
+      })
       .catch(() => Promise.resolve(this.createRoom(eventId)));
   }
 }
