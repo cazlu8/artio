@@ -123,7 +123,12 @@ export class NetworkRoomGateway {
     this.server
       .to(`event-${eventId}:room-${+lastRoom}`)
       .emit('requestRoom', newTwillioRoom);
-    console.log(`${newTwillioRoom.uniqueName}/${process.pid}/${+lastRoom}`);
+    const counter = await this.redisClient.get(
+      `event-${eventId}:clientsNetworkRoomCounter`,
+    );
+    console.log(
+      `${newTwillioRoom.uniqueName}/${process.pid}/${+lastRoom}/${counter}`,
+    );
   }
 
   async incrementCounter(eventId: number): Promise<number | void> {
@@ -151,7 +156,8 @@ export class NetworkRoomGateway {
   }
 
   private leaveRoom(socket: any): void {
-    const formerRoom: string | undefined = socket.rooms[1];
+    const roomsArray = Object.keys(socket.rooms);
+    const formerRoom: string | undefined = roomsArray[1];
     formerRoom && socket.leaveRoom(formerRoom);
   }
 
@@ -164,6 +170,6 @@ export class NetworkRoomGateway {
 
   private preventRepeatedSocket(socket: any): boolean {
     const roomsArray = Object.keys(socket.rooms);
-    return roomsArray.length === 2;
+    return roomsArray.length > 1;
   }
 }
