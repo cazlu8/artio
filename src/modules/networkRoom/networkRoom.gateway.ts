@@ -22,7 +22,7 @@ import { JwtService } from '../../shared/services/jwt.service';
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
-@WebSocketGateway(3030, { transports: ['websocket'] })
+@WebSocketGateway(3030, { namespace: 'networkRoom', transports: ['websocket'] })
 export class NetworkRoomGateway implements OnGatewayConnection {
   @WebSocketServer()
   readonly server: Server;

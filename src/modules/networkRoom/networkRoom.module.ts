@@ -17,6 +17,6 @@ import { JwtService } from '../../shared/services/jwt.service';
     NetworkRoomProcessor,
     JwtService,
   ],
-  exports: [NetworkRoomService, NetworkRoomGateway, NetworkRoomQueue],
+  exports: [NetworkRoomService, NetworkRoomQueue],
 })
 export class NetworkRoomModule {}

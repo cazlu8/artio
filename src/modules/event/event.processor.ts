@@ -1,6 +1,7 @@
 import { Process, Processor } from '@nestjs/bull';
 import { RedisService } from 'nestjs-redis';
 import { catchError } from '../../shared/utils/errorHandler.utils';
+import { EventGateway } from './event.gateway';
 
 const numCPUs = require('os').cpus().length;
 
@@ -8,7 +9,10 @@ const numCPUs = require('os').cpus().length;
 export class EventProcessor {
   private readonly redisClient: any;
 
-  constructor(private readonly redisService: RedisService) {
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly eventGateway: EventGateway,
+  ) {
     this.redisClient = this.redisService.getClient();
   }
 
@@ -23,6 +27,7 @@ export class EventProcessor {
         `event-${eventId}`,
       ].map(key => this.redisClient.del(key));
       await Promise.all(removeAllKeys);
+      this.eventGateway.server.sockets.emit(`endIntermission`, true);
       jobDone();
       console.log(`clearIntermission`);
     } catch (error) {

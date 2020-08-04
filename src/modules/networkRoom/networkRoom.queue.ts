@@ -10,7 +10,7 @@ export default BullModule.registerQueueAsync({
       removeOnComplete: true,
       removeOnFail: true,
       attempts: 3,
-      timeout: 300000,
+      timeout: 180000,
     },
   }),
   inject: [ConfigService],
