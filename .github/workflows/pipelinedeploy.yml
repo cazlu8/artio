@@ -1,9 +1,11 @@
-name: Pipeline Web API Deploy develop.
+name: Pipeline Web API Deploy.
 
 on:
   push:
-    branches: [ develop ]
-       
+    branches:
+      - master
+      - develop
+
 jobs:       
   build:
     runs-on: ubuntu-latest
@@ -47,13 +49,27 @@ jobs:
         replace-with: '-'
         flags: 'g'
 
-    - name: Beanstalk Deploy for app
+    - name: Beanstalk Deploy for app STAGING
+      if: github.ref == 'refs/heads/develop'      
       uses: einaregilsson/beanstalk-deploy@v10
       with:
         aws_access_key: ${{secrets.AWS_ACCESS_KEY_ID}}
         aws_secret_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
         application_name: artio-api-staging
         environment_name: artio-api-staging-dev
+        region: us-west-1
+        version_label: "my-app-${{ steps.format-time.outputs.replaced }}"
+        deployment_package: deploy.zip
+        
+
+    - name: Beanstalk Deploy for app PRODUCTION
+      if: github.ref == 'refs/heads/master' 
+      uses: einaregilsson/beanstalk-deploy@v10
+      with:
+        aws_access_key: ${{secrets.AWS_ACCESS_KEY_ID}}
+        aws_secret_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+        application_name: artio-api-staging
+        environment_name: artio-api-produ
         region: us-west-1
         version_label: "my-app-${{ steps.format-time.outputs.replaced }}"
         deployment_package: deploy.zip
