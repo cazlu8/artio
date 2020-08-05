@@ -84,9 +84,12 @@ export class NetworkRoomGateway
   }
 
   @SubscribeMessage('requestRoom')
-  async requestRoom(socket: any, data: { eventId: number }): Promise<void> {
-    const { eventId } = data;
-    if (await this.preventRequestRoom(socket)) return;
+  async requestRoom(
+    socket: any,
+    data: { eventId: number; userId: number },
+  ): Promise<void> {
+    const { eventId, userId } = data;
+    if (await this.preventRequestRoom(userId)) return;
     this.redlock
       .lock(`event-${eventId}:locks:clientsNetworkRoomCounter`, 5000)
       .then(async lock => {
@@ -97,7 +100,7 @@ export class NetworkRoomGateway
           bindSocketToRoom,
         ]);
         await this.send(+counter, eventId);
-        await this.redisClient.set(socket.userId, 1, 'NX', 'EX', 380);
+        await this.redisClient.set(socket.userId, 1, 'NX', 'EX', 500);
         return lock.unlock().catch(catchErrorWs);
       });
   }
@@ -181,7 +184,7 @@ export class NetworkRoomGateway
       .catch(() => Promise.resolve(this.createRoom()));
   }
 
-  private async preventRequestRoom(socket: any): Promise<boolean> {
-    return (await this.redisClient.get(socket.userId)) !== null;
+  private async preventRequestRoom(userId: number): Promise<boolean> {
+    return (await this.redisClient.get(userId)) !== null;
   }
 }
