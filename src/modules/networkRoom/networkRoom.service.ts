@@ -91,7 +91,7 @@ export class NetworkRoomService {
 
   videoToken(networkRoomTokenDto: NetworkRoomTokenDto): ObjectLiteral {
     const { identity, room } = networkRoomTokenDto;
-    const videoGrant = room ? new VideoGrant({ room }) : new VideoGrant();
+    const videoGrant = new VideoGrant({ room });
     const token: any = this.twilioConfig;
     token.addGrant(videoGrant);
     token.identity = identity;
