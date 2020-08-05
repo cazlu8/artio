@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber } from 'class-validator';
+import { IsNumber, IsObject } from 'class-validator';
 
 export class NetworkRoomRequestRoomDto {
   @IsNumber()
@@ -9,4 +9,7 @@ export class NetworkRoomRequestRoomDto {
   @IsNumber()
   @ApiProperty({ type: 'string' })
   userId: number;
+
+  @IsObject()
+  auth: { token: string };
 }
