@@ -35,7 +35,7 @@ export class NetworkRoomProcessor {
       const createRoomFns = Array.from(new Array(rooms)).map(() =>
         this.createRoom(eventId),
       );
-      parallel(createRoomFns, () => jobDone(null), 32);
+      parallel(createRoomFns, () => jobDone(), 32);
       console.log('createRooms');
     } catch (error) {
       console.log('deu pau', error);
@@ -48,20 +48,26 @@ export class NetworkRoomProcessor {
     try {
       const { eventId } = job.data;
       await this.redisClient.del(`event-${eventId}:rooms`).catch(catchError);
-      await this.networkRoomQueue.add('createRooms', {
-        eventId,
-        isRepeat: true,
-      });
-      await this.networkRoomQueue.add(
-        `clearExpiredRooms`,
-        { eventId },
-        { delay: 270000 },
-      );
       console.log(`matou as rooms`);
-      jobDone();
+      const isOnIntermission = await this.redisClient.get(
+        `event-${eventId}:isOnIntermission`,
+      );
+      if (isOnIntermission) {
+        await this.networkRoomQueue.add('createRooms', {
+          eventId,
+          isRepeat: true,
+        });
+        await this.networkRoomQueue.add(
+          `clearExpiredRooms`,
+          { eventId },
+          { delay: 270000 },
+        );
+      }
     } catch (error) {
       console.log('deu pau', error);
       catchError(error);
+    } finally {
+      jobDone();
     }
   }
 

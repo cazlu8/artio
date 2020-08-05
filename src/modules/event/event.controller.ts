@@ -187,7 +187,6 @@ export class EventController extends BaseWithoutAuthController {
   }
 
   @ApiCreatedResponse({
-    type: UpdateEventDTO,
     description: 'start intermission',
   })
   @ApiParam({ name: 'startIntermission' })
@@ -203,7 +202,6 @@ export class EventController extends BaseWithoutAuthController {
   }
 
   @ApiCreatedResponse({
-    type: UpdateEventDTO,
     description: 'finish intermission',
   })
   @ApiParam({ name: 'finishIntermission' })
@@ -216,6 +214,18 @@ export class EventController extends BaseWithoutAuthController {
     return this.service
       .finishIntermission(eventId)
       .then(() => res.status(204).send());
+  }
+
+  @ApiCreatedResponse({
+    description: 'get intermission Status',
+  })
+  @ApiParam({ name: 'getIntermissionStatus' })
+  @UseGuards(AuthGuard)
+  @Get('/getIntermissionStatus/:eventId')
+  getIntermissionStatus(
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ): Promise<boolean> {
+    return this.service.getIntermissionStatus(eventId);
   }
 
   @ApiCreatedResponse({

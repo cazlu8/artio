@@ -24,7 +24,7 @@ import { AuthGuard } from '../../shared/guards/auth.guard';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
 import { AdminAuthGuard } from '../../shared/guards/adminAuth.guard';
-import { OrganizerAuthGuard } from '../../shared/guards/organizer-auth.guard';
+import { OrganizerAuthGuard } from '../../shared/guards/organizerAuth.guard';
 
 @ApiTags('Users')
 @Controller('users')
