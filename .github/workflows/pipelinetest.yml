@@ -2,7 +2,9 @@ name: Pipeline Web API tests develop.
 
 on:
   pull_request:
-    branches: [ develop ]
+    branches:
+      - develop
+      - master
 
 jobs:
   tests:
