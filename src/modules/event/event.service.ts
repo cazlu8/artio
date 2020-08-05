@@ -80,11 +80,17 @@ export class EventService {
       .then((event: Partial<Event>) => plainToClass(EventDetailsDTO, event));
   }
 
-  getEvent(id: number): Promise<Partial<Event> | void> {
-    return this.repository.findOneOrFail({ id }).catch(error => {
-      if (error.name === 'EntityNotFound') throw new NotFoundException();
-      throw new InternalServerErrorException(error);
+  async getEvent(id: number): Promise<ObjectLiteral | void> {
+    const getSubscribers = this.userEventsRepository.count({
+      where: { eventId: `${id}` },
     });
+    const getEvents = this.repository.findOneOrFail({ id });
+    return await Promise.all([getEvents, getSubscribers]).then(
+      ([events, subscribers]) => ({
+        ...events,
+        subscribers,
+      }),
+    );
   }
 
   getEvents(): Promise<Partial<Event[]> | void> {
@@ -163,12 +169,6 @@ export class EventService {
 
   async getIntermissionStatus(eventId: number): Promise<boolean> {
     return !!(await this.redisClient.get(`event-${eventId}:isOnIntermission`));
-  }
-
-  getSubscribed(eventId) {
-    return this.userEventsRepository.count({
-      where: { eventId: `${eventId}` },
-    });
   }
 
   async finishLive(eventId) {
