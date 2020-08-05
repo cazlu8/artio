@@ -141,20 +141,25 @@ export class EventService {
         addCreateRoomOnQueue,
         addFinishIntermissionToQueue,
       ]).then(async () => {
-        this.eventGateway.server.emit('startIntermission', true);
+        this.eventGateway.server.emit('startIntermission', { eventId });
         await this.redisClient.set(`event-${eventId}:isOnIntermission`, true);
       });
-    }
+    } else
+      throw new BadRequestException(
+        `event ${eventId} is already on intermission`,
+      );
   }
 
   async finishIntermission(eventId: number, intermissionTime = 0) {
-    await this.eventQueue.add(
-      'endIntermission',
-      { eventId },
-      { delay: intermissionTime * 60000 },
-    );
-
-    this.eventGateway.server.emit('endIntermission', true);
+    if (await this.eventIsOnIntermission(eventId)) {
+      await this.eventQueue.add(
+        'endIntermission',
+        { eventId },
+        { delay: intermissionTime * 60000 },
+      );
+      this.eventGateway.server.emit('endIntermission', { eventId });
+    } else
+      throw new BadRequestException(`event ${eventId} is not on intermission`);
   }
 
   async getIntermissionStatus(eventId: number): Promise<boolean> {
@@ -290,11 +295,6 @@ export class EventService {
     const isOnIntermission = await this.redisClient.get(
       `event-${eventId}:isOnIntermission`,
     );
-    if (isOnIntermission) {
-      throw new BadRequestException(
-        `event ${eventId} is already on intermission`,
-      );
-    }
-    return false;
+    return !!isOnIntermission;
   }
 }
