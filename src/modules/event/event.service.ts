@@ -73,17 +73,11 @@ export class EventService {
       .then((event: Partial<Event>) => plainToClass(EventDetailsDTO, event));
   }
 
-  async getEvent(id: number): Promise<ObjectLiteral | void> {
-    const getSubscribers = this.userEventsRepository.count({
-      where: { eventId: `${id}` },
+  getEvent(id: number): Promise<Partial<Event> | void> {
+    return this.repository.findOneOrFail({ id }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+      throw new InternalServerErrorException(error);
     });
-    const getEvents = this.repository.findOneOrFail({ id });
-    return await Promise.all([getEvents, getSubscribers]).then(
-      ([events, subscribers]) => ({
-        ...events,
-        subscribers,
-      }),
-    );
   }
 
   getEvents(): Promise<Partial<Event[]> | void> {
@@ -152,6 +146,12 @@ export class EventService {
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
+  }
+
+  getSubscribed(eventId) {
+    return this.userEventsRepository.count({
+      where: { eventId: `${eventId}` },
+    });
   }
 
   async finishLive(eventId) {
