@@ -1,7 +1,6 @@
 import {
   BaseWsExceptionFilter,
   OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
