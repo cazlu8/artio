@@ -137,12 +137,12 @@ export class EventService {
         eventId,
         intermissionTime,
       );
+      await this.redisClient.set(`event-${eventId}:isOnIntermission`, true);
       await Promise.all([
         addCreateRoomOnQueue,
         addFinishIntermissionToQueue,
       ]).then(async () => {
         this.eventGateway.server.emit('startIntermission', { eventId });
-        await this.redisClient.set(`event-${eventId}:isOnIntermission`, true);
       });
     } else
       throw new BadRequestException(
@@ -157,7 +157,6 @@ export class EventService {
         { eventId },
         { delay: intermissionTime * 60000 },
       );
-      this.eventGateway.server.emit('endIntermission', { eventId });
     } else
       throw new BadRequestException(`event ${eventId} is not on intermission`);
   }
