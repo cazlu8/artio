@@ -157,7 +157,6 @@ export class EventService {
         { eventId },
         { delay: intermissionTime * 60000 },
       );
-      this.eventGateway.server.emit('endIntermission', { eventId });
     } else
       throw new BadRequestException(`event ${eventId} is not on intermission`);
   }
