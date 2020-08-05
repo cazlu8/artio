@@ -144,7 +144,10 @@ export class EventService {
         this.eventGateway.server.emit('startIntermission', { eventId });
         await this.redisClient.set(`event-${eventId}:isOnIntermission`, true);
       });
-    }
+    } else
+      throw new BadRequestException(
+        `event ${eventId} is already on intermission`,
+      );
   }
 
   async finishIntermission(eventId: number, intermissionTime = 0) {
@@ -292,11 +295,6 @@ export class EventService {
     const isOnIntermission = await this.redisClient.get(
       `event-${eventId}:isOnIntermission`,
     );
-    if (isOnIntermission) {
-      throw new BadRequestException(
-        `event ${eventId} is already on intermission`,
-      );
-    }
-    return false;
+    return !!isOnIntermission;
   }
 }
