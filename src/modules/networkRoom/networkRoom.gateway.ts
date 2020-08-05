@@ -1,7 +1,6 @@
 import {
   BaseWsExceptionFilter,
   OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -24,8 +23,7 @@ import { JwtService } from '../../shared/services/jwt.service';
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
 @WebSocketGateway(3030, { namespace: 'networkRoom', transports: ['websocket'] })
-export class NetworkRoomGateway
-  implements OnGatewayConnection, OnGatewayDisconnect {
+export class NetworkRoomGateway implements OnGatewayConnection {
   @WebSocketServer()
   readonly server: Server;
 
@@ -46,10 +44,6 @@ export class NetworkRoomGateway
       retryCount: Infinity,
     });
     this.redlock.on('clientError', catchErrorWs);
-  }
-
-  async handleDisconnect(socket: any) {
-    await this.redisClient.del(socket.userId);
   }
 
   async handleConnection(socket: any) {
@@ -88,6 +82,7 @@ export class NetworkRoomGateway
     socket: any,
     data: { eventId: number; userId: number },
   ): Promise<void> {
+    console.log('requestRoom', data);
     const { eventId, userId } = data;
     if (await this.preventRequestRoom(userId)) return;
     this.redlock
@@ -100,7 +95,7 @@ export class NetworkRoomGateway
           bindSocketToRoom,
         ]);
         await this.send(+counter, eventId);
-        await this.redisClient.set(socket.userId, 1, 'NX', 'EX', 500);
+        await this.redisClient.set(userId, 1, 'NX', 'EX', 500);
         return lock.unlock().catch(catchErrorWs);
       });
   }
