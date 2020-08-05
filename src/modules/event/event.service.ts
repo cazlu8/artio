@@ -130,13 +130,10 @@ export class EventService {
   ) {
     const { eventId, intermissionTime } = eventStartIntermissionDto;
     if (!(await this.eventIsOnIntermission(eventId))) {
-      const addCreateRoomOnQueue = this.networkRoomService.addCreateRoomOnQueue(
-        eventId,
-      );
-      const addFinishIntermissionToQueue = this.finishIntermission(
-        eventId,
-        intermissionTime,
-      );
+      const addCreateRoomOnQueue = () =>
+        this.networkRoomService.addCreateRoomOnQueue(eventId);
+      const addFinishIntermissionToQueue = () =>
+        this.finishIntermission(eventId, intermissionTime);
       await this.redisClient.set(`event-${eventId}:isOnIntermission`, true);
       await Promise.all([
         addCreateRoomOnQueue,
