@@ -137,7 +137,7 @@ export class EventService {
         eventId,
         intermissionTime,
       );
-      return await Promise.all([
+      await Promise.all([
         addCreateRoomOnQueue,
         addFinishIntermissionToQueue,
       ]).then(async () => {
