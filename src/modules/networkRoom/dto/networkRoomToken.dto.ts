@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsObject, IsString } from 'class-validator';
 
 export class NetworkRoomTokenDto {
   @IsString()
@@ -9,4 +9,7 @@ export class NetworkRoomTokenDto {
   @IsString()
   @ApiProperty({ type: 'string' })
   room: string;
+
+  @IsObject()
+  auth: { token: string };
 }

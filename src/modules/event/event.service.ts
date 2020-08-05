@@ -154,17 +154,13 @@ export class EventService {
   }
 
   async finishIntermission(eventId: number, intermissionTime = 0) {
-    const addFinishIntermissionOnQueue = this.eventQueue.add(
+    await this.eventQueue.add(
       'endIntermission',
       { eventId },
       { delay: intermissionTime * 60000 },
     );
-    const emitEndIntermission = () =>
-      this.eventGateway.server.emit(`endIntermission`, true);
-    return await Promise.all([
-      addFinishIntermissionOnQueue,
-      emitEndIntermission,
-    ]);
+
+    this.eventGateway.server.emit('endIntermission', true);
   }
 
   async getIntermissionStatus(eventId: number): Promise<boolean> {
