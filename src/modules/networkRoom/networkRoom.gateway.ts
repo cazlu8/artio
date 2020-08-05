@@ -1,5 +1,6 @@
 import {
   BaseWsExceptionFilter,
+  MessageBody,
   OnGatewayConnection,
   SubscribeMessage,
   WebSocketGateway,
@@ -18,6 +19,9 @@ import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 import { WsAuthGuard } from '../../shared/guards/wsAuth.guard';
 import { ErrorsInterceptor } from '../../shared/interceptors/errors.interceptor';
 import { JwtService } from '../../shared/services/jwt.service';
+import { ValidationSchemaWsPipe } from '../../shared/pipes/validationSchemaWs.pipe';
+import { NetworkRoomRequestRoomDto } from './dto/networkRoomRequestRoom.dto';
+import { NetworkRoomSwitchRoomDto } from './dto/networkRoomSwitchRoom.dto';
 
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
@@ -69,7 +73,10 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('switchRoom')
-  async switchRoom(socket: any, data: { currentRoom: string }): Promise<void> {
+  async switchRoom(
+    socket: any,
+    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
+  ): Promise<void> {
     const { currentRoom } = data;
     this.leaveRoom(socket);
     const newRoom = await this.service.getAvailableRoom(currentRoom);
@@ -80,7 +87,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   @SubscribeMessage('requestRoom')
   async requestRoom(
     socket: any,
-    data: { eventId: number; userId: number },
+    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomRequestRoomDto,
   ): Promise<void> {
     console.log('requestRoom', data);
     const { eventId, userId } = data;
@@ -101,7 +108,10 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('requestRoomToken')
-  requestRoomToken(socket: any, data: NetworkRoomTokenDto): void {
+  requestRoomToken(
+    socket: any,
+    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomTokenDto,
+  ): void {
     console.log(`requestRoomToken`, data);
     const token = this.service.videoToken(data);
     socket.emit('requestRoomToken', token);
