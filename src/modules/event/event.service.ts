@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -11,6 +12,7 @@ import * as sharp from 'sharp';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { InjectRepository } from '@nestjs/typeorm';
+import { RedisService } from 'nestjs-redis';
 import { Event } from './event.entity';
 import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
@@ -30,6 +32,8 @@ import { EventGateway } from './event.gateway';
 
 @Injectable()
 export class EventService {
+  private redisClient: any;
+
   constructor(
     private readonly repository: EventRepository,
     private readonly networkRoomService: NetworkRoomService,
@@ -37,7 +41,10 @@ export class EventService {
     private readonly eventGateway: EventGateway,
     @InjectRepository(UserEvents)
     private readonly userEventsRepository: Repository<UserEvents>,
-  ) {}
+    private readonly redisService: RedisService,
+  ) {
+    this.redisClient = this.redisService.getClient();
+  }
 
   create(createEventDTO: CreateEventDTO): Promise<void | ObjectLiteral> {
     return this.repository
@@ -121,8 +128,8 @@ export class EventService {
   async startIntermission(
     eventStartIntermissionDto: EventStartIntermissionDto,
   ) {
-    try {
-      const { eventId, intermissionTime } = eventStartIntermissionDto;
+    const { eventId, intermissionTime } = eventStartIntermissionDto;
+    if (!(await this.eventIsOnIntermission(eventId))) {
       const addCreateRoomOnQueue = this.networkRoomService.addCreateRoomOnQueue(
         eventId,
       );
@@ -130,22 +137,32 @@ export class EventService {
         eventId,
         intermissionTime,
       );
-      await Promise.all([addCreateRoomOnQueue, addFinishIntermissionToQueue]);
-    } catch (error) {
-      throw new InternalServerErrorException(error);
+      await Promise.all([
+        addCreateRoomOnQueue,
+        addFinishIntermissionToQueue,
+      ]).then(async () => {
+        this.eventGateway.server.emit('startIntermission', true);
+        await this.redisClient.set(`event-${eventId}:isOnIntermission`, true);
+      });
     }
   }
 
   async finishIntermission(eventId: number, intermissionTime = 0) {
-    try {
-      await this.eventQueue.add(
-        'clearIntermissionData',
-        { eventId },
-        { delay: intermissionTime * 60000 },
-      );
-    } catch (error) {
-      throw new InternalServerErrorException(error);
-    }
+    const addFinishIntermissionOnQueue = this.eventQueue.add(
+      'endIntermission',
+      { eventId },
+      { delay: intermissionTime * 60000 },
+    );
+    const emitEndIntermission = () =>
+      this.eventGateway.server.emit(`endIntermission`, true);
+    return await Promise.all([
+      addFinishIntermissionOnQueue,
+      emitEndIntermission,
+    ]);
+  }
+
+  async getIntermissionStatus(eventId: number): Promise<boolean> {
+    return !!(await this.redisClient.get(`event-${eventId}:isOnIntermission`));
   }
 
   getSubscribed(eventId) {
@@ -175,16 +192,6 @@ export class EventService {
     const s3 = new AWS.S3(s3Config());
     const Bucket = process.env.S3_BUCKET_HERO_IMAGE;
     await this.deleteHeroImage(user, s3, Bucket);
-  }
-
-  private deleteHeroImage(event: any, s3: AWS.S3, Bucket: string) {
-    if (event?.heroImgUrl) {
-      const { heroImgUrl: formerUrl } = event;
-      const lastIndex = formerUrl.lastIndexOf('/');
-      const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
-      return s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
-    }
-    return Promise.resolve();
   }
 
   async createHeroImage(
@@ -219,6 +226,16 @@ export class EventService {
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
+  }
+
+  private deleteHeroImage(event: any, s3: AWS.S3, Bucket: string) {
+    if (event?.heroImgUrl) {
+      const { heroImgUrl: formerUrl } = event;
+      const lastIndex = formerUrl.lastIndexOf('/');
+      const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
+      return s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
+    }
+    return Promise.resolve();
   }
 
   private async processAvatarImage(
@@ -271,5 +288,17 @@ export class EventService {
 
   private update(id: number, eventData: Partial<Event>): Promise<UpdateResult> {
     return this.repository.update(id, eventData);
+  }
+
+  private async eventIsOnIntermission(eventId: number) {
+    const isOnIntermission = await this.redisClient.get(
+      `event-${eventId}:isOnIntermission`,
+    );
+    if (isOnIntermission) {
+      throw new BadRequestException(
+        `event ${eventId} is already on intermission`,
+      );
+    }
+    return false;
   }
 }

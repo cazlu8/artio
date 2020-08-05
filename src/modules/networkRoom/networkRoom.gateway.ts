@@ -50,7 +50,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     this.redlock.on('clientError', catchErrorWs);
   }
 
-  async handleConnection(socket: any) {
+  async handleConnection(socket: any): Promise<void> {
     try {
       const { token } = socket.handshake.query;
       const { sub } = await this.jwtService.validateToken(token);

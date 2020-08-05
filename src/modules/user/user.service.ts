@@ -231,7 +231,7 @@ export class UserService {
       StringStream.from(readSTream)
         .lines()
         .CSVParse()
-        .do(async function(data) {
+        .do(async data => {
           console.log(data);
         });
     } catch (error) {

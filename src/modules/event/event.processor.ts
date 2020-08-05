@@ -16,8 +16,8 @@ export class EventProcessor {
     this.redisClient = this.redisService.getClient();
   }
 
-  @Process({ name: 'clearIntermissionData', concurrency: numCPUs })
-  async clearIntermissionData(job, jobDone) {
+  @Process({ name: 'endIntermission', concurrency: numCPUs })
+  async endIntermission(job, jobDone) {
     try {
       const { eventId } = job.data;
       const removeAllKeys = [
@@ -27,7 +27,7 @@ export class EventProcessor {
         `event-${eventId}`,
       ].map(key => this.redisClient.del(key));
       await Promise.all(removeAllKeys);
-      this.eventGateway.server.emit(`endIntermission`, true);
+      await this.redisClient.del(`event-${eventId}:isOnIntermission`);
       jobDone();
       console.log(`clearIntermission`);
     } catch (error) {
