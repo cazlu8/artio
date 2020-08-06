@@ -74,18 +74,20 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     await this.redisClient.set(`event-${eventId}:availableRoom`, 1);
     if (alreadyRequestARoom) {
       this.redlock
-        .lock(`locks:event-${eventId}:availableRoom`, 5000)
+        .lock(`locks:event-${eventId}:availableRoom`, 4000)
         .then(async lock => {
           this.leaveRoom(socket);
           const availableRoom = await this.service.getAvailableRoom();
           if (availableRoom?.uniqueName) {
             socket.emit(`requestAvailableRoom`, availableRoom);
-            console.log(`requestAvailableRoom`, availableRoom);
+            console.log(`request AvailableRoom`, availableRoom);
           } else {
             socket.emit(`requestAvailableRoom`, false);
           }
-          lock.unlock().catch(catchErrorWs);
-          await this.redisClient.del(`event-${eventId}:availableRoom`);
+          lock.extend(2000).then(async extendLock => {
+            extendLock.unlock();
+            await this.redisClient.del(`event-${eventId}:availableRoom`);
+          });
         });
     } else socket.emit(`requestAvailableRoom`, false);
   }
