@@ -20,6 +20,9 @@ import { User } from './user.entity';
 import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
 import { UpdateUserDto } from './dto/user.update.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
+import { RedeemEventCodeDTO } from './dto/user.redeemEventCode.dto';
+import { LinkToEventWithCodeDTO } from './dto/user.linkToEventWithCode.dto';
+import { LinkToEventWithRoleDTO } from './dto/user.linkToEventWithRole.dto';
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
@@ -35,7 +38,7 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: CreateUserDto,
-    description: 'the user has been successfully created',
+    description: 'User has been successfully created',
   })
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
@@ -44,41 +47,124 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: CreateAvatarDto,
-    description: 'the avatar has been successfully created',
+    description: 'Avatar has been successfully created',
   })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post('/create-avatar')
-  async createAvatar(@Body() createAvatarDto: CreateAvatarDto) {
+  createAvatar(@Body() createAvatarDto: CreateAvatarDto) {
     return this.userService.createAvatar(createAvatarDto);
   }
 
   @ApiCreatedResponse({
-    type: User,
-    description: 'get user avatar by id',
+    type: CreateAvatarDto,
+    description: 'CSV file has been successfully uploaded',
   })
+  @UseGuards(AuthGuard)
+  @Post('uploadUsers/:eventId')
+  async processCSVUsers(
+    @Req() req,
+    @Res() res,
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ) {
+    const { file } = req.raw.files;
+    return await this.userService
+      .processCsvFile(file, eventId)
+      .then(() => res.status(201).send());
+  }
+
+  @ApiParam({ name: 'guid', type: 'string' })
+  @ApiCreatedResponse({
+    description: 'User found in cognito pool',
+  })
+  @Post('/checkUserExists')
+  verifyIfUserExists(
+    @Body() checkUserExists: CheckUserExistsDto,
+  ): Promise<boolean> {
+    return this.userService.exists(checkUserExists);
+  }
+
+  @ApiParam({ name: 'userId and eventId', type: 'number' })
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'Success on link a user with role to a event',
+  })
+  @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
+  @Post('linkEvent')
+  bindUserEvent(
+    @Res() res,
+    @Body() linkToEventWithRoleDTO: LinkToEventWithRoleDTO,
+  ): Promise<void | ObjectLiteral> {
+    return this.userService
+      .bindUserEvent(linkToEventWithRoleDTO)
+      .then(() => res.status(201).send());
+  }
+
+  @ApiParam({ name: 'userId and eventId', type: 'number' })
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'Success on link a user with code to a event',
+  })
+  @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
+  @Post('linkEventCode')
+  bindUserEventCode(
+    @Res() res,
+    @Body() linkToEventWithCodeDTO: LinkToEventWithCodeDTO,
+  ): Promise<void | ObjectLiteral> {
+    return this.userService
+      .bindUserEventCode(linkToEventWithCodeDTO)
+      .then(() => res.status(201).send())
+      .catch(() => res.status(404).send());
+  }
+
   @ApiParam({ name: 'id', type: 'number' })
+  @ApiCreatedResponse({
+    type: User,
+    description: 'User avatar by id ',
+  })
   @UseGuards(AuthGuard)
   @Get('/avatar/:id')
   async getAvatarUrl(@Param('id') id): Promise<Partial<User> | void> {
-    return this.userService.getAvatarUrl(id);
+    return await this.userService.getAvatarUrl(id);
   }
 
+  @ApiParam({ name: 'email', type: 'string' })
   @ApiCreatedResponse({
     type: User,
-    description: 'get user by email',
+    description: 'User by email was successfully retrieved',
   })
-  @ApiParam({ name: 'email', type: 'string' })
   @UseGuards(AdminAuthGuard)
   @Get('/email/:email')
   async getUserByEmail(@Param('email') email): Promise<User | void> {
-    return this.userService.getUserByEmail(email);
+    return await this.userService.getUserByEmail(email);
   }
 
+  @ApiParam({ name: 'guid', type: 'string' })
+  @ApiCreatedResponse({
+    type: User,
+    description: 'User by guid was successfully retrieved',
+  })
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @Get('/:guid')
+  async findOne(@Param('guid') guid): Promise<Partial<User> | void> {
+    return await this.userService.findOne(guid);
+  }
+
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'Events by user id were successfully retrieved',
+  })
+  @UseGuards(AuthGuard)
+  @Get('events/:id')
+  async getUserEvents(@Param('id', ParseIntPipe) id: number) {
+    return await this.userService.getEventsByUserId(id);
+  }
+
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: UpdateUserDto,
-    description: 'the user has been successfully updated',
+    description: 'User has been successfully updated',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Put('/:id')
   update(
@@ -91,113 +177,31 @@ export class UserController extends BaseWithoutAuthController {
       .then(() => res.status(204).send());
   }
 
-  @ApiCreatedResponse({
-    type: User,
-    description: 'get user by guid',
-  })
-  @ApiParam({ name: 'guid', type: 'string' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
-  @Get('/:guid')
-  async findOne(@Param('guid') guid): Promise<Partial<User> | void> {
-    return this.userService.findOne(guid);
-  }
-
-  @ApiCreatedResponse({
-    description: 'check if a given user exists on cognito user pool',
-  })
-  @ApiParam({ name: 'guid', type: 'string' })
-  @Post('/checkUserExists')
-  async verifyIfUserExists(
-    @Body() checkUserExists: CheckUserExistsDto,
-  ): Promise<boolean> {
-    return this.userService.exists(checkUserExists);
-  }
-
-  @ApiCreatedResponse({
-    type: Event,
-    description: 'get events by user id',
-  })
-  @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard)
-  @Get('events/:id')
-  async getUserEvents(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.getEventsByUserId(id);
-  }
-
-  @ApiCreatedResponse({
-    type: Event,
-    description: 'Link a user with role to a event',
-  })
-  @ApiParam({ name: 'userId and eventId', type: 'number' })
-  @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
-  @Post('linkEvent')
-  async bindUserEvent(
-    @Res() res,
-    @Body() { roleId, userId, eventId },
-  ): Promise<void | ObjectLiteral> {
-    const data = { roleId, userId, eventId };
-    return this.userService
-      .bindUserEvent(data)
-      .then(() => res.status(201).send());
-  }
-
-  @ApiCreatedResponse({
-    type: Event,
-    description: 'Link a user with code to a event',
-  })
-  @ApiParam({ name: 'userId and eventId', type: 'number' })
-  @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
-  @Post('linkEventCode')
-  async bindUserEventCode(
-    @Res() res,
-    @Body() { userEmail, eventId },
-  ): Promise<void | ObjectLiteral> {
-    const data = { userEmail, eventId };
-    return this.userService
-      .bindUserEventCode(data)
-      .then(() => res.status(201).send())
-      .catch(() => res.status(404).send());
-  }
-
-  @ApiCreatedResponse({
-    type: Event,
-    description: 'Redeem a event code',
-  })
   @ApiParam({ name: 'userId', type: 'number' })
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'Event code was successfully redeemed',
+  })
   @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
   @Put('redeemCode')
-  async redeemEventCode(
+  redeemEventCode(
     @Res() res,
-    @Body() { userId, ticketCode },
+    @Body() redeemEventCodeDTO: RedeemEventCodeDTO,
   ): Promise<void | ObjectLiteral> {
-    const data = { userId, ticketCode };
     return this.userService
-      .redeemEventCode(data)
+      .redeemEventCode(redeemEventCodeDTO)
       .then(() => res.status(200).send())
       .catch(() => res.status(404).send());
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
-    description: 'delete avatar image by user id',
+    description: 'Avatar image by user id was successfully deleted',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Delete('removeAvatar/:id')
-  async removeAvatar(@Param('id', ParseIntPipe) id: number) {
+  removeAvatar(@Param('id', ParseIntPipe) id: number) {
     return this.userService.removeAvatar(id);
-  }
-
-  @UseGuards(AuthGuard)
-  @Post('uploadUsers/:eventId')
-  async processCSVUsers(
-    @Req() req,
-    @Res() res,
-    @Param('eventId', ParseIntPipe) eventId: number,
-  ) {
-    const { file } = req.raw.files;
-    return await this.userService
-      .processCsvFile(file, eventId)
-      .then(() => res.status(201).send());
   }
 }

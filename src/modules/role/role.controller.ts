@@ -24,7 +24,7 @@ export class RoleController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: CreateRoleDTO,
-    description: 'the role has been successfully created',
+    description: 'The role has been successfully created',
   })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post()
@@ -32,24 +32,24 @@ export class RoleController extends BaseWithoutAuthController {
     return this.service.create(createRoleDTO);
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Role,
-    description: 'get role by id',
+    description: 'Role by id was successfully retrieved',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/:id')
   async findOne(@Param('id', ParseIntPipe) id): Promise<Partial<Role> | void> {
-    return this.service.getRole(id);
+    return await this.service.getRole(id);
   }
 
   @ApiCreatedResponse({
     type: Role,
-    description: 'get all roles',
+    description: 'All roles were successfully retrieved',
   })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get()
   async find(): Promise<Partial<Role[]> | void> {
-    return this.service.getRoles();
+    return await this.service.getRoles();
   }
 }
