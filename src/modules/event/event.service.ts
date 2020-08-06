@@ -137,6 +137,10 @@ export class EventService {
         `event-${eventId}:intermissionStartedAt`,
         new Date().toISOString(),
       );
+      await this.redisClient.set(
+        `event-${eventId}:intermissionTime`,
+        intermissionTime,
+      );
       this.eventGateway.server.emit('startIntermission', { eventId });
     } else
       throw new BadRequestException(
