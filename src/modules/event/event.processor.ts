@@ -26,6 +26,7 @@ export class EventProcessor {
         `event-${eventId}:clientsNetworkRoomCounter`,
         `event-${eventId}`,
       ].map(key => this.redisClient.del(key));
+      console.log('endIntermission');
       await Promise.all(removeAllKeys);
       await this.redisClient.flushdb();
       this.eventGateway.server.emit('endIntermission', { eventId });

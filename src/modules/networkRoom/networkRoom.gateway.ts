@@ -180,16 +180,9 @@ export class NetworkRoomGateway implements OnGatewayConnection {
 
   async sendTwillioRoomToSockets(eventId: number): Promise<void> {
     console.log('sending message');
-    const getLastRoom = this.redisClient.get(`event-${eventId}:lastRoom`);
-    const getNewTwillioRoom = this.getNewTwillioRoom(eventId);
-    const incrementLastRoom = this.redisClient.incr(
-      `event-${eventId}:lastRoom`,
-    );
-    const [lastRoom, newTwillioRoom] = await Promise.all([
-      getLastRoom,
-      getNewTwillioRoom,
-      incrementLastRoom,
-    ]);
+    const lastRoom = await this.redisClient.get(`event-${eventId}:lastRoom`);
+    const newTwillioRoom = await this.getNewTwillioRoom(eventId);
+    await this.redisClient.incr(`event-${eventId}:lastRoom`);
     this.server
       .to(`event-${eventId}:room-${+lastRoom}`)
       .emit('requestRoom', newTwillioRoom);
