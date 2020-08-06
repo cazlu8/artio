@@ -21,9 +21,9 @@ import { WsAuthGuard } from '../../shared/guards/wsAuth.guard';
 import { ErrorsInterceptor } from '../../shared/interceptors/errors.interceptor';
 import { JwtService } from '../../shared/services/jwt.service';
 import { ValidationSchemaWsPipe } from '../../shared/pipes/validationSchemaWs.pipe';
-import { NetworkRoomRequestRoomDto } from './dto/networkRoomRequestRoom.dto';
+import { NetworkRoomEventDefaultDto } from './dto/networkRoomEventDefault.dto';
 import { NetworkRoomSwitchRoomDto } from './dto/networkRoomSwitchRoom.dto';
-import { NetworkRoomLeaveRoomDto } from './dto/networkRoomLeaveRoom.dto';
+import { NetworkRoomRequestAvailableRoomDto } from './dto/NetworkRoomRequestAvailableRoom.dto';
 
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
@@ -63,15 +63,27 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('requestAvailableRoom')
-  async requestAvailableRoom(socket: any): Promise<void> {
-    this.leaveRoom(socket);
-    const availableRoom = await this.service.getAvailableRoom();
-    if (availableRoom?.uniqueName) {
-      socket.emit(`requestAvailableRoom`, availableRoom);
-      console.log(`requestAvailableRoom`, availableRoom);
-    } else {
-      socket.emit(`requestAvailableRoom`, false);
-    }
+  async requestAvailableRoom(
+    @ConnectedSocket() socket: any,
+    @MessageBody(new ValidationSchemaWsPipe())
+    data: NetworkRoomRequestAvailableRoomDto,
+  ): Promise<void> {
+    const { eventId } = data;
+    await this.redisClient.set(`event-${eventId}:locks:availableRoom`, 1);
+    this.redlock
+      .lock(`event-${eventId}:locks:availableRoom`, 5000)
+      .then(async lock => {
+        this.leaveRoom(socket);
+        const availableRoom = await this.service.getAvailableRoom();
+        if (availableRoom?.uniqueName) {
+          socket.emit(`requestAvailableRoom`, availableRoom);
+          console.log(`requestAvailableRoom`, availableRoom);
+        } else {
+          socket.emit(`requestAvailableRoom`, false);
+        }
+        lock.unlock().catch(catchErrorWs);
+        await this.redisClient.del(`event-${eventId}:locks:availableRoom`);
+      });
   }
 
   @SubscribeMessage('switchRoom')
@@ -89,7 +101,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   @SubscribeMessage('requestRoom')
   async requestRoom(
     @ConnectedSocket() socket: any,
-    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomRequestRoomDto,
+    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
     console.log('requestRoom', data);
     const { eventId, userId } = data;
@@ -119,10 +131,12 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   @SubscribeMessage('leaveRoom')
   async leaveRoomTwillio(
     @ConnectedSocket() socket: any,
-    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomLeaveRoomDto,
+    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
+    const { eventId, userId } = data;
+    await this.redisClient.decr(`event-${eventId}:clientsNetworkRoomCounter`);
     await this.leaveRoom(socket);
-    await this.removeRequestRoomLock(data.userId);
+    await this.removeRequestRoomLock(userId);
   }
 
   async bindSocketToRoom(socket: any, eventId: number): Promise<void> {
