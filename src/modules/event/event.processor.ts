@@ -27,8 +27,7 @@ export class EventProcessor {
         `event-${eventId}`,
       ].map(key => this.redisClient.del(key));
       await Promise.all(removeAllKeys);
-      await this.redisClient.del(`event-${eventId}:isOnIntermission`);
-      await this.redisClient.del(`event-${eventId}:intermissionStartedAt`);
+      await this.redisClient.flushdb();
       this.eventGateway.server.emit('endIntermission', { eventId });
       jobDone();
       console.log(`clearIntermission`);

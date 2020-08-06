@@ -16,9 +16,12 @@ export class WsAuthGuard implements CanActivate {
       const {
         auth: { token },
       } = context.switchToWs().getData();
-      await this.tokenIsValid(token);
+      const socket = context.switchToWs().getClient();
+      const { sub } = await this.tokenIsValid(token);
+      socket.userId = sub;
       return true;
     } catch (error) {
+      console.log('error ws', error);
       const socket = context.switchToWs().getClient();
       socket.disconnect();
       return false;
