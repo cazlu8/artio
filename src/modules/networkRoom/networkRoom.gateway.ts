@@ -198,6 +198,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   }
 
   private async preventRequestRoom(userId: number): Promise<boolean> {
+    console.log(`releasing user${userId}`);
     return (await this.redisClient.get(userId)) !== null;
   }
 }
