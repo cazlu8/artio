@@ -99,7 +99,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
       .then(async lock => {
         const counter = await this.incrementCounter(eventId);
         await this.bindSocketToRoom(socket, eventId);
-        console.log('counter', counter);
+        console.log('foi counter', counter);
         await this.send(+counter, eventId);
         await this.redisClient.set(userId, 1, 'EX', 600);
         return lock.unlock().catch(catchErrorWs);
@@ -187,6 +187,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   }
 
   private async removeRequestRoomLock(userId: number) {
+    console.log(`releasing user${userId}`);
     await this.redisClient.del(userId);
   }
 
@@ -198,7 +199,6 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   }
 
   private async preventRequestRoom(userId: number): Promise<boolean> {
-    console.log(`releasing user${userId}`);
     return (await this.redisClient.get(userId)) !== null;
   }
 }
