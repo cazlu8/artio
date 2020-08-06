@@ -139,6 +139,10 @@ export class EventService {
         `event-${eventId}:intermissionStartedAt`,
         new Date().toISOString(),
       );
+      await this.redisClient.set(
+        `event-${eventId}:intermissionTime`,
+        intermissionTime,
+      );
       await Promise.all([
         addCreateRoomOnQueue,
         addFinishIntermissionToQueue,
@@ -165,14 +169,17 @@ export class EventService {
   async getIntermissionStatus(
     eventId: number,
   ): Promise<ObjectLiteral | boolean> {
-    const isOnIntermission = !!(await this.redisClient.get(
+    const ongoing = !!(await this.redisClient.get(
       `event-${eventId}:isOnIntermission`,
     ));
-    if (isOnIntermission) {
-      const intermissionStartedAt = await this.redisClient.get(
+    if (ongoing) {
+      const startedAt = await this.redisClient.get(
         `event-${eventId}:intermissionStartedAt`,
       );
-      return { isOnIntermission, intermissionStartedAt };
+      const duration = await this.redisClient.get(
+        `event-${eventId}:intermissionTime`,
+      );
+      return { ongoing, startedAt, duration };
     }
     return false;
   }
