@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
-import { UpdateResult } from 'typeorm';
+import { ObjectLiteral, UpdateResult } from 'typeorm/index';
 import { EventService } from './event.service';
 import EventListDto from './dto/event.list.dto';
 import EventDetailsDTO from './dto/event.details.dto';
@@ -224,7 +224,7 @@ export class EventController extends BaseWithoutAuthController {
   @Get('/getIntermissionStatus/:eventId')
   getIntermissionStatus(
     @Param('eventId', ParseIntPipe) eventId: number,
-  ): Promise<boolean> {
+  ): Promise<ObjectLiteral | boolean> {
     return this.service.getIntermissionStatus(eventId);
   }
 
