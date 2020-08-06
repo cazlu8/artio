@@ -12,7 +12,7 @@ import { Queue } from 'bull';
 import { RedisService } from 'nestjs-redis';
 import * as Redlock from 'redlock';
 import { UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { LoggerService } from '../../shared/services/logger.service';
 import { NetworkRoomService } from './networkRoom.service';
 import { catchErrorWs } from '../../shared/utils/errorHandler.utils';
@@ -23,6 +23,7 @@ import { JwtService } from '../../shared/services/jwt.service';
 import { ValidationSchemaWsPipe } from '../../shared/pipes/validationSchemaWs.pipe';
 import { NetworkRoomRequestRoomDto } from './dto/networkRoomRequestRoom.dto';
 import { NetworkRoomSwitchRoomDto } from './dto/networkRoomSwitchRoom.dto';
+import { NetworkRoomLeaveRoomDto } from './dto/networkRoomLeaveRoom.dto';
 
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
@@ -119,8 +120,12 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('leaveRoom')
-  leaveRoomTwillio(socket: any): void {
-    this.leaveRoom(socket);
+  async leaveRoomTwillio(
+    @ConnectedSocket() socket: any,
+    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomLeaveRoomDto,
+  ): Promise<void> {
+    await this.leaveRoom(socket);
+    await this.removeRequestRoomLock(data.userId);
   }
 
   async bindSocketToRoom(socket: any, eventId: number): Promise<void> {
@@ -177,10 +182,14 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     }
   }
 
-  private leaveRoom(socket: Socket): void {
+  private leaveRoom(socket: any): void {
     const roomsArray: string[] = Object.keys(socket.rooms);
     const formerRoom: string = roomsArray[1];
     formerRoom && socket.leave(formerRoom);
+  }
+
+  private async removeRequestRoomLock(userId: number) {
+    await this.redisClient.del(userId);
   }
 
   createRoom() {
