@@ -179,7 +179,7 @@ export class EventService {
 
   async getSubscribed(eventId) {
     return await this.userEventsRepository.count({
-      where: { eventId: `${eventId}` },
+      where: { eventId },
     });
   }
 
