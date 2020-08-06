@@ -97,14 +97,14 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     this.redlock
       .lock(`event-${eventId}:locks:clientsNetworkRoomCounter`, 5000)
       .then(async lock => {
-        const incrementCounter = this.incrementCounter(eventId);
-        const bindSocketToRoom = this.bindSocketToRoom(socket, eventId);
+        const incrementCounter = () => this.incrementCounter(eventId);
+        const bindSocketToRoom = () => this.bindSocketToRoom(socket, eventId);
         const [counter] = await Promise.all([
           incrementCounter,
           bindSocketToRoom,
         ]);
         await this.send(+counter, eventId);
-        await this.redisClient.set(userId, 1, 'NX', 'EX', 600);
+        await this.redisClient.set(userId, 1, 'EX', 600);
         return lock.unlock().catch(catchErrorWs);
       });
   }
@@ -139,6 +139,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   }
 
   async sendTwillioRoomToSockets(eventId: number): Promise<void> {
+    console.log('sending message');
     const getLastRoom = this.redisClient.get(`event-${eventId}:lastRoom`);
     const getNewTwillioRoom = this.getNewTwillioRoom(eventId);
     const incrementLastRoom = this.redisClient.incr(
