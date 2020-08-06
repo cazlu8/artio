@@ -196,6 +196,8 @@ export class UserController extends BaseWithoutAuthController {
     @Param('eventId', ParseIntPipe) eventId: number,
   ) {
     const { file } = req.raw.files;
-    await this.userService.processCsvFile(file, eventId);
+    return this.userService
+      .processCsvFile(file, eventId)
+      .then(() => res.status(201).send());
   }
 }
