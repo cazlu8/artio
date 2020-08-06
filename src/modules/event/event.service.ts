@@ -130,21 +130,14 @@ export class EventService {
   ) {
     const { eventId, intermissionTime } = eventStartIntermissionDto;
     if (!(await this.eventIsOnIntermission(eventId))) {
-      const addCreateRoomOnQueue = () =>
-        this.networkRoomService.addCreateRoomOnQueue(eventId);
-      const addFinishIntermissionToQueue = () =>
-        this.finishIntermission(eventId, intermissionTime);
+      await this.networkRoomService.addCreateRoomOnQueue(eventId);
       await this.redisClient.set(`event-${eventId}:isOnIntermission`, true);
+      await this.finishIntermission(eventId, intermissionTime);
       await this.redisClient.set(
         `event-${eventId}:intermissionStartedAt`,
         new Date().toISOString(),
       );
-      await Promise.all([
-        addCreateRoomOnQueue,
-        addFinishIntermissionToQueue,
-      ]).then(async () => {
-        this.eventGateway.server.emit('startIntermission', { eventId });
-      });
+      this.eventGateway.server.emit('startIntermission', { eventId });
     } else
       throw new BadRequestException(
         `event ${eventId} is already on intermission`,
