@@ -5,6 +5,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
@@ -74,7 +75,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
 
   @SubscribeMessage('switchRoom')
   async switchRoom(
-    socket: any,
+    @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
     const { currentRoom } = data;
@@ -86,7 +87,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
 
   @SubscribeMessage('requestRoom')
   async requestRoom(
-    socket: any,
+    @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomRequestRoomDto,
   ): Promise<void> {
     console.log('requestRoom', data);
@@ -102,14 +103,14 @@ export class NetworkRoomGateway implements OnGatewayConnection {
           bindSocketToRoom,
         ]);
         await this.send(+counter, eventId);
-        await this.redisClient.set(userId, 1, 'NX', 'EX', 500);
+        await this.redisClient.set(userId, 1, 'NX', 'EX', 600);
         return lock.unlock().catch(catchErrorWs);
       });
   }
 
   @SubscribeMessage('requestRoomToken')
   requestRoomToken(
-    socket: any,
+    @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomTokenDto,
   ): void {
     console.log(`requestRoomToken`, data);
