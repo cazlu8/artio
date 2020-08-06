@@ -20,6 +20,9 @@ import { User } from './user.entity';
 import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
 import { UpdateUserDto } from './dto/user.update.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
+import { RedeemEventCodeDTO } from './dto/user.redeemEventCode.dto';
+import { LinkToEventWithCodeDTO } from './dto/user.linkToEventWithCode.dto';
+import { LinkToEventWithRoleDTO } from './dto/user.linkToEventWithRole.dto';
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
@@ -87,11 +90,10 @@ export class UserController extends BaseWithoutAuthController {
   @Post('linkEvent')
   async bindUserEvent(
     @Res() res,
-    @Body() { roleId, userId, eventId },
+    @Body() linkToEventWithRoleDTO: LinkToEventWithRoleDTO,
   ): Promise<void | ObjectLiteral> {
-    const data = { roleId, userId, eventId };
     return this.userService
-      .bindUserEvent(data)
+      .bindUserEvent(linkToEventWithRoleDTO)
       .then(() => res.status(201).send());
   }
 
@@ -104,11 +106,10 @@ export class UserController extends BaseWithoutAuthController {
   @Post('linkEventCode')
   async bindUserEventCode(
     @Res() res,
-    @Body() { userEmail, eventId },
+    @Body() linkToEventWithCodeDTO: LinkToEventWithCodeDTO,
   ): Promise<void | ObjectLiteral> {
-    const data = { userEmail, eventId };
     return this.userService
-      .bindUserEventCode(data)
+      .bindUserEventCode(linkToEventWithCodeDTO)
       .then(() => res.status(201).send())
       .catch(() => res.status(404).send());
   }
@@ -187,11 +188,10 @@ export class UserController extends BaseWithoutAuthController {
   @Put('redeemCode')
   async redeemEventCode(
     @Res() res,
-    @Body() { userId, ticketCode },
+    @Body() redeemEventCodeDTO: RedeemEventCodeDTO,
   ): Promise<void | ObjectLiteral> {
-    const data = { userId, ticketCode };
     return this.userService
-      .redeemEventCode(data)
+      .redeemEventCode(redeemEventCodeDTO)
       .then(() => res.status(200).send())
       .catch(() => res.status(404).send());
   }
