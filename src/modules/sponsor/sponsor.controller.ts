@@ -30,7 +30,7 @@ export class SponsorController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: CreateSponsorDto,
-    description: 'the sponsor has been successfully created',
+    description: 'The sponsor has been successfully created',
   })
   @Post()
   async create(@Body() createSponsorDto: CreateSponsorDto) {
@@ -39,41 +39,52 @@ export class SponsorController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: CreateLogoDto,
-    description: 'the logo has been successfully created',
+    description: 'Logo has been successfully created',
   })
   @UseGuards(AuthGuard)
   @Post('/uploadLogo')
-  async uploadLogo(@Body() createLogoDto: CreateLogoDto) {
+  uploadLogo(@Body() createLogoDto: CreateLogoDto) {
     return this.sponsorService.uploadLogo(createLogoDto);
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Sponsor,
-    description: 'get sponsor logo by id',
+    description: 'Sponsor logo by id was successfully retrieved',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
   @Get('/logo/:id')
-  async getlogoUrl(@Param('id') id): Promise<Partial<Sponsor> | void> {
+  getlogoUrl(@Param('id') id): Promise<Partial<Sponsor> | void> {
     return this.sponsorService.getlogoUrl(id);
   }
 
+  @ApiParam({ name: 'email', type: 'string' })
   @ApiCreatedResponse({
     type: Sponsor,
-    description: 'get sponsor by email',
+    description: 'Sponsor by email was successfully retrieved',
   })
-  @ApiParam({ name: 'email', type: 'string' })
   @UseGuards(AdminAuthGuard)
   @Get('/email/:email')
   async getSponsorByEmail(@Param('email') email): Promise<Sponsor | void> {
-    return this.sponsorService.getSponsorByEmail(email);
+    return await this.sponsorService.getSponsorByEmail(email);
   }
 
+  @ApiParam({ name: 'guid', type: 'string' })
+  @ApiCreatedResponse({
+    type: Sponsor,
+    description: 'Sponsor by guid was successfully retrieved',
+  })
+  @UseGuards(AuthGuard)
+  @Get('/:guid')
+  async findOne(@Param('guid') guid): Promise<Partial<Sponsor> | void> {
+    return await this.sponsorService.findOne(guid);
+  }
+
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: UpdateSponsorDto,
-    description: 'the sponsor has been successfully updated',
+    description: 'Sponsor has been successfully updated',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
   @Put('/:id')
   update(
@@ -86,25 +97,14 @@ export class SponsorController extends BaseWithoutAuthController {
       .then(() => res.status(204).send());
   }
 
-  @ApiCreatedResponse({
-    type: Sponsor,
-    description: 'get sponsor by guid',
-  })
-  @ApiParam({ name: 'guid', type: 'string' })
-  @UseGuards(AuthGuard)
-  @Get('/:guid')
-  async findOne(@Param('guid') guid): Promise<Partial<Sponsor> | void> {
-    return this.sponsorService.findOne(guid);
-  }
-
-  @ApiCreatedResponse({
-    type: Sponsor,
-    description: 'delete logo image by sponsor id',
-  })
   @ApiParam({ name: 'id', type: 'number' })
+  @ApiCreatedResponse({
+    type: Sponsor,
+    description: 'Image by sponsor id was successfully deleted',
+  })
   @UseGuards(AuthGuard)
   @Delete('removeLogo/:id')
-  async removeLogo(@Param('id', ParseIntPipe) id: number) {
+  removeLogo(@Param('id', ParseIntPipe) id: number) {
     return this.sponsorService.removeLogo(id);
   }
 }
