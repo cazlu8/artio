@@ -135,6 +135,10 @@ export class EventService {
       const addFinishIntermissionToQueue = () =>
         this.finishIntermission(eventId, intermissionTime);
       await this.redisClient.set(`event-${eventId}:isOnIntermission`, true);
+      await this.redisClient.set(
+        `event-${eventId}:intermissionStartedAt`,
+        new Date().toISOString(),
+      );
       await Promise.all([
         addCreateRoomOnQueue,
         addFinishIntermissionToQueue,
@@ -158,8 +162,19 @@ export class EventService {
       throw new BadRequestException(`event ${eventId} is not on intermission`);
   }
 
-  async getIntermissionStatus(eventId: number): Promise<boolean> {
-    return !!(await this.redisClient.get(`event-${eventId}:isOnIntermission`));
+  async getIntermissionStatus(
+    eventId: number,
+  ): Promise<ObjectLiteral | boolean> {
+    const isOnIntermission = !!(await this.redisClient.get(
+      `event-${eventId}:isOnIntermission`,
+    ));
+    if (isOnIntermission) {
+      const intermissionStartedAt = await this.redisClient.get(
+        `event-${eventId}:intermissionStartedAt`,
+      );
+      return { isOnIntermission, intermissionStartedAt };
+    }
+    return false;
   }
 
   getSubscribed(eventId) {
