@@ -33,6 +33,8 @@ export class EventController extends BaseWithoutAuthController {
     super();
   }
 
+  // POST's (CREATE)
+
   @ApiCreatedResponse({
     type: CreateEventDTO,
     description: 'the event has been successfully created',
@@ -42,6 +44,18 @@ export class EventController extends BaseWithoutAuthController {
   create(@Body() createEventDto: CreateEventDTO) {
     return this.service.create(createEventDto);
   }
+
+  @ApiCreatedResponse({
+    type: CreateHeroImage,
+    description: 'the heroImage has been successfully created',
+  })
+  @UseGuards(AuthGuard)
+  @Post('/createHeroImage')
+  async createHeroImage(@Body() createHeroImage: CreateHeroImage) {
+    return this.service.createHeroImage(createHeroImage);
+  }
+
+  // GET's (READ)
 
   @ApiCreatedResponse({
     type: EventListDto,
@@ -117,23 +131,6 @@ export class EventController extends BaseWithoutAuthController {
   }
 
   @ApiCreatedResponse({
-    type: UpdateEventDTO,
-    description: 'the event has been successfully updated',
-  })
-  @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard)
-  @Put('/:id')
-  update(
-    @Res() res,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateEventDto: UpdateEventDTO,
-  ): Promise<void | UpdateResult> {
-    return this.service
-      .updateEventInfo(id, updateEventDto)
-      .then(() => res.status(204).send());
-  }
-
-  @ApiCreatedResponse({
     type: Event,
     description: 'get events by user id and role',
   })
@@ -187,6 +184,50 @@ export class EventController extends BaseWithoutAuthController {
   }
 
   @ApiCreatedResponse({
+    description: 'get intermission Status',
+  })
+  @ApiParam({ name: 'getIntermissionStatus' })
+  @UseGuards(AuthGuard)
+  @Get('/getIntermissionStatus/:eventId')
+  getIntermissionStatus(
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ): Promise<ObjectLiteral | boolean> {
+    return this.service.getIntermissionStatus(eventId);
+  }
+
+  @ApiParam({ name: 'eventId', type: 'number' })
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'get the amount of subscribers on events',
+  })
+  @UseGuards(AuthGuard)
+  @Get('/subscribed/:eventId')
+  async getSubscribed(
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ): Promise<any> {
+    return await this.service.getSubscribed(eventId);
+  }
+
+  // PUT's (UPDATE)
+
+  @ApiCreatedResponse({
+    type: UpdateEventDTO,
+    description: 'the event has been successfully updated',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard)
+  @Put('/:id')
+  update(
+    @Res() res,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateEventDto: UpdateEventDTO,
+  ): Promise<void | UpdateResult> {
+    return this.service
+      .updateEventInfo(id, updateEventDto)
+      .then(() => res.status(204).send());
+  }
+
+  @ApiCreatedResponse({
     description: 'start intermission',
   })
   @ApiParam({ name: 'startIntermission' })
@@ -217,18 +258,6 @@ export class EventController extends BaseWithoutAuthController {
   }
 
   @ApiCreatedResponse({
-    description: 'get intermission Status',
-  })
-  @ApiParam({ name: 'getIntermissionStatus' })
-  @UseGuards(AuthGuard)
-  @Get('/getIntermissionStatus/:eventId')
-  getIntermissionStatus(
-    @Param('eventId', ParseIntPipe) eventId: number,
-  ): Promise<ObjectLiteral | boolean> {
-    return this.service.getIntermissionStatus(eventId);
-  }
-
-  @ApiCreatedResponse({
     type: UpdateEventDTO,
     description: 'start live',
   })
@@ -256,15 +285,7 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.finishLive(eventId).then(() => res.status(204).send());
   }
 
-  @ApiCreatedResponse({
-    type: CreateHeroImage,
-    description: 'the heroImage has been successfully created',
-  })
-  @UseGuards(AuthGuard)
-  @Post('/createHeroImage')
-  async createHeroImage(@Body() createHeroImage: CreateHeroImage) {
-    return this.service.createHeroImage(createHeroImage);
-  }
+  // DELETE's
 
   @ApiCreatedResponse({
     type: Event,
@@ -275,18 +296,5 @@ export class EventController extends BaseWithoutAuthController {
   @Delete('removeHeroImage/:id')
   async removeHeroImage(@Param('id', ParseIntPipe) id: number) {
     return this.service.removeHeroImage(id);
-  }
-
-  @ApiParam({ name: 'eventId', type: 'number' })
-  @ApiCreatedResponse({
-    type: Event,
-    description: 'get the amount of subscribers on events',
-  })
-  @UseGuards(AuthGuard)
-  @Get('/subscribed/:eventId')
-  async getSubscribed(
-    @Param('eventId', ParseIntPipe) eventId: number,
-  ): Promise<any> {
-    return await this.service.getSubscribed(eventId);
   }
 }

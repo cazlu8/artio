@@ -28,6 +28,8 @@ export class SponsorController extends BaseWithoutAuthController {
     super();
   }
 
+  // POST's (CREATE)
+
   @ApiCreatedResponse({
     type: CreateSponsorDto,
     description: 'the sponsor has been successfully created',
@@ -46,6 +48,8 @@ export class SponsorController extends BaseWithoutAuthController {
   async uploadLogo(@Body() createLogoDto: CreateLogoDto) {
     return this.sponsorService.uploadLogo(createLogoDto);
   }
+
+  // GET's (READ)
 
   @ApiCreatedResponse({
     type: Sponsor,
@@ -70,6 +74,19 @@ export class SponsorController extends BaseWithoutAuthController {
   }
 
   @ApiCreatedResponse({
+    type: Sponsor,
+    description: 'get sponsor by guid',
+  })
+  @ApiParam({ name: 'guid', type: 'string' })
+  @UseGuards(AuthGuard)
+  @Get('/:guid')
+  async findOne(@Param('guid') guid): Promise<Partial<Sponsor> | void> {
+    return this.sponsorService.findOne(guid);
+  }
+
+  // PUT's (UPDATE)
+
+  @ApiCreatedResponse({
     type: UpdateSponsorDto,
     description: 'the sponsor has been successfully updated',
   })
@@ -86,16 +103,7 @@ export class SponsorController extends BaseWithoutAuthController {
       .then(() => res.status(204).send());
   }
 
-  @ApiCreatedResponse({
-    type: Sponsor,
-    description: 'get sponsor by guid',
-  })
-  @ApiParam({ name: 'guid', type: 'string' })
-  @UseGuards(AuthGuard)
-  @Get('/:guid')
-  async findOne(@Param('guid') guid): Promise<Partial<Sponsor> | void> {
-    return this.sponsorService.findOne(guid);
-  }
+  // DELETE's
 
   @ApiCreatedResponse({
     type: Sponsor,

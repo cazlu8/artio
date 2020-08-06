@@ -22,6 +22,8 @@ export class RoleController extends BaseWithoutAuthController {
     super();
   }
 
+  // POST's (CREATE)
+
   @ApiCreatedResponse({
     type: CreateRoleDTO,
     description: 'the role has been successfully created',
@@ -42,6 +44,8 @@ export class RoleController extends BaseWithoutAuthController {
   async findOne(@Param('id', ParseIntPipe) id): Promise<Partial<Role> | void> {
     return this.service.getRole(id);
   }
+
+  // GET's (READ)
 
   @ApiCreatedResponse({
     type: Role,

@@ -52,54 +52,15 @@ export class UserController extends BaseWithoutAuthController {
     return this.userService.createAvatar(createAvatarDto);
   }
 
-  @ApiCreatedResponse({
-    type: User,
-    description: 'get user avatar by id',
-  })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
-  @Get('/avatar/:id')
-  async getAvatarUrl(@Param('id') id): Promise<Partial<User> | void> {
-    return this.userService.getAvatarUrl(id);
-  }
-
-  @ApiCreatedResponse({
-    type: User,
-    description: 'get user by email',
-  })
-  @ApiParam({ name: 'email', type: 'string' })
-  @UseGuards(AdminAuthGuard)
-  @Get('/email/:email')
-  async getUserByEmail(@Param('email') email): Promise<User | void> {
-    return this.userService.getUserByEmail(email);
-  }
-
-  @ApiCreatedResponse({
-    type: UpdateUserDto,
-    description: 'the user has been successfully updated',
-  })
-  @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
-  @Put('/:id')
-  update(
+  @Post('uploadUsers/:eventId')
+  async processCSVUsers(
+    @Req() req,
     @Res() res,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto,
-  ): Promise<void | UpdateResult> {
-    return this.userService
-      .updateUserInfo(id, updateUserDto)
-      .then(() => res.status(204).send());
-  }
-
-  @ApiCreatedResponse({
-    type: User,
-    description: 'get user by guid',
-  })
-  @ApiParam({ name: 'guid', type: 'string' })
-  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
-  @Get('/:guid')
-  async findOne(@Param('guid') guid): Promise<Partial<User> | void> {
-    return this.userService.findOne(guid);
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ) {
+    const { file } = req.raw.files;
+    await this.userService.processCsvFile(file, eventId);
   }
 
   @ApiCreatedResponse({
@@ -111,17 +72,6 @@ export class UserController extends BaseWithoutAuthController {
     @Body() checkUserExists: CheckUserExistsDto,
   ): Promise<boolean> {
     return this.userService.exists(checkUserExists);
-  }
-
-  @ApiCreatedResponse({
-    type: Event,
-    description: 'get events by user id',
-  })
-  @ApiParam({ name: 'id', type: 'number' })
-  @UseGuards(AuthGuard)
-  @Get('events/:id')
-  async getUserEvents(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.getEventsByUserId(id);
   }
 
   @ApiCreatedResponse({
@@ -159,6 +109,71 @@ export class UserController extends BaseWithoutAuthController {
       .catch(() => res.status(404).send());
   }
 
+  // GET's (READ)
+
+  @ApiCreatedResponse({
+    type: User,
+    description: 'get user avatar by id',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard)
+  @Get('/avatar/:id')
+  async getAvatarUrl(@Param('id') id): Promise<Partial<User> | void> {
+    return this.userService.getAvatarUrl(id);
+  }
+
+  @ApiCreatedResponse({
+    type: User,
+    description: 'get user by email',
+  })
+  @ApiParam({ name: 'email', type: 'string' })
+  @UseGuards(AdminAuthGuard)
+  @Get('/email/:email')
+  async getUserByEmail(@Param('email') email): Promise<User | void> {
+    return this.userService.getUserByEmail(email);
+  }
+
+  @ApiCreatedResponse({
+    type: User,
+    description: 'get user by guid',
+  })
+  @ApiParam({ name: 'guid', type: 'string' })
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @Get('/:guid')
+  async findOne(@Param('guid') guid): Promise<Partial<User> | void> {
+    return this.userService.findOne(guid);
+  }
+
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'get events by user id',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard)
+  @Get('events/:id')
+  async getUserEvents(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.getEventsByUserId(id);
+  }
+
+  // PUT's (UPDATE)
+
+  @ApiCreatedResponse({
+    type: UpdateUserDto,
+    description: 'the user has been successfully updated',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
+  @Put('/:id')
+  update(
+    @Res() res,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<void | UpdateResult> {
+    return this.userService
+      .updateUserInfo(id, updateUserDto)
+      .then(() => res.status(204).send());
+  }
+
   @ApiCreatedResponse({
     type: Event,
     description: 'Redeem a event code',
@@ -177,6 +192,8 @@ export class UserController extends BaseWithoutAuthController {
       .catch(() => res.status(404).send());
   }
 
+  // DELETE's
+
   @ApiCreatedResponse({
     type: Event,
     description: 'delete avatar image by user id',
@@ -186,16 +203,5 @@ export class UserController extends BaseWithoutAuthController {
   @Delete('removeAvatar/:id')
   async removeAvatar(@Param('id', ParseIntPipe) id: number) {
     return this.userService.removeAvatar(id);
-  }
-
-  @UseGuards(AuthGuard)
-  @Post('uploadUsers/:eventId')
-  async processCSVUsers(
-    @Req() req,
-    @Res() res,
-    @Param('eventId', ParseIntPipe) eventId: number,
-  ) {
-    const { file } = req.raw.files;
-    await this.userService.processCsvFile(file, eventId);
   }
 }
