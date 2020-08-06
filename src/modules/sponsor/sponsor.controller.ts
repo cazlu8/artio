@@ -32,7 +32,7 @@ export class SponsorController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: CreateSponsorDto,
-    description: 'the sponsor has been successfully created',
+    description: 'The sponsor has been successfully created',
   })
   @Post()
   async create(@Body() createSponsorDto: CreateSponsorDto) {
@@ -41,7 +41,7 @@ export class SponsorController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: CreateLogoDto,
-    description: 'the logo has been successfully created',
+    description: 'Logo has been successfully created',
   })
   @UseGuards(AuthGuard)
   @Post('/uploadLogo')
@@ -53,7 +53,7 @@ export class SponsorController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Sponsor,
-    description: 'get sponsor logo by id',
+    description: 'Sponsor logo by id was successfully retrieved',
   })
   @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
@@ -64,7 +64,7 @@ export class SponsorController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Sponsor,
-    description: 'get sponsor by email',
+    description: 'Sponsor by email was successfully retrieved',
   })
   @ApiParam({ name: 'email', type: 'string' })
   @UseGuards(AdminAuthGuard)
@@ -75,7 +75,7 @@ export class SponsorController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Sponsor,
-    description: 'get sponsor by guid',
+    description: 'Sponsor by guid was successfully retrieved',
   })
   @ApiParam({ name: 'guid', type: 'string' })
   @UseGuards(AuthGuard)
@@ -88,7 +88,7 @@ export class SponsorController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: UpdateSponsorDto,
-    description: 'the sponsor has been successfully updated',
+    description: 'Sponsor has been successfully updated',
   })
   @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
@@ -107,7 +107,7 @@ export class SponsorController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Sponsor,
-    description: 'delete logo image by sponsor id',
+    description: 'Image by sponsor id was successfully deleted',
   })
   @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)

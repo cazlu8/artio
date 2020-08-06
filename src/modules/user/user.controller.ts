@@ -35,7 +35,7 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: CreateUserDto,
-    description: 'the user has been successfully created',
+    description: 'User has been successfully created',
   })
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
@@ -44,7 +44,7 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: CreateAvatarDto,
-    description: 'the avatar has been successfully created',
+    description: 'Avatar has been successfully created',
   })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post('/create-avatar')
@@ -52,6 +52,10 @@ export class UserController extends BaseWithoutAuthController {
     return this.userService.createAvatar(createAvatarDto);
   }
 
+  @ApiCreatedResponse({
+    type: CreateAvatarDto,
+    description: 'CSV file has been successfully uploaded',
+  })
   @UseGuards(AuthGuard)
   @Post('uploadUsers/:eventId')
   async processCSVUsers(
@@ -64,7 +68,7 @@ export class UserController extends BaseWithoutAuthController {
   }
 
   @ApiCreatedResponse({
-    description: 'check if a given user exists on cognito user pool',
+    description: 'User found in cognito pool',
   })
   @ApiParam({ name: 'guid', type: 'string' })
   @Post('/checkUserExists')
@@ -76,7 +80,7 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Event,
-    description: 'Link a user with role to a event',
+    description: 'Success on link a user with role to a event',
   })
   @ApiParam({ name: 'userId and eventId', type: 'number' })
   @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
@@ -93,7 +97,7 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Event,
-    description: 'Link a user with code to a event',
+    description: 'Success on link a user with code to a event',
   })
   @ApiParam({ name: 'userId and eventId', type: 'number' })
   @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
@@ -113,7 +117,7 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: User,
-    description: 'get user avatar by id',
+    description: 'User avatar by id ',
   })
   @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
@@ -124,7 +128,7 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: User,
-    description: 'get user by email',
+    description: 'User by email was successfully retrieved',
   })
   @ApiParam({ name: 'email', type: 'string' })
   @UseGuards(AdminAuthGuard)
@@ -135,7 +139,7 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: User,
-    description: 'get user by guid',
+    description: 'User by guid was successfully retrieved',
   })
   @ApiParam({ name: 'guid', type: 'string' })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
@@ -146,7 +150,7 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Event,
-    description: 'get events by user id',
+    description: 'Events by user id were successfully retrieved',
   })
   @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
@@ -159,7 +163,7 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: UpdateUserDto,
-    description: 'the user has been successfully updated',
+    description: 'User has been successfully updated',
   })
   @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
@@ -176,7 +180,7 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Event,
-    description: 'Redeem a event code',
+    description: 'Event code was successfully redeemed',
   })
   @ApiParam({ name: 'userId', type: 'number' })
   @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
@@ -196,7 +200,7 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Event,
-    description: 'delete avatar image by user id',
+    description: 'Avatar image by user id was successfully deleted',
   })
   @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)

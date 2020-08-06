@@ -26,7 +26,7 @@ export class RoleController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: CreateRoleDTO,
-    description: 'the role has been successfully created',
+    description: 'The role has been successfully created',
   })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post()
@@ -36,7 +36,7 @@ export class RoleController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Role,
-    description: 'get role by id',
+    description: 'Role by id was successfully retrieved',
   })
   @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
@@ -49,7 +49,7 @@ export class RoleController extends BaseWithoutAuthController {
 
   @ApiCreatedResponse({
     type: Role,
-    description: 'get all roles',
+    description: 'All roles were successfully retrieved',
   })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get()
