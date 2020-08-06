@@ -24,6 +24,7 @@ import { ValidationSchemaWsPipe } from '../../shared/pipes/validationSchemaWs.pi
 import { NetworkRoomEventDefaultDto } from './dto/networkRoomEventDefault.dto';
 import { NetworkRoomSwitchRoomDto } from './dto/networkRoomSwitchRoom.dto';
 import { NetworkRoomRequestAvailableRoomDto } from './dto/NetworkRoomRequestAvailableRoom.dto';
+import { NetworkRoomRRDto } from './dto/networkRoomRR';
 
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
@@ -118,7 +119,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   @SubscribeMessage('requestRoom')
   async requestRoom(
     @ConnectedSocket() socket: any,
-    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
+    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomRRDto,
   ): Promise<void> {
     console.log('requestRoom', data);
     const { eventId } = data;
@@ -151,21 +152,18 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
-    const { eventId } = data;
     const { userId } = socket;
+    console.log(data);
     const alreadyRequestARoom = await this.redisClient.get(userId);
-    await this.redisClient.set(`event-${eventId}:leaveRoom`, 1);
+    await this.redisClient.set(`event-${userId}:leaveRoom`, 1);
     if (alreadyRequestARoom) {
       this.redlock
-        .lock(`locks:event-${eventId}:leaveRoom`, 5000)
+        .lock(`locks:event-${userId}:leaveRoom`, 5000)
         .then(async lock => {
-          await this.redisClient.decr(
-            `event-${eventId}:clientsNetworkRoomCounter`,
-          );
           await this.leaveRoom(socket);
           await this.removeRequestRoomLock(userId);
           lock.unlock().catch(catchErrorWs);
-          await this.redisClient.del(`event-${eventId}:leaveRoom`);
+          await this.redisClient.del(`event-${userId}:leaveRoom`);
         });
     }
   }

@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsObject } from 'class-validator';
 
-export class NetworkRoomEventDefaultDto {
-  /* @IsNumber()
+export class NetworkRoomRRDto {
+  @IsNumber()
   @ApiProperty({ type: 'string' })
-  eventId: number; */
+  eventId: number;
 
   @IsNumber()
   @ApiProperty({ type: 'string' })
