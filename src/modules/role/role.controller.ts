@@ -22,8 +22,6 @@ export class RoleController extends BaseWithoutAuthController {
     super();
   }
 
-  // POST's (CREATE)
-
   @ApiCreatedResponse({
     type: CreateRoleDTO,
     description: 'The role has been successfully created',
@@ -42,10 +40,8 @@ export class RoleController extends BaseWithoutAuthController {
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/:id')
   async findOne(@Param('id', ParseIntPipe) id): Promise<Partial<Role> | void> {
-    return this.service.getRole(id);
+    return await this.service.getRole(id);
   }
-
-  // GET's (READ)
 
   @ApiCreatedResponse({
     type: Role,
@@ -54,6 +50,6 @@ export class RoleController extends BaseWithoutAuthController {
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get()
   async find(): Promise<Partial<Role[]> | void> {
-    return this.service.getRoles();
+    return await this.service.getRoles();
   }
 }

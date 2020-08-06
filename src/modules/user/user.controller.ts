@@ -51,7 +51,7 @@ export class UserController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post('/create-avatar')
-  async createAvatar(@Body() createAvatarDto: CreateAvatarDto) {
+  createAvatar(@Body() createAvatarDto: CreateAvatarDto) {
     return this.userService.createAvatar(createAvatarDto);
   }
 
@@ -77,7 +77,7 @@ export class UserController extends BaseWithoutAuthController {
     description: 'User found in cognito pool',
   })
   @Post('/checkUserExists')
-  async verifyIfUserExists(
+  verifyIfUserExists(
     @Body() checkUserExists: CheckUserExistsDto,
   ): Promise<boolean> {
     return this.userService.exists(checkUserExists);
@@ -90,7 +90,7 @@ export class UserController extends BaseWithoutAuthController {
   })
   @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
   @Post('linkEvent')
-  async bindUserEvent(
+  bindUserEvent(
     @Res() res,
     @Body() linkToEventWithRoleDTO: LinkToEventWithRoleDTO,
   ): Promise<void | ObjectLiteral> {
@@ -106,7 +106,7 @@ export class UserController extends BaseWithoutAuthController {
   })
   @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
   @Post('linkEventCode')
-  async bindUserEventCode(
+  bindUserEventCode(
     @Res() res,
     @Body() linkToEventWithCodeDTO: LinkToEventWithCodeDTO,
   ): Promise<void | ObjectLiteral> {
@@ -116,8 +116,6 @@ export class UserController extends BaseWithoutAuthController {
       .catch(() => res.status(404).send());
   }
 
-  // GET's (READ)
-
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: User,
@@ -126,7 +124,7 @@ export class UserController extends BaseWithoutAuthController {
   @UseGuards(AuthGuard)
   @Get('/avatar/:id')
   async getAvatarUrl(@Param('id') id): Promise<Partial<User> | void> {
-    return this.userService.getAvatarUrl(id);
+    return await this.userService.getAvatarUrl(id);
   }
 
   @ApiParam({ name: 'email', type: 'string' })
@@ -137,7 +135,7 @@ export class UserController extends BaseWithoutAuthController {
   @UseGuards(AdminAuthGuard)
   @Get('/email/:email')
   async getUserByEmail(@Param('email') email): Promise<User | void> {
-    return this.userService.getUserByEmail(email);
+    return await this.userService.getUserByEmail(email);
   }
 
   @ApiParam({ name: 'guid', type: 'string' })
@@ -148,7 +146,7 @@ export class UserController extends BaseWithoutAuthController {
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/:guid')
   async findOne(@Param('guid') guid): Promise<Partial<User> | void> {
-    return this.userService.findOne(guid);
+    return await this.userService.findOne(guid);
   }
 
   @ApiParam({ name: 'id', type: 'number' })
@@ -159,10 +157,8 @@ export class UserController extends BaseWithoutAuthController {
   @UseGuards(AuthGuard)
   @Get('events/:id')
   async getUserEvents(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.getEventsByUserId(id);
+    return await this.userService.getEventsByUserId(id);
   }
-
-  // PUT's (UPDATE)
 
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
@@ -188,7 +184,7 @@ export class UserController extends BaseWithoutAuthController {
   })
   @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
   @Put('redeemCode')
-  async redeemEventCode(
+  redeemEventCode(
     @Res() res,
     @Body() redeemEventCodeDTO: RedeemEventCodeDTO,
   ): Promise<void | ObjectLiteral> {
@@ -198,8 +194,6 @@ export class UserController extends BaseWithoutAuthController {
       .catch(() => res.status(404).send());
   }
 
-  // DELETE's
-
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
@@ -207,7 +201,7 @@ export class UserController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Delete('removeAvatar/:id')
-  async removeAvatar(@Param('id', ParseIntPipe) id: number) {
+  removeAvatar(@Param('id', ParseIntPipe) id: number) {
     return this.userService.removeAvatar(id);
   }
 }

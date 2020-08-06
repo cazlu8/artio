@@ -101,15 +101,15 @@ export class EventService {
     return this.update(id, updateEventDTO);
   }
 
-  async getUserEventsByRole(userId: number, roleId: number) {
+  getUserEventsByRole(userId: number, roleId: number) {
     return this.repository.getUserEventsByRole(userId, roleId);
   }
 
-  async getHappeningNowByUser(userId: number) {
+  getHappeningNowByUser(userId: number) {
     return this.repository.getHappeningNowByUser(userId);
   }
 
-  async getUpcomingByUser(userId: number, skip: number) {
+  getUpcomingByUser(userId: number, skip: number) {
     const getCount: Promise<number> = this.repository.getUpcomingCount();
     const getEvents: Promise<Partial<
       Event[]
@@ -117,7 +117,7 @@ export class EventService {
     return this.paginateEvents(getCount, getEvents, skip);
   }
 
-  async getPastByUser(userId: number, skip: number) {
+  getPastByUser(userId: number, skip: number) {
     const getCount: Promise<number> = this.repository.getPastCount();
     const getEvents: Promise<Partial<
       Event[]
@@ -177,8 +177,8 @@ export class EventService {
     return false;
   }
 
-  getSubscribed(eventId) {
-    return this.userEventsRepository.count({
+  async getSubscribed(eventId) {
+    return await this.userEventsRepository.count({
       where: { eventId: `${eventId}` },
     });
   }

@@ -28,8 +28,6 @@ export class SponsorController extends BaseWithoutAuthController {
     super();
   }
 
-  // POST's (CREATE)
-
   @ApiCreatedResponse({
     type: CreateSponsorDto,
     description: 'The sponsor has been successfully created',
@@ -45,11 +43,9 @@ export class SponsorController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @Post('/uploadLogo')
-  async uploadLogo(@Body() createLogoDto: CreateLogoDto) {
+  uploadLogo(@Body() createLogoDto: CreateLogoDto) {
     return this.sponsorService.uploadLogo(createLogoDto);
   }
-
-  // GET's (READ)
 
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
@@ -58,7 +54,7 @@ export class SponsorController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @Get('/logo/:id')
-  async getlogoUrl(@Param('id') id): Promise<Partial<Sponsor> | void> {
+  getlogoUrl(@Param('id') id): Promise<Partial<Sponsor> | void> {
     return this.sponsorService.getlogoUrl(id);
   }
 
@@ -70,7 +66,7 @@ export class SponsorController extends BaseWithoutAuthController {
   @UseGuards(AdminAuthGuard)
   @Get('/email/:email')
   async getSponsorByEmail(@Param('email') email): Promise<Sponsor | void> {
-    return this.sponsorService.getSponsorByEmail(email);
+    return await this.sponsorService.getSponsorByEmail(email);
   }
 
   @ApiParam({ name: 'guid', type: 'string' })
@@ -81,10 +77,8 @@ export class SponsorController extends BaseWithoutAuthController {
   @UseGuards(AuthGuard)
   @Get('/:guid')
   async findOne(@Param('guid') guid): Promise<Partial<Sponsor> | void> {
-    return this.sponsorService.findOne(guid);
+    return await this.sponsorService.findOne(guid);
   }
-
-  // PUT's (UPDATE)
 
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
@@ -103,8 +97,6 @@ export class SponsorController extends BaseWithoutAuthController {
       .then(() => res.status(204).send());
   }
 
-  // DELETE's
-
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Sponsor,
@@ -112,7 +104,7 @@ export class SponsorController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @Delete('removeLogo/:id')
-  async removeLogo(@Param('id', ParseIntPipe) id: number) {
+  removeLogo(@Param('id', ParseIntPipe) id: number) {
     return this.sponsorService.removeLogo(id);
   }
 }

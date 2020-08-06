@@ -176,7 +176,7 @@ export class UserService {
   }
 
   async getEventsByUserId(id: number) {
-    return this.repository.getEventsByUserId(id);
+    return await this.repository.getEventsByUserId(id);
   }
 
   async bindUserEvent(linkToEventWithRoleDTO: {
@@ -248,7 +248,7 @@ export class UserService {
   }
 
   private async linkUserToEvent(userId: number, eventId: number): Promise<any> {
-    return this.userEventsRepository
+    return await this.userEventsRepository
       .save({ userId, eventId, redeemed: true })
       .then(({ id }) => id);
   }
@@ -258,7 +258,7 @@ export class UserService {
     userId: number,
     eventId: number,
   ): Promise<any> {
-    return this.userEventsRepository.save({
+    return await this.userEventsRepository.save({
       ticketCode,
       userId,
       eventId,
@@ -271,7 +271,7 @@ export class UserService {
     userId: number,
     eventId: number,
   ): Promise<any> {
-    return this.userEventsRolesRepository.save({
+    return await this.userEventsRolesRepository.save({
       userEventsId,
       roleId,
       userEventsUserId: userId,
