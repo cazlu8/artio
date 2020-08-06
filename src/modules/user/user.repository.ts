@@ -39,8 +39,8 @@ export class UserRepository extends Repository<User> {
       .execute();
   }
 
-  checkCode(data) {
-    const { userId, ticketCode } = data;
+  checkCode(redeemEventCodeDTO) {
+    const { userId, ticketCode } = redeemEventCodeDTO;
     const attributes = ['user_events.eventId'];
     return this.createQueryBuilder('user')
       .select(attributes)

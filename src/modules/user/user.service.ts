@@ -176,15 +176,15 @@ export class UserService {
   }
 
   async getEventsByUserId(id: number) {
-    return this.repository.getEventsByUserId(id);
+    return await this.repository.getEventsByUserId(id);
   }
 
-  async bindUserEvent(data: {
+  async bindUserEvent(linkToEventWithRoleDTO: {
     roleId: number;
     userId: number;
     eventId: number;
   }): Promise<boolean | void> {
-    const { roleId, userId, eventId } = data;
+    const { roleId, userId, eventId } = linkToEventWithRoleDTO;
     const bindUserToEvent = this.linkUserToEvent(userId, eventId).then(id =>
       this.linkUserAndRoleToEvent(id, roleId, userId, eventId),
     );
@@ -192,8 +192,10 @@ export class UserService {
     return (await isRoleValid) && (await bindUserToEvent);
   }
 
-  async bindUserEventCode(data): Promise<ObjectLiteral | void> {
-    const { eventId, userEmail } = data;
+  async bindUserEventCode(
+    linkToEventWithCodeDTO,
+  ): Promise<ObjectLiteral | void> {
+    const { eventId, userEmail } = linkToEventWithCodeDTO;
     const ticketCode: string = uuid();
     const { id: userId } = await this.getUserIdByEmail(userEmail);
     const { id } = await this.linkUserAndCodeToEvent(
@@ -204,8 +206,8 @@ export class UserService {
     return await this.linkUserAndRoleToEvent(id, 2, userId, eventId);
   }
 
-  async redeemEventCode(data): Promise<UpdateResult> {
-    const id = await this.repository.checkCode(data);
+  async redeemEventCode(redeemEventCodeDTO): Promise<UpdateResult> {
+    const id = await this.repository.checkCode(redeemEventCodeDTO);
     return await this.repository.redeemEventCode(id);
   }
 
@@ -246,7 +248,7 @@ export class UserService {
   }
 
   private async linkUserToEvent(userId: number, eventId: number): Promise<any> {
-    return this.userEventsRepository
+    return await this.userEventsRepository
       .save({ userId, eventId, redeemed: true })
       .then(({ id }) => id);
   }
@@ -256,7 +258,7 @@ export class UserService {
     userId: number,
     eventId: number,
   ): Promise<any> {
-    return this.userEventsRepository.save({
+    return await this.userEventsRepository.save({
       ticketCode,
       userId,
       eventId,
@@ -269,7 +271,7 @@ export class UserService {
     userId: number,
     eventId: number,
   ): Promise<any> {
-    return this.userEventsRolesRepository.save({
+    return await this.userEventsRolesRepository.save({
       userEventsId,
       roleId,
       userEventsUserId: userId,
