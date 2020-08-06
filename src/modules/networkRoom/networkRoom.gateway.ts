@@ -69,21 +69,25 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     data: NetworkRoomRequestAvailableRoomDto,
   ): Promise<void> {
     const { eventId } = data;
-    await this.redisClient.set(`event-${eventId}:locks:availableRoom`, 1);
-    this.redlock
-      .lock(`event-${eventId}:locks:availableRoom`, 5000)
-      .then(async lock => {
-        this.leaveRoom(socket);
-        const availableRoom = await this.service.getAvailableRoom();
-        if (availableRoom?.uniqueName) {
-          socket.emit(`requestAvailableRoom`, availableRoom);
-          console.log(`requestAvailableRoom`, availableRoom);
-        } else {
-          socket.emit(`requestAvailableRoom`, false);
-        }
-        lock.unlock().catch(catchErrorWs);
-        await this.redisClient.del(`event-${eventId}:locks:availableRoom`);
-      });
+    const { userId } = socket;
+    const alreadyRequestARoom = await this.redisClient.get(userId);
+    await this.redisClient.set(`event-${eventId}:availableRoom`, 1);
+    if (alreadyRequestARoom) {
+      this.redlock
+        .lock(`locks:event-${eventId}:availableRoom`, 5000)
+        .then(async lock => {
+          this.leaveRoom(socket);
+          const availableRoom = await this.service.getAvailableRoom();
+          if (availableRoom?.uniqueName) {
+            socket.emit(`requestAvailableRoom`, availableRoom);
+            console.log(`requestAvailableRoom`, availableRoom);
+          } else {
+            socket.emit(`requestAvailableRoom`, false);
+          }
+          lock.unlock().catch(catchErrorWs);
+          await this.redisClient.del(`event-${eventId}:availableRoom`);
+        });
+    } else socket.emit(`requestAvailableRoom`, false);
   }
 
   @SubscribeMessage('switchRoom')
@@ -91,11 +95,22 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
-    const { currentRoom } = data;
-    this.leaveRoom(socket);
-    const newRoom = await this.service.getAvailableRoom(currentRoom);
-    if (newRoom?.uniqueName) socket.emit(`switchRoom`, newRoom);
-    else socket.emit(`switchRoom`, false);
+    const { currentRoom, eventId } = data;
+    const { userId } = socket;
+    const alreadyRequestARoom = await this.redisClient.get(userId);
+    await this.redisClient.set(`event-${eventId}:switchRoom`, 1);
+    if (alreadyRequestARoom) {
+      this.redlock
+        .lock(`locks:event-${eventId}:switchRoom`, 5000)
+        .then(async lock => {
+          this.leaveRoom(socket);
+          const newRoom = await this.service.getAvailableRoom(currentRoom);
+          if (newRoom?.uniqueName) socket.emit(`switchRoom`, newRoom);
+          else socket.emit(`switchRoom`, false);
+          lock.unlock().catch(catchErrorWs);
+          await this.redisClient.del(`event-${eventId}:switchRoom`);
+        });
+    }
   }
 
   @SubscribeMessage('requestRoom')
@@ -104,17 +119,18 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
     console.log('requestRoom', data);
-    const { eventId, userId } = data;
+    const { eventId } = data;
+    const { userId } = socket;
     if (await this.preventRequestRoom(userId)) return;
     this.redlock
-      .lock(`event-${eventId}:locks:clientsNetworkRoomCounter`, 5000)
+      .lock(`locks:event-${eventId}:clientsNetworkRoomCounter`, 5000)
       .then(async lock => {
         const counter = await this.incrementCounter(eventId);
         await this.bindSocketToRoom(socket, eventId);
         console.log('foi counter', counter);
         await this.send(+counter, eventId);
         await this.redisClient.set(userId, 1, 'EX', 1000);
-        return lock.unlock().catch(catchErrorWs);
+        lock.unlock().catch(catchErrorWs);
       });
   }
 
@@ -133,10 +149,23 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
-    const { eventId, userId } = data;
-    await this.redisClient.decr(`event-${eventId}:clientsNetworkRoomCounter`);
-    await this.leaveRoom(socket);
-    await this.removeRequestRoomLock(userId);
+    const { eventId } = data;
+    const { userId } = socket;
+    const alreadyRequestARoom = await this.redisClient.get(userId);
+    await this.redisClient.set(`event-${eventId}:leaveRoom`, 1);
+    if (alreadyRequestARoom) {
+      this.redlock
+        .lock(`locks:event-${eventId}:leaveRoom`, 5000)
+        .then(async lock => {
+          await this.redisClient.decr(
+            `event-${eventId}:clientsNetworkRoomCounter`,
+          );
+          await this.leaveRoom(socket);
+          await this.removeRequestRoomLock(userId);
+          lock.unlock().catch(catchErrorWs);
+          await this.redisClient.del(`event-${eventId}:leaveRoom`);
+        });
+    }
   }
 
   async bindSocketToRoom(socket: any, eventId: number): Promise<void> {
