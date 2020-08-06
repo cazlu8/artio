@@ -67,7 +67,9 @@ export class UserController extends BaseWithoutAuthController {
     @Param('eventId', ParseIntPipe) eventId: number,
   ) {
     const { file } = req.raw.files;
-    await this.userService.processCsvFile(file, eventId);
+    return await this.userService
+      .processCsvFile(file, eventId)
+      .then(() => res.status(201).send());
   }
 
   @ApiParam({ name: 'guid', type: 'string' })
@@ -207,18 +209,5 @@ export class UserController extends BaseWithoutAuthController {
   @Delete('removeAvatar/:id')
   async removeAvatar(@Param('id', ParseIntPipe) id: number) {
     return this.userService.removeAvatar(id);
-  }
-
-  @UseGuards(AuthGuard)
-  @Post('uploadUsers/:eventId')
-  async processCSVUsers(
-    @Req() req,
-    @Res() res,
-    @Param('eventId', ParseIntPipe) eventId: number,
-  ) {
-    const { file } = req.raw.files;
-    return await this.userService
-      .processCsvFile(file, eventId)
-      .then(() => res.status(201).send());
   }
 }
