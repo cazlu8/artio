@@ -97,12 +97,9 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     this.redlock
       .lock(`event-${eventId}:locks:clientsNetworkRoomCounter`, 5000)
       .then(async lock => {
-        const incrementCounter = () => this.incrementCounter(eventId);
-        const bindSocketToRoom = () => this.bindSocketToRoom(socket, eventId);
-        const [counter] = await Promise.all([
-          incrementCounter,
-          bindSocketToRoom,
-        ]);
+        const counter = await this.incrementCounter(eventId);
+        await this.bindSocketToRoom(socket, eventId);
+        console.log('counter', counter);
         await this.send(+counter, eventId);
         await this.redisClient.set(userId, 1, 'EX', 600);
         return lock.unlock().catch(catchErrorWs);
