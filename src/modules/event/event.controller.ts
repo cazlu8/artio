@@ -109,11 +109,11 @@ export class EventController extends BaseWithoutAuthController {
     return await this.service.getEventDetails(id);
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
     description: 'The event was successfully retrieved',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
   @Get('/:id')
   async findOne(@Param('id', ParseIntPipe) id): Promise<Partial<Event> | void> {
@@ -130,11 +130,11 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.getEvents();
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
     description: 'Events by user id and role was successfully retrieved',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
   @Get('eventsByRole/:userId/:roleId')
   async getUserEventsByRole(
@@ -144,22 +144,22 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.getUserEventsByRole(userId, roleId);
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
     description: 'Happening now events by user id were successfully retrieved',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
   @Get('happeningNowByUser/:userId')
   async getHappeningNowByUser(@Param('userId', ParseIntPipe) userId: number) {
     return this.service.getHappeningNowByUser(userId);
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
     description: 'Upcoming events by user id were successfully retrieved',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
   @Get('upcomingByUser/:userId/:skip')
   async getUpcomingByUser(
@@ -169,11 +169,11 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.getUpcomingByUser(userId, skip);
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
     description: 'Past events by user id were successfully retrieved',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
   @Get('pastByUser/:userId/:skip')
   async getPastByUser(
@@ -183,10 +183,10 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.getPastByUser(userId, skip);
   }
 
+  @ApiParam({ name: 'getIntermissionStatus' })
   @ApiCreatedResponse({
     description: 'Intermission Status was successfully retrieved',
   })
-  @ApiParam({ name: 'getIntermissionStatus' })
   @UseGuards(AuthGuard)
   @Get('/getIntermissionStatus/:eventId')
   getIntermissionStatus(
@@ -210,11 +210,11 @@ export class EventController extends BaseWithoutAuthController {
 
   // PUT's (UPDATE)
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: UpdateEventDTO,
     description: 'The event has been successfully updated',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
   @Put('/:id')
   update(
@@ -227,10 +227,10 @@ export class EventController extends BaseWithoutAuthController {
       .then(() => res.status(204).send());
   }
 
+  @ApiParam({ name: 'startIntermission' })
   @ApiCreatedResponse({
     description: 'Intermission started',
   })
-  @ApiParam({ name: 'startIntermission' })
   @UseGuards(AuthGuard)
   @Put('/startIntermission')
   startIntermission(
@@ -242,10 +242,10 @@ export class EventController extends BaseWithoutAuthController {
       .then(() => res.status(204).send());
   }
 
+  @ApiParam({ name: 'finishIntermission' })
   @ApiCreatedResponse({
     description: 'Intermission finished',
   })
-  @ApiParam({ name: 'finishIntermission' })
   @UseGuards(AuthGuard)
   @Put('/finishIntermission/:eventId')
   finishIntermission(
@@ -257,11 +257,11 @@ export class EventController extends BaseWithoutAuthController {
       .then(() => res.status(204).send());
   }
 
+  @ApiParam({ name: 'startLive' })
   @ApiCreatedResponse({
     type: UpdateEventDTO,
     description: 'Live started',
   })
-  @ApiParam({ name: 'startLive' })
   @UseGuards(AuthGuard)
   @Put('/startLive/:eventId')
   startLive(
@@ -271,11 +271,11 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.startLive(eventId).then(() => res.status(204).send());
   }
 
+  @ApiParam({ name: 'finishLive' })
   @ApiCreatedResponse({
     type: UpdateEventDTO,
     description: 'Live finished',
   })
-  @ApiParam({ name: 'finishLive' })
   @UseGuards(AuthGuard)
   @Put('/finishLive/:eventId')
   finishLive(
@@ -287,11 +287,11 @@ export class EventController extends BaseWithoutAuthController {
 
   // DELETE's
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
     description: 'HeroImage image by user id successfuly removed',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
   @Delete('removeHeroImage/:id')
   async removeHeroImage(@Param('id', ParseIntPipe) id: number) {

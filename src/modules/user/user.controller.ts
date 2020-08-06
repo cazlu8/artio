@@ -67,10 +67,10 @@ export class UserController extends BaseWithoutAuthController {
     await this.userService.processCsvFile(file, eventId);
   }
 
+  @ApiParam({ name: 'guid', type: 'string' })
   @ApiCreatedResponse({
     description: 'User found in cognito pool',
   })
-  @ApiParam({ name: 'guid', type: 'string' })
   @Post('/checkUserExists')
   async verifyIfUserExists(
     @Body() checkUserExists: CheckUserExistsDto,
@@ -78,11 +78,11 @@ export class UserController extends BaseWithoutAuthController {
     return this.userService.exists(checkUserExists);
   }
 
+  @ApiParam({ name: 'userId and eventId', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
     description: 'Success on link a user with role to a event',
   })
-  @ApiParam({ name: 'userId and eventId', type: 'number' })
   @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
   @Post('linkEvent')
   async bindUserEvent(
@@ -95,11 +95,11 @@ export class UserController extends BaseWithoutAuthController {
       .then(() => res.status(201).send());
   }
 
+  @ApiParam({ name: 'userId and eventId', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
     description: 'Success on link a user with code to a event',
   })
-  @ApiParam({ name: 'userId and eventId', type: 'number' })
   @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
   @Post('linkEventCode')
   async bindUserEventCode(
@@ -115,44 +115,44 @@ export class UserController extends BaseWithoutAuthController {
 
   // GET's (READ)
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: User,
     description: 'User avatar by id ',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
   @Get('/avatar/:id')
   async getAvatarUrl(@Param('id') id): Promise<Partial<User> | void> {
     return this.userService.getAvatarUrl(id);
   }
 
+  @ApiParam({ name: 'email', type: 'string' })
   @ApiCreatedResponse({
     type: User,
     description: 'User by email was successfully retrieved',
   })
-  @ApiParam({ name: 'email', type: 'string' })
   @UseGuards(AdminAuthGuard)
   @Get('/email/:email')
   async getUserByEmail(@Param('email') email): Promise<User | void> {
     return this.userService.getUserByEmail(email);
   }
 
+  @ApiParam({ name: 'guid', type: 'string' })
   @ApiCreatedResponse({
     type: User,
     description: 'User by guid was successfully retrieved',
   })
-  @ApiParam({ name: 'guid', type: 'string' })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/:guid')
   async findOne(@Param('guid') guid): Promise<Partial<User> | void> {
     return this.userService.findOne(guid);
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
     description: 'Events by user id were successfully retrieved',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard)
   @Get('events/:id')
   async getUserEvents(@Param('id', ParseIntPipe) id: number) {
@@ -161,11 +161,11 @@ export class UserController extends BaseWithoutAuthController {
 
   // PUT's (UPDATE)
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: UpdateUserDto,
     description: 'User has been successfully updated',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Put('/:id')
   update(
@@ -178,11 +178,11 @@ export class UserController extends BaseWithoutAuthController {
       .then(() => res.status(204).send());
   }
 
+  @ApiParam({ name: 'userId', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
     description: 'Event code was successfully redeemed',
   })
-  @ApiParam({ name: 'userId', type: 'number' })
   @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
   @Put('redeemCode')
   async redeemEventCode(
@@ -198,11 +198,11 @@ export class UserController extends BaseWithoutAuthController {
 
   // DELETE's
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
     description: 'Avatar image by user id was successfully deleted',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Delete('removeAvatar/:id')
   async removeAvatar(@Param('id', ParseIntPipe) id: number) {

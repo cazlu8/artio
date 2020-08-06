@@ -34,11 +34,11 @@ export class RoleController extends BaseWithoutAuthController {
     return this.service.create(createRoleDTO);
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Role,
     description: 'Role by id was successfully retrieved',
   })
-  @ApiParam({ name: 'id', type: 'number' })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/:id')
   async findOne(@Param('id', ParseIntPipe) id): Promise<Partial<Role> | void> {
