@@ -101,7 +101,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
         await this.bindSocketToRoom(socket, eventId);
         console.log('foi counter', counter);
         await this.send(+counter, eventId);
-        await this.redisClient.set(userId, 1, 'EX', 600);
+        await this.redisClient.set(userId, 1, 'EX', 1000);
         return lock.unlock().catch(catchErrorWs);
       });
   }

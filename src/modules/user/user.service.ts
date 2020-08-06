@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -228,14 +229,15 @@ export class UserService {
           Key: `${id}.csv`,
         })
         .createReadStream();
-      StringStream.from(readSTream)
+      return await StringStream.from(readSTream)
         .lines()
         .CSVParse()
         .do(async data => {
           console.log(data);
-        });
+        })
+        .run();
     } catch (error) {
-      throw new Error(error);
+      throw new BadRequestException(error);
     }
   }
 
