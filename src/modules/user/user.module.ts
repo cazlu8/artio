@@ -5,21 +5,20 @@ import { UserService } from './user.service';
 import { LoggerService } from '../../shared/services/logger.service';
 import { UserRepository } from './user.repository';
 import { User } from './user.entity';
-import { UserEvents } from '../userEvents/userEvents.entity';
 import { UserEventsRoles } from '../userEventsRoles/user.events.roles.entity';
 import { Role } from '../role/role.entity';
+import { UserEventsModule } from '../userEvents/userEvents.module';
+import { UserProcessor } from './user.processor';
+import UserQueue from './user.queue';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      User,
-      UserRepository,
-      UserEvents,
-      UserEventsRoles,
-      Role,
-    ]),
+    UserQueue,
+    TypeOrmModule.forFeature([User, UserRepository, UserEventsRoles, Role]),
+    UserEventsModule,
   ],
   controllers: [UserController],
-  providers: [UserService, LoggerService],
+  providers: [UserService, LoggerService, UserProcessor],
+  exports: [UserService],
 })
 export class UserModule {}

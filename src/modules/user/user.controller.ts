@@ -20,7 +20,7 @@ import { User } from './user.entity';
 import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
 import { UpdateUserDto } from './dto/user.update.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
-import { RedeemEventCodeDTO } from './dto/user.redeemEventCode.dto';
+import { RedeemEventCodeDTO } from '../userEvents/dto/userEvents.redeemEventCode.dto';
 import { LinkToEventWithCodeDTO } from './dto/user.linkToEventWithCode.dto';
 import { LinkToEventWithRoleDTO } from './dto/user.linkToEventWithRole.dto';
 import { AuthGuard } from '../../shared/guards/auth.guard';

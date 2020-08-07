@@ -39,22 +39,11 @@ export class UserRepository extends Repository<User> {
       .execute();
   }
 
-  checkCode(redeemEventCodeDTO) {
-    const { userId, ticketCode } = redeemEventCodeDTO;
-    const attributes = ['user_events.eventId'];
-    return this.createQueryBuilder('user')
-      .select(attributes)
-      .leftJoin('user_events', 'user_events', `${userId} = user_events.userId`)
-      .where(`"ticketCode" = '${ticketCode}' and "userId" = ${userId}`)
-      .getRawOne();
-  }
-
-  redeemEventCode(eventId) {
-    const { user_events_eventId } = eventId;
+  preSaveUsers(emails: string[]) {
+    const users = emails.map(email => ({ email }));
     return this.createQueryBuilder()
-      .update(UserEvents)
-      .set({ redeemed: true })
-      .where(`"eventId" = ${user_events_eventId}`)
+      .insert()
+      .values(users)
       .execute();
   }
 }
