@@ -12,7 +12,6 @@ import { Queue } from 'bull';
 import { RedisService } from 'nestjs-redis';
 import * as Redlock from 'redlock';
 import { UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Server } from 'socket.io';
 import { LoggerService } from '../../shared/services/logger.service';
 import { NetworkRoomService } from './networkRoom.service';
 import { catchErrorWs } from '../../shared/utils/errorHandler.utils';
@@ -24,7 +23,6 @@ import { ValidationSchemaWsPipe } from '../../shared/pipes/validationSchemaWs.pi
 import { NetworkRoomEventDefaultDto } from './dto/networkRoomEventDefault.dto';
 import { NetworkRoomSwitchRoomDto } from './dto/networkRoomSwitchRoom.dto';
 import { NetworkRoomRequestAvailableRoomDto } from './dto/NetworkRoomRequestAvailableRoom.dto';
-import { NetworkRoomRRDto } from './dto/networkRoomRR';
 
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
@@ -32,7 +30,7 @@ import { NetworkRoomRRDto } from './dto/networkRoomRR';
 @WebSocketGateway(3030, { namespace: 'networkRoom', transports: ['websocket'] })
 export class NetworkRoomGateway implements OnGatewayConnection {
   @WebSocketServer()
-  readonly server: Server;
+  readonly server: any;
 
   private readonly redisClient: any;
 
@@ -55,6 +53,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
 
   async handleConnection(socket: any): Promise<void> {
     try {
+      if (process.env.NODE_ENV === 'development') return;
       const { token } = socket.handshake.query;
       const { sub } = await this.jwtService.validateToken(token);
       socket.userId = sub;
@@ -77,10 +76,10 @@ export class NetworkRoomGateway implements OnGatewayConnection {
       this.redlock
         .lock(`locks:event-${eventId}:availableRoom`, 4000)
         .then(async lock => {
-          this.leaveRoom(socket);
           const availableRoom = await this.service.getAvailableRoom();
           if (availableRoom?.uniqueName) {
             socket.emit(`requestAvailableRoom`, availableRoom);
+            this.leaveRoom(socket);
             console.log(`request AvailableRoom`, availableRoom);
           } else {
             socket.emit(`requestAvailableRoom`, false);
@@ -119,20 +118,25 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   @SubscribeMessage('requestRoom')
   async requestRoom(
     @ConnectedSocket() socket: any,
-    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomRRDto,
+    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
-    console.log('requestRoom', data);
     const { eventId } = data;
     const { userId } = socket;
     if (await this.preventRequestRoom(userId)) return;
     this.redlock
       .lock(`locks:event-${eventId}:clientsNetworkRoomCounter`, 5000)
       .then(async lock => {
-        const counter = await this.incrementCounter(eventId);
+        this.leaveRoom(socket);
+        const lastRoom =
+          +(await this.redisClient.get(`event-${eventId}:lastRoom`)) || 0;
         await this.bindSocketToRoom(socket, eventId);
-        console.log('foi counter', counter);
-        await this.send(+counter, eventId);
-        await this.redisClient.set(userId, 1, 'EX', 1000);
+        const { length } = this.server.adapter.rooms[
+          `event-${eventId}:room-${+lastRoom}`
+        ];
+        if (length === 3) {
+          await this.send(eventId);
+        }
+        await this.redisClient.set(userId, 1, 'EX', 2000);
         lock.unlock().catch(catchErrorWs);
       });
   }
@@ -153,29 +157,29 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
     const { userId } = socket;
-    console.log(data);
-    const alreadyRequestARoom = await this.redisClient.get(userId);
-    await this.redisClient.set(`event-${userId}:leaveRoom`, 1);
-    if (alreadyRequestARoom) {
-      this.redlock
-        .lock(`locks:event-${userId}:leaveRoom`, 5000)
-        .then(async lock => {
-          await this.leaveRoom(socket);
-          await this.removeRequestRoomLock(userId);
-          lock.unlock().catch(catchErrorWs);
-          await this.redisClient.del(`event-${userId}:leaveRoom`);
-        });
-    }
+    const { eventId } = data;
+    await this.redisClient.set(`event-${eventId}:leaveRoom`, 1);
+    this.redlock
+      .lock(`locks:event-${eventId}:leaveRoom`, 2000)
+      .then(async lock => {
+        this.leaveRoom(socket);
+        await this.removeRequestRoomLock(userId);
+        lock.unlock().catch(catchErrorWs);
+        await this.redisClient.del(`event-${userId}:leaveRoom`);
+      });
   }
 
   async bindSocketToRoom(socket: any, eventId: number): Promise<void> {
     const lastRoom =
       +(await this.redisClient.get(`event-${eventId}:lastRoom`)) || 0;
-    socket.join(`event-${eventId}:room-${lastRoom}`);
+    this.server.adapter.remoteJoin(
+      socket.id,
+      `event-${eventId}:room-${lastRoom}`,
+    );
   }
 
-  async send(counter: number, eventId: number): Promise<void> {
-    if (counter % 3 === 0) await this.sendTwillioRoomToSockets(eventId);
+  async send(eventId: number): Promise<void> {
+    await this.sendTwillioRoomToSockets(eventId);
   }
 
   async sendTwillioRoomToSockets(eventId: number): Promise<void> {
@@ -191,13 +195,6 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     );
     console.log(
       `${newTwillioRoom.uniqueName}/${process.pid}/${+lastRoom}/${counter}`,
-    );
-  }
-
-  async incrementCounter(eventId: number): Promise<number | void> {
-    await this.redisClient.incr(`event-${eventId}:clientsNetworkRoomCounter`);
-    return await this.redisClient.get(
-      `event-${eventId}:clientsNetworkRoomCounter`,
     );
   }
 
@@ -219,7 +216,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
   private leaveRoom(socket: any): void {
     const roomsArray: string[] = Object.keys(socket.rooms);
     const formerRoom: string = roomsArray[1];
-    formerRoom && socket.leave(formerRoom);
+    formerRoom && this.server.adapter.remoteLeave(socket.id, formerRoom);
   }
 
   private async removeRequestRoomLock(userId: number) {
