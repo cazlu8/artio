@@ -10,15 +10,23 @@ import { Role } from '../role/role.entity';
 import { UserEventsModule } from '../userEvents/userEvents.module';
 import { UserProcessor } from './user.processor';
 import UserQueue from './user.queue';
+import { EmailService } from '../../shared/services/email/email.service';
+import { EventRepository } from '../event/event.repository';
 
 @Module({
   imports: [
     UserQueue,
-    TypeOrmModule.forFeature([User, UserRepository, UserEventsRoles, Role]),
+    TypeOrmModule.forFeature([
+      User,
+      UserRepository,
+      UserEventsRoles,
+      Role,
+      EventRepository,
+    ]),
     UserEventsModule,
   ],
   controllers: [UserController],
-  providers: [UserService, LoggerService, UserProcessor],
+  providers: [UserService, LoggerService, EmailService, UserProcessor],
   exports: [UserService],
 })
 export class UserModule {}

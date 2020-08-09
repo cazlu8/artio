@@ -15,10 +15,18 @@ export class UserEventsService {
   }
 
   async bindUsersToEvent(
-    usersId: number[],
+    userIds: number[],
     eventId: number,
     ticketCode: string,
   ) {
-    return await this.repository.bindUsersToEvent(usersId, eventId, ticketCode);
+    const existsFn = userId => this.repository.exists({ userId, eventId });
+    const bindUserFn = userId =>
+      this.repository.bindUserToEvent({ userId, eventId, ticketCode });
+    const bindUsersToEventFns = userIds.map(userId =>
+      existsFn(userId).then(async exists =>
+        exists ? Promise.resolve() : await bindUserFn(userId),
+      ),
+    );
+    await Promise.all(bindUsersToEventFns);
   }
 }

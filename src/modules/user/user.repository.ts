@@ -1,6 +1,5 @@
 import { EntityRepository, Repository } from 'typeorm';
 import { User } from './user.entity';
-import { UserEvents } from '../userEvents/userEvents.entity';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -39,11 +38,10 @@ export class UserRepository extends Repository<User> {
       .execute();
   }
 
-  preSaveUsers(emails: string[]) {
-    const users = emails.map(email => ({ email }));
+  preSaveUser(user: Partial<User>) {
     return this.createQueryBuilder()
       .insert()
-      .values(users)
+      .values(user)
       .execute();
   }
 }

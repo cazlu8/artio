@@ -244,10 +244,38 @@ export class UserService {
 
   async preSaveUsersAndBindToEvent(emails: string[], eventId: number) {
     const ticketCode = short.generate();
-    const userIds: number[] = (
-      await this.repository.preSaveUsers(emails)
-    ).raw.map(({ id }) => id);
+    const userIds: any[] = await this.preSaveUsers(emails);
     await this.userEventsService.bindUsersToEvent(userIds, eventId, ticketCode);
+    return ticketCode;
+  }
+
+  private async preSaveUsers(emails) {
+    const existsFn = email => this.repository.exists({ email });
+    const getUserId = email =>
+      this.repository.get({ where: { email }, select: ['id'] });
+    const preSaveUserFn = email =>
+      this.repository
+        .preSaveUser({ email })
+        .then(({ raw }) => raw[0].id)
+        .catch(console.log);
+    const preSaveFns: any = emails.map(email =>
+      existsFn(email).then(async exists =>
+        exists ? await getUserId(email) : await preSaveUserFn(email),
+      ),
+    );
+
+    return await Promise.all(preSaveFns).then((...ids: any[]) =>
+      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+      // @ts-ignore
+      ids.flatMap(x => {
+        if (Array.isArray(x)) {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+          // @ts-ignore
+          return x.flatMap(y => (y.id !== undefined ? y.id : y));
+        }
+        return x.id !== undefined ? x.id : x;
+      }),
+    );
   }
 
   private async readCsvUsers(csvReadStream, eventId: number) {

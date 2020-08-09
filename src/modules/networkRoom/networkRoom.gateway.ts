@@ -121,22 +121,19 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
     const { eventId } = data;
-    const { userId } = socket;
-    if (await this.preventRequestRoom(userId)) return;
     this.redlock
       .lock(`locks:event-${eventId}:clientsNetworkRoomCounter`, 5000)
       .then(async lock => {
         this.leaveRoom(socket);
+        await this.bindSocketToRoom(socket, eventId);
         const lastRoom =
           +(await this.redisClient.get(`event-${eventId}:lastRoom`)) || 0;
-        await this.bindSocketToRoom(socket, eventId);
         const { length } = this.server.adapter.rooms[
           `event-${eventId}:room-${+lastRoom}`
         ];
         if (length === 3) {
           await this.send(eventId);
         }
-        await this.redisClient.set(userId, 1, 'EX', 2000);
         lock.unlock().catch(catchErrorWs);
       });
   }
@@ -163,7 +160,6 @@ export class NetworkRoomGateway implements OnGatewayConnection {
       .lock(`locks:event-${eventId}:leaveRoom`, 2000)
       .then(async lock => {
         this.leaveRoom(socket);
-        await this.removeRequestRoomLock(userId);
         lock.unlock().catch(catchErrorWs);
         await this.redisClient.del(`event-${userId}:leaveRoom`);
       });
@@ -217,11 +213,6 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     const roomsArray: string[] = Object.keys(socket.rooms);
     const formerRoom: string = roomsArray[1];
     formerRoom && this.server.adapter.remoteLeave(socket.id, formerRoom);
-  }
-
-  private async removeRequestRoomLock(userId: number) {
-    console.log(`releasing user${userId}`);
-    await this.redisClient.del(userId);
   }
 
   createRoom() {

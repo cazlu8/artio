@@ -23,11 +23,14 @@ export class UserEventsRepository extends Repository<UserEvents> {
       .execute();
   }
 
-  bindUsersToEvent(userIds: number[], eventId: number, ticketCode: string) {
-    const userEvents = userIds.map(userId => ({ userId, eventId, ticketCode }));
+  bindUserToEvent(userEvent: Partial<UserEvents>) {
     return this.createQueryBuilder()
       .insert()
-      .values(userEvents)
+      .values(userEvent)
       .execute();
+  }
+
+  async exists(properties: {}): Promise<boolean> {
+    return (await this.count(properties)) > 0;
   }
 }
