@@ -217,8 +217,4 @@ export class NetworkRoomGateway implements OnGatewayConnection {
       .then(({ uniqueName }) => ({ uniqueName }))
       .catch(() => Promise.resolve(this.createRoom()));
   }
-
-  private async preventRequestRoom(userId: number): Promise<boolean> {
-    return (await this.redisClient.get(userId)) !== null;
-  }
 }
