@@ -21,7 +21,7 @@ export class User {
   id: number;
 
   @Exclude()
-  @Column('varchar', { nullable: false, name: 'guid', unique: true })
+  @Column('varchar', { nullable: true, name: 'guid', unique: true })
   guid: string;
 
   @ApiProperty()

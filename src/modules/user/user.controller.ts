@@ -10,6 +10,7 @@ import {
   Res,
   ParseIntPipe,
   Req,
+  HttpCode,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { UpdateResult, ObjectLiteral } from 'typeorm';
@@ -20,7 +21,7 @@ import { User } from './user.entity';
 import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
 import { UpdateUserDto } from './dto/user.update.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
-import { RedeemEventCodeDTO } from './dto/user.redeemEventCode.dto';
+import { RedeemEventCodeDTO } from '../userEvents/dto/userEvents.redeemEventCode.dto';
 import { LinkToEventWithCodeDTO } from './dto/user.linkToEventWithCode.dto';
 import { LinkToEventWithRoleDTO } from './dto/user.linkToEventWithRole.dto';
 import { AuthGuard } from '../../shared/guards/auth.guard';
@@ -60,16 +61,14 @@ export class UserController extends BaseWithoutAuthController {
     description: 'CSV file has been successfully uploaded',
   })
   @UseGuards(AuthGuard)
+  @HttpCode(201)
   @Post('uploadUsers/:eventId')
   async processCSVUsers(
     @Req() req,
-    @Res() res,
     @Param('eventId', ParseIntPipe) eventId: number,
   ) {
     const { file } = req.raw.files;
-    return await this.userService
-      .processCsvFile(file, eventId)
-      .then(() => res.status(201).send());
+    return this.userService.processCsvFile(file, eventId);
   }
 
   @ApiParam({ name: 'guid', type: 'string' })

@@ -8,8 +8,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ObjectLiteral, UpdateResult, Repository } from 'typeorm';
 import * as sharp from 'sharp';
 import * as AWS from 'aws-sdk';
-import { uuid } from 'uuidv4';
 import { StringStream } from 'scramjet';
+import * as short from 'short-uuid';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';
@@ -22,6 +24,8 @@ import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { UserEvents } from '../userEvents/userEvents.entity';
 import { UserEventsRoles } from '../userEventsRoles/user.events.roles.entity';
 import { Role } from '../role/role.entity';
+import { UserEventsService } from '../userEvents/userEvents.service';
+import { UserEventsRepository } from '../userEvents/userEvents.repository';
 
 const cognito = new AWS.CognitoIdentityServiceProvider(cognitoConfig());
 
@@ -29,12 +33,14 @@ const cognito = new AWS.CognitoIdentityServiceProvider(cognitoConfig());
 export class UserService {
   constructor(
     private readonly repository: UserRepository,
+    private readonly userEventsService: UserEventsService,
     @InjectRepository(UserEvents)
-    private readonly userEventsRepository: Repository<UserEvents>,
+    private readonly userEventsRepository: UserEventsRepository,
     @InjectRepository(UserEventsRoles)
     private readonly userEventsRolesRepository: Repository<UserEventsRoles>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectQueue('user') private readonly userQueue: Queue,
   ) {}
 
   findOne(guid: string): Promise<Partial<User> | void> {
@@ -75,7 +81,7 @@ export class UserService {
   ): Promise<void | ObjectLiteral> {
     try {
       const { avatarImgUrl, id: userId } = createAvatarDto;
-      const avatarId: string = uuid();
+      const avatarId: string = short.generate();
       const { user, sharpedImage } = await this.processAvatarImage(
         avatarImgUrl,
         userId,
@@ -196,7 +202,7 @@ export class UserService {
     linkToEventWithCodeDTO,
   ): Promise<ObjectLiteral | void> {
     const { eventId, userEmail } = linkToEventWithCodeDTO;
-    const ticketCode: string = uuid();
+    const ticketCode: string = short.generate();
     const { id: userId } = await this.getUserIdByEmail(userEmail);
     const { id } = await this.linkUserAndCodeToEvent(
       ticketCode,
@@ -207,15 +213,14 @@ export class UserService {
   }
 
   async redeemEventCode(redeemEventCodeDTO): Promise<UpdateResult> {
-    const id = await this.repository.checkCode(redeemEventCodeDTO);
-    return await this.repository.redeemEventCode(id);
+    const id = await this.userEventsService.checkCode(redeemEventCodeDTO);
+    return await this.userEventsService.redeemEventCode(id);
   }
 
   async processCsvFile(file, eventId) {
     try {
-      console.log(eventId);
       const s3 = new AWS.S3(s3Config());
-      const id = uuid();
+      const id = short.generate();
       const params = {
         Bucket: process.env.S3_BUCKET_CSV_USERS,
         Key: `${id}.csv`,
@@ -225,22 +230,63 @@ export class UserService {
         ContentType: `text/csv`,
       };
       await s3.upload(params).promise();
-      const readSTream = s3
+      const csvReadStream = s3
         .getObject({
           Bucket: params.Bucket,
           Key: `${id}.csv`,
         })
         .createReadStream();
-      return await StringStream.from(readSTream)
-        .lines()
-        .CSVParse()
-        .do(async data => {
-          console.log(data);
-        })
-        .run();
+      this.readCsvUsers(csvReadStream, eventId);
     } catch (error) {
       throw new BadRequestException(error);
     }
+  }
+
+  async preSaveUsersAndBindToEvent(emails: string[], eventId: number) {
+    const ticketCode = short.generate();
+    const userIds: any[] = await this.preSaveUsers(emails);
+    await this.userEventsService.bindUsersToEvent(userIds, eventId, ticketCode);
+    return ticketCode;
+  }
+
+  async getUserEmailsBindedToEvent(emails: string[], eventId: number) {
+    return await this.userEventsRepository.getUserEmailsBindedToEventByEmail(
+      emails,
+      eventId,
+    );
+  }
+
+  private async preSaveUsers(emails: string[]) {
+    const getUserId = email =>
+      this.repository.get({ where: { email }, select: ['id'] });
+    const preSaveUserFn = email =>
+      this.repository.preSaveUser({ email }).then(({ raw }) => raw[0].id);
+    const preSaveFns: any = emails.map(email =>
+      getUserId(email).then(async id =>
+        id !== undefined ? Promise.resolve(id) : await preSaveUserFn(email),
+      ),
+    );
+    return await Promise.all(preSaveFns).then((...ids: any[]) =>
+      ids.flatMap(x => {
+        if (Array.isArray(x)) {
+          return x.flatMap(y => (y.id !== undefined ? y.id : y));
+        }
+        return x.id !== undefined ? x.id : x;
+      }),
+    );
+  }
+
+  private readCsvUsers(csvReadStream, eventId: number) {
+    return StringStream.from(csvReadStream)
+      .setOptions({ maxParallel: 8 })
+      .lines()
+      .CSVParse()
+      .do(async (emails: string[]) => {
+        await this.userQueue.add('preSaveUserAndBindToEvent', {
+          emails,
+          eventId,
+        });
+      });
   }
 
   private async verifyUserRole(id: number): Promise<boolean> {

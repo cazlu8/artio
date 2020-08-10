@@ -87,6 +87,10 @@ export class EventService {
     });
   }
 
+  get(properties: { where; select }) {
+    return this.repository.get(properties);
+  }
+
   getEvents(): Promise<Partial<Event[]> | void> {
     return this.repository.find().catch(error => {
       if (error.name === 'EntityNotFound') throw new NotFoundException();
