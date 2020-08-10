@@ -27,7 +27,11 @@ import { NetworkRoomRequestAvailableRoomDto } from './dto/NetworkRoomRequestAvai
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
-@WebSocketGateway(3030, { namespace: 'networkRoom', transports: ['websocket'] })
+@WebSocketGateway(3030, {
+  namespace: 'networkRoom',
+  transports: ['websocket'],
+  origins: process.env.ALLOWED_ORIGINS,
+})
 export class NetworkRoomGateway implements OnGatewayConnection {
   @WebSocketServer()
   readonly server: any;
@@ -69,27 +73,23 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     data: NetworkRoomRequestAvailableRoomDto,
   ): Promise<void> {
     const { eventId } = data;
-    const { userId } = socket;
-    const alreadyRequestARoom = await this.redisClient.get(userId);
     await this.redisClient.set(`event-${eventId}:availableRoom`, 1);
-    if (alreadyRequestARoom) {
-      this.redlock
-        .lock(`locks:event-${eventId}:availableRoom`, 4000)
-        .then(async lock => {
-          const availableRoom = await this.service.getAvailableRoom();
-          if (availableRoom?.uniqueName) {
-            socket.emit(`requestAvailableRoom`, availableRoom);
-            this.leaveRoom(socket);
-            console.log(`request AvailableRoom`, availableRoom);
-          } else {
-            socket.emit(`requestAvailableRoom`, false);
-          }
-          lock.extend(2000).then(async extendLock => {
-            extendLock.unlock();
-            await this.redisClient.del(`event-${eventId}:availableRoom`);
-          });
+    this.redlock
+      .lock(`locks:event-${eventId}:availableRoom`, 4000)
+      .then(async lock => {
+        const availableRoom = await this.service.getAvailableRoom();
+        if (availableRoom?.uniqueName) {
+          socket.emit(`requestAvailableRoom`, availableRoom);
+          this.leaveRoom(socket);
+          console.log(`request AvailableRoom`, availableRoom);
+        } else {
+          socket.emit(`requestAvailableRoom`, false);
+        }
+        lock.extend(2000).then(async extendLock => {
+          extendLock.unlock();
+          await this.redisClient.del(`event-${eventId}:availableRoom`);
         });
-    } else socket.emit(`requestAvailableRoom`, false);
+      });
   }
 
   @SubscribeMessage('switchRoom')
@@ -98,21 +98,17 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
     const { currentRoom, eventId } = data;
-    const { userId } = socket;
-    const alreadyRequestARoom = await this.redisClient.get(userId);
     await this.redisClient.set(`event-${eventId}:switchRoom`, 1);
-    if (alreadyRequestARoom) {
-      this.redlock
-        .lock(`locks:event-${eventId}:switchRoom`, 5000)
-        .then(async lock => {
-          this.leaveRoom(socket);
-          const newRoom = await this.service.getAvailableRoom(currentRoom);
-          if (newRoom?.uniqueName) socket.emit(`switchRoom`, newRoom);
-          else socket.emit(`switchRoom`, false);
-          lock.unlock().catch(catchErrorWs);
-          await this.redisClient.del(`event-${eventId}:switchRoom`);
-        });
-    }
+    this.redlock
+      .lock(`locks:event-${eventId}:switchRoom`, 5000)
+      .then(async lock => {
+        this.leaveRoom(socket);
+        const newRoom = await this.service.getAvailableRoom(currentRoom);
+        if (newRoom?.uniqueName) socket.emit(`switchRoom`, newRoom);
+        else socket.emit(`switchRoom`, false);
+        lock.unlock().catch(catchErrorWs);
+        await this.redisClient.del(`event-${eventId}:switchRoom`);
+      });
   }
 
   @SubscribeMessage('requestRoom')

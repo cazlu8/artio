@@ -10,6 +10,7 @@ import {
   Res,
   ParseIntPipe,
   Req,
+  HttpCode,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { UpdateResult, ObjectLiteral } from 'typeorm';
@@ -63,16 +64,14 @@ export class UserController extends BaseWithoutAuthController {
     description: 'CSV file has been successfully uploaded',
   })
   @UseGuards(AuthGuard)
+  @HttpCode(201)
   @Post('uploadUsers/:eventId')
   async processCSVUsers(
     @Req() req,
-    @Res() res,
     @Param('eventId', ParseIntPipe) eventId: number,
   ) {
     const { file } = req.raw.files;
-    return await this.userService
-      .processCsvFile(file, eventId)
-      .then(() => res.status(201).send());
+    return this.userService.processCsvFile(file, eventId);
   }
 
   @ApiParam({ name: 'guid', type: 'string' })

@@ -24,7 +24,7 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: true,
+    origin: process.env.ALLOWED_ORIGINS,
   });
   app.useWebSocketAdapter(
     new RedisIoAdapter(app, process.env.REDIS_HOST, +process.env.REDIS_PORT),

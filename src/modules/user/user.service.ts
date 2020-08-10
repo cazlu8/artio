@@ -236,7 +236,7 @@ export class UserService {
           Key: `${id}.csv`,
         })
         .createReadStream();
-      await this.readCsvUsers(csvReadStream, eventId);
+      this.readCsvUsers(csvReadStream, eventId);
     } catch (error) {
       throw new BadRequestException(error);
     }
@@ -276,8 +276,8 @@ export class UserService {
     );
   }
 
-  private async readCsvUsers(csvReadStream, eventId: number) {
-    return await StringStream.from(csvReadStream)
+  private readCsvUsers(csvReadStream, eventId: number) {
+    return StringStream.from(csvReadStream)
       .setOptions({ maxParallel: 8 })
       .lines()
       .CSVParse()
@@ -286,8 +286,7 @@ export class UserService {
           emails,
           eventId,
         });
-      })
-      .run();
+      });
   }
 
   private async verifyUserRole(id: number): Promise<boolean> {
