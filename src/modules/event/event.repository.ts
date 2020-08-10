@@ -9,12 +9,23 @@ import { Event } from './event.entity';
 import {
   getFormattedDayOfWeekFromHappeningNow,
   getFormattedAddressQuery,
+  getFormattedDateQuery,
 } from './queries';
 
 @EntityRepository(Event)
 export class EventRepository extends Repository<Event> {
-  async get({ where, select }) {
+  get({ where, select }) {
     return this.findOne({ select, where });
+  }
+
+  getEventDataToTicketCodeEmail(eventId: number) {
+    const attributes = ['name'];
+    return this.createQueryBuilder('event')
+      .select(attributes)
+      .addSelect('hero_img_url', 'heroImgUrl')
+      .addSelect(getFormattedDateQuery, 'date')
+      .where(`id = ${eventId}`)
+      .getRawOne();
   }
 
   getHappeningNowEvents(): Promise<Partial<Event[]> | void> {

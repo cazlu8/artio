@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { UpdateResult, ObjectLiteral } from 'typeorm';
+import * as AWS from 'aws-sdk';
 import { CreateUserDto } from './dto/user.create.dto';
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
 import { UserService } from './user.service';
@@ -28,6 +29,8 @@ import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
 import { AdminAuthGuard } from '../../shared/guards/adminAuth.guard';
 import { OrganizerAuthGuard } from '../../shared/guards/organizerAuth.guard';
+import { sesConfig } from '../../shared/config/AWS';
+import ticketTemaplate from '../../shared/services/email/templates/tickerCode..email.template';
 
 @ApiTags('Users')
 @Controller('users')

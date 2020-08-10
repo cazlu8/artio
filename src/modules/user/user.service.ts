@@ -25,6 +25,7 @@ import { UserEvents } from '../userEvents/userEvents.entity';
 import { UserEventsRoles } from '../userEventsRoles/user.events.roles.entity';
 import { Role } from '../role/role.entity';
 import { UserEventsService } from '../userEvents/userEvents.service';
+import { UserEventsRepository } from '../userEvents/userEvents.repository';
 
 const cognito = new AWS.CognitoIdentityServiceProvider(cognitoConfig());
 
@@ -34,7 +35,7 @@ export class UserService {
     private readonly repository: UserRepository,
     private readonly userEventsService: UserEventsService,
     @InjectRepository(UserEvents)
-    private readonly userEventsRepository: Repository<UserEvents>,
+    private readonly userEventsRepository: UserEventsRepository,
     @InjectRepository(UserEventsRoles)
     private readonly userEventsRolesRepository: Repository<UserEventsRoles>,
     @InjectRepository(Role)
@@ -218,7 +219,6 @@ export class UserService {
 
   async processCsvFile(file, eventId) {
     try {
-      console.log(eventId);
       const s3 = new AWS.S3(s3Config());
       const id = short.generate();
       const params = {
@@ -249,28 +249,26 @@ export class UserService {
     return ticketCode;
   }
 
-  private async preSaveUsers(emails) {
-    const existsFn = email => this.repository.exists({ email });
+  async getUserEmailsBindedToEvent(emails: string[], eventId: number) {
+    return await this.userEventsRepository.getUserEmailsBindedToEventByEmail(
+      emails,
+      eventId,
+    );
+  }
+
+  private async preSaveUsers(emails: string[]) {
     const getUserId = email =>
       this.repository.get({ where: { email }, select: ['id'] });
     const preSaveUserFn = email =>
-      this.repository
-        .preSaveUser({ email })
-        .then(({ raw }) => raw[0].id)
-        .catch(console.log);
+      this.repository.preSaveUser({ email }).then(({ raw }) => raw[0].id);
     const preSaveFns: any = emails.map(email =>
-      existsFn(email).then(async exists =>
-        exists ? await getUserId(email) : await preSaveUserFn(email),
+      getUserId(email).then(async id =>
+        id !== undefined ? Promise.resolve(id) : await preSaveUserFn(email),
       ),
     );
-
     return await Promise.all(preSaveFns).then((...ids: any[]) =>
-      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-      // @ts-ignore
       ids.flatMap(x => {
         if (Array.isArray(x)) {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-          // @ts-ignore
           return x.flatMap(y => (y.id !== undefined ? y.id : y));
         }
         return x.id !== undefined ? x.id : x;

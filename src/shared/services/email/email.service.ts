@@ -1,18 +1,15 @@
 import * as AWS from 'aws-sdk';
 import { Injectable } from '@nestjs/common';
 import { sesConfig } from '../../config/AWS';
+import { SendEmailTicketCode } from '../../types/user';
 
 const ses = new AWS.SES(sesConfig());
 
 @Injectable()
 export class EmailService {
-  async sendBulkTicketCode(
-    emails: string[],
-    ticketCode: string,
-    eventImg: string,
-    eventName: string,
-  ) {
+  async sendBulkTicketCode(data: SendEmailTicketCode) {
     try {
+      const { emails, ticketCode, eventName, eventImg, eventDate } = data;
       const destinations = emails.map(email => ({
         Destination: { ToAddresses: [email] },
       }));
@@ -20,6 +17,7 @@ export class EmailService {
         ticketCode,
         eventName,
         eventImg,
+        eventDate,
         artioLogo: process.env.LOGO_EMAIL,
         artioUrl: process.env.FRONT_END_URL,
       };
