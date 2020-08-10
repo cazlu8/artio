@@ -236,7 +236,7 @@ export class UserService {
           Key: `${id}.csv`,
         })
         .createReadStream();
-      this.readCsvUsers(csvReadStream, eventId);
+      await this.readCsvUsers(csvReadStream, eventId);
     } catch (error) {
       throw new BadRequestException(error);
     }
@@ -283,7 +283,7 @@ export class UserService {
       .CSVParse()
       .do(async (emails: string[]) => {
         await this.userQueue.add('preSaveUserAndBindToEvent', {
-          emails,
+          emails: emails.filter(x => x !== ''),
           eventId,
         });
       });
