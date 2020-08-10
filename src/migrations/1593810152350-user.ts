@@ -8,7 +8,7 @@ export class user1593810152350 implements MigrationInterface {
       `CREATE TYPE "user_gender_enum" AS ENUM('1', '2', '3')`,
     );
     await queryRunner.query(
-      `CREATE TABLE "user" ("id" SERIAL NOT NULL, "guid" character varying NOT NULL, "first_name" character varying(255), "last_name" character varying(255), "email" character varying(70) NOT NULL, "avatar_img_url" character varying(255), "bio" character varying(2000), "phone_number" character varying(50), "gender" "user_gender_enum", "company" character varying(255), "current_position" character varying(255), "social_urls" json, "is_new" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_61ea3ae73af64f7ce8e9fe55e10" UNIQUE ("guid"), CONSTRAINT "UQ_e12875dfb3b1d92d7d7c5377e22" UNIQUE ("email"), CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "user" ("id" SERIAL NOT NULL, "guid" character varying, "first_name" character varying(255), "last_name" character varying(255), "email" character varying(70) NOT NULL, "avatar_img_url" character varying(255), "bio" character varying(2000), "phone_number" character varying(50), "gender" "user_gender_enum", "company" character varying(255), "current_position" character varying(255), "social_urls" json DEFAULT '[]', "is_new" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_61ea3ae73af64f7ce8e9fe55e10" UNIQUE ("guid"), CONSTRAINT "UQ_e12875dfb3b1d92d7d7c5377e22" UNIQUE ("email"), CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id"))`,
     );
   }
 

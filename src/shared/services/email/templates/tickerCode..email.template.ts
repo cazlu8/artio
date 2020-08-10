@@ -104,7 +104,7 @@ a[x-apple-data-detectors] {
                   <td align="center" valign="top" style="padding:0;Margin:0;width:570px"> 
                    <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px"> 
                      <tr style="border-collapse:collapse"> 
-                      <td align="left" style="padding:0;Margin:0"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:21px;font-family:roboto, 'helvetica neue', helvetica, arial, sans-serif;line-height:32px;color:#7F7F7F"><br>You have been successfully registered for the <span style="color:#4995B5"><strong>{{eventName}} <br/> {{eventDate}}</strong></span> event.<br><br>Use the code below to access the event on the platform.</p></td> 
+                      <td align="left" style="padding:0;Margin:0"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:21px;font-family:roboto, 'helvetica neue', helvetica, arial, sans-serif;line-height:32px;color:#7F7F7F"><br>You have been successfully registered for the <span style="color:#4995B5"><strong>{{eventName}} event. <br/> {{eventDate}}</strong></span><br><br>Use the code below to access the event on the platform.</p></td> 
                      </tr> 
                    </table></td> 
                  </tr> 

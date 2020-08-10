@@ -62,14 +62,14 @@ export class UserProcessor {
     const { emails } = data;
     if (emails.length >= 50) {
       const currentEmails = emails.splice(0, 50);
-      await this.sendToQueue(currentEmails, data);
-      await this.sendEmails({ emails, ...data });
+      await this.sendToQueue({ ...data, emails: currentEmails });
+      await this.sendEmails({ ...data, emails });
     } else {
-      await this.sendToQueue(emails, data);
+      await this.sendToQueue(data);
     }
   }
 
-  async sendToQueue(emails, data: SendEmailTicketCode) {
-    await this.emailService.sendBulkTicketCode({ emails, ...data });
+  async sendToQueue(data: SendEmailTicketCode) {
+    await this.emailService.sendBulkTicketCode(data);
   }
 }
