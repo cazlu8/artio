@@ -18,7 +18,7 @@ export class EmailService {
         eventName,
         eventImg,
         eventDate,
-        artioLogo: process.env.LOGO_EMAIL,
+        artioLogo: process.env.LOGO_EMAIL_IMG,
         artioUrl: process.env.FRONT_END_URL,
       };
       const params = {
