@@ -1,26 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import * as winston from 'winston';
 import * as WinstonCloudWatch from 'winston-cloudwatch';
-import { ConfigService } from '@nestjs/config';
+import { CloudWatchConfigError, CloudWatchConfigInfo } from '../config/logger';
 
 @Injectable()
 export class LoggerService {
-  private winstonLogger: winston.Logger;
+  private winstonLoggerInfo: winston.Logger;
 
-  constructor(private configService: ConfigService) {
-    const logger = winston.createLogger({
+  private winstonLoggerError: winston.Logger;
+
+  constructor() {
+    const infoLogger = winston.createLogger({
+      format: winston.format.json(),
+      transports: [new winston.transports.Console()],
+    });
+
+    const errorLogger = winston.createLogger({
       format: winston.format.json(),
       transports: [new winston.transports.Console()],
     });
 
     if (process.env.NODE_ENV === 'production') {
-      logger.add(new WinstonCloudWatch(this.configService.get('cloudWatch')));
+      infoLogger.add(new WinstonCloudWatch(CloudWatchConfigInfo()));
+      errorLogger.add(new WinstonCloudWatch(CloudWatchConfigError()));
     }
-    this.winstonLogger = logger;
+    this.winstonLoggerInfo = infoLogger;
+    this.winstonLoggerError = errorLogger;
   }
 
-  log(level = 'info', error, request: any = {}) {
-    this.winstonLogger.log(
+  errorLog(level, error, request: any = {}) {
+    this.winstonLoggerError.log(
       level,
       `Requesting ${request?.raw?.method} ${request?.raw?.originalUrl}`,
       {
@@ -34,7 +43,15 @@ export class LoggerService {
     );
   }
 
-  info(error, request) {
-    this.log('info', error, request);
+  infoLog(level, message) {
+    this.winstonLoggerInfo.log(level, `${message}`);
+  }
+
+  error(error, request) {
+    this.errorLog('error', error, request);
+  }
+
+  info(message) {
+    this.infoLog('info', message);
   }
 }

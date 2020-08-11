@@ -12,16 +12,16 @@ export class UserEventsRepository extends Repository<UserEvents> {
   checkCode(redeemEventCodeDTO: RedeemEventCodeDTO) {
     const { userId, ticketCode } = redeemEventCodeDTO;
     return this.createQueryBuilder('userEvents')
-      .select('userEvents.eventId')
+      .select('userEvents.userId')
       .where(`"ticketCode" = '${ticketCode}' and "userId" = ${userId}`)
       .getRawOne();
   }
 
-  redeemEventCode(eventId) {
+  redeemEventCode(userId) {
     return this.createQueryBuilder()
       .update()
       .set({ redeemed: true })
-      .where(`"eventId" = ${eventId}`)
+      .where(`"userId" = ${userId}`)
       .execute();
   }
 

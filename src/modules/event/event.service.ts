@@ -29,6 +29,7 @@ import { NetworkRoomService } from '../networkRoom/networkRoom.service';
 import { UserEvents } from '../userEvents/userEvents.entity';
 import EventStartIntermissionDto from './dto/event.startIntermission.dto';
 import { EventGateway } from './event.gateway';
+import { LoggerService } from '../../shared/services/logger.service';
 
 @Injectable()
 export class EventService {
@@ -42,14 +43,17 @@ export class EventService {
     @InjectRepository(UserEvents)
     private readonly userEventsRepository: Repository<UserEvents>,
     private readonly redisService: RedisService,
+    private readonly loggerService: LoggerService,
   ) {
     this.redisClient = this.redisService.getClient();
   }
 
-  create(createEventDTO: CreateEventDTO): Promise<void | ObjectLiteral> {
-    return this.repository
+  async create(createEventDTO: CreateEventDTO): Promise<void | ObjectLiteral> {
+    const event = await this.repository
       .save(createEventDTO)
       .catch(err => validateEntityUserException.check(err));
+    this.loggerService.info(`Event ${createEventDTO.name} Created`);
+    return event;
   }
 
   getHappeningNowEvents(): Promise<EventListDto[] | void> {
@@ -236,6 +240,9 @@ export class EventService {
         this.deleteHeroImage(user, s3, Bucket),
       ];
       await Promise.all(functions);
+      this.loggerService.info(
+        `Event hero image for event id(${eventId}) was created`,
+      );
       return {
         url: `${process.env.S3_BUCKET_HERO_IMAGE_PREFIX_URL}${heroImageId}.png`,
       };
@@ -249,6 +256,7 @@ export class EventService {
       const { heroImgUrl: formerUrl } = event;
       const lastIndex = formerUrl.lastIndexOf('/');
       const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
+      this.loggerService.info(`Event Hero Image ${formerUrl} was deleted`);
       return s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
     }
     return Promise.resolve();
@@ -302,8 +310,13 @@ export class EventService {
     });
   }
 
-  private update(id: number, eventData: Partial<Event>): Promise<UpdateResult> {
-    return this.repository.update(id, eventData);
+  private async update(
+    id: number,
+    eventData: Partial<Event>,
+  ): Promise<UpdateResult> {
+    const event = await this.repository.update(id, eventData);
+    this.loggerService.info(`Event ${id} has been updated`);
+    return event;
   }
 
   private async eventIsOnIntermission(eventId: number) {
