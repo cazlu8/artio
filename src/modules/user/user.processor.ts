@@ -18,44 +18,52 @@ export class UserProcessor {
 
   @Process({ name: 'preSaveUserAndBindToEvent', concurrency: numCPUs })
   async preSaveUserAndBindToEvent(job, jobDone) {
-    const { emails, eventId } = job.data;
-    const emailsToNotSend = (
-      await this.service.getUserEmailsBindedToEvent(emails, eventId)
-    )?.map(x => x.user_email);
-    const emailsToSend = emailsToNotSend.length
-      ? emails.filter(x => !emailsToNotSend.some(y => x === y))
-      : emails;
-    if (emailsToSend.length) {
-      const ticketCode = await this.service.preSaveUsersAndBindToEvent(
-        emailsToSend,
-        eventId,
-      );
-      await this.userQueue.add('sendTicketCodeEmail', {
-        emails: emailsToSend,
-        eventId,
-        ticketCode,
-      });
+    try {
+      const { emails, eventId } = job.data;
+      const emailsToNotSend = (
+        await this.service.getUserEmailsBindedToEvent(emails, eventId)
+      )?.map(x => x.user_email);
+      const emailsToSend = emailsToNotSend.length
+        ? emails.filter(x => !emailsToNotSend.some(y => x === y))
+        : emails;
+      if (emailsToSend.length) {
+        const ticketCode = await this.service.preSaveUsersAndBindToEvent(
+          emailsToSend,
+          eventId,
+        );
+        await this.userQueue.add('sendTicketCodeEmail', {
+          emails: emailsToSend,
+          eventId,
+          ticketCode,
+        });
+      }
+      jobDone();
+    } catch (error) {
+      console.log('error pre save users', error);
     }
-    jobDone();
   }
 
   @Process({ name: 'sendTicketCodeEmail', concurrency: numCPUs })
   async sendTicketCodeEmail(job, jobDone) {
-    const { emails, eventId, ticketCode } = job.data;
-    const {
-      heroImgUrl: eventImg,
-      name: eventName,
-      date: eventDate,
-    } = await this.eventRepository.getEventDataToTicketCodeEmail(eventId);
-    const data: SendEmailTicketCode = {
-      emails,
-      ticketCode,
-      eventImg,
-      eventName,
-      eventDate,
-    };
-    await this.sendEmails(data);
-    jobDone();
+    try {
+      const { emails, eventId, ticketCode } = job.data;
+      const {
+        heroImgUrl: eventImg,
+        name: eventName,
+        date: eventDate,
+      } = await this.eventRepository.getEventDataToTicketCodeEmail(eventId);
+      const data: SendEmailTicketCode = {
+        emails,
+        ticketCode,
+        eventImg,
+        eventName,
+        eventDate,
+      };
+      await this.sendEmails(data);
+      jobDone();
+    } catch (error) {
+      console.log('error pre save users', error);
+    }
   }
 
   async sendEmails(data: SendEmailTicketCode) {

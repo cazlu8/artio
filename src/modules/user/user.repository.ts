@@ -7,7 +7,7 @@ export class UserRepository extends Repository<User> {
     return (await this.count(properties)) > 0;
   }
 
-  async get({ where, select }) {
+  get({ where, select }) {
     return this.findOne({ select, where });
   }
 

@@ -29,6 +29,7 @@ export class EmailService {
       };
       await ses.sendBulkTemplatedEmail(params).promise();
     } catch (error) {
+      console.log('error email', error);
       throw new Error(error);
     }
   }
