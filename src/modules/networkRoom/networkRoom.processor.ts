@@ -63,11 +63,10 @@ export class NetworkRoomProcessor {
           { delay: 270000 },
         );
       }
+      jobDone();
     } catch (error) {
       console.log('deu pau', error);
       catchError(error);
-    } finally {
-      jobDone();
     }
   }
 
