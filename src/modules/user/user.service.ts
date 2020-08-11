@@ -221,10 +221,10 @@ export class UserService {
   }
 
   async redeemEventCode(redeemEventCodeDTO): Promise<UpdateResult> {
-    const { userEvents_eventId } = await this.userEventsService.checkCode(
+    const { userEvents_userId } = await this.userEventsService.checkCode(
       redeemEventCodeDTO,
     );
-    return await this.userEventsService.redeemEventCode(userEvents_eventId);
+    return await this.userEventsService.redeemEventCode(userEvents_userId);
   }
 
   async processCsvFile(file, eventId) {
