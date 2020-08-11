@@ -72,10 +72,12 @@ export class UserProcessor {
       const currentEmails = emails.splice(0, 49);
       await this.sendToQueue({ ...data, emails: currentEmails });
       console.log('emails:', JSON.stringify(currentEmails));
+      console.log('emails.length', currentEmails.length);
       await this.sendEmails({ ...data, emails });
     } else if (emails.length) {
       await this.sendToQueue(data);
       console.log('emails:', JSON.stringify(emails));
+      console.log('emails.length', emails.length);
     }
   }
 
