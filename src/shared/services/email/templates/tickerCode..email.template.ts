@@ -493,7 +493,7 @@ export default () => `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional/
                                         style="color: #7f7f7f; font-size: 11px;"
                                         >** This code is linked to the
                                         invitation e-mail, so will only be valid
-                                        for users created from this specific
+                                        for an user created from this specific
                                         e-mail. **</small
                                       >
                                     </p>
