@@ -309,7 +309,7 @@ export class UserService {
       .CSVParse()
       .do(async (emails: string[]) => {
         await this.userQueue.add('preSaveUserAndBindToEvent', {
-          emails: emails.filter(x => x !== ''),
+          emails: emails.filter(x => x.trim() !== ''),
           eventId,
         });
       });
