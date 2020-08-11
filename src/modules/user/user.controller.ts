@@ -43,7 +43,7 @@ export class UserController extends BaseWithoutAuthController {
   })
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
-    return await this.userService.create(createUserDto);
+    return this.userService.create(createUserDto);
   }
 
   @ApiCreatedResponse({
