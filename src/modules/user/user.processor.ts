@@ -68,7 +68,7 @@ export class UserProcessor {
 
   async sendEmails(data: SendEmailTicketCode) {
     const { emails } = data;
-    if (emails.length >= 49) {
+    if (emails.length > 49) {
       const currentEmails = emails.splice(0, 49);
       await this.sendToQueue({ ...data, emails: currentEmails });
       console.log('emails:', JSON.stringify(emails));
