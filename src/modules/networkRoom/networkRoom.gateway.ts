@@ -73,7 +73,6 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     data: NetworkRoomRequestAvailableRoomDto,
   ): Promise<void> {
     const { eventId } = data;
-    await this.redisClient.set(`event-${eventId}:availableRoom`, 1);
     this.redlock
       .lock(`locks:event-${eventId}:availableRoom`, 4000)
       .then(async lock => {
@@ -94,7 +93,6 @@ export class NetworkRoomGateway implements OnGatewayConnection {
             socket.emit(`requestAvailableRoom`, false);
           }
           lock.extend(4000).then(async extendLock => {
-            await this.redisClient.del(`event-${eventId}:availableRoom`);
             await extendLock.unlock().catch(catchErrorWs);
           });
         }
@@ -107,7 +105,6 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
     const { currentRoom, eventId } = data;
-    await this.redisClient.set(`event-${eventId}:switchRoom`, 1);
     this.redlock
       .lock(`locks:event-${eventId}:switchRoom`, 5000)
       .then(async lock => {
@@ -115,7 +112,6 @@ export class NetworkRoomGateway implements OnGatewayConnection {
         const newRoom = await this.service.getAvailableRoom(currentRoom);
         if (newRoom?.uniqueName) socket.emit(`switchRoom`, newRoom);
         else socket.emit(`switchRoom`, false);
-        await this.redisClient.del(`event-${eventId}:switchRoom`);
         await lock.unlock().catch(catchErrorWs);
       });
   }
@@ -162,14 +158,11 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
-    const { userId } = socket;
     const { eventId } = data;
-    await this.redisClient.set(`event-${eventId}:leaveRoom`, 1);
     this.redlock
       .lock(`locks:event-${eventId}:leaveRoom`, 2000)
       .then(async lock => {
         this.leaveRoom(socket);
-        await this.redisClient.del(`event-${userId}:leaveRoom`);
         await lock.unlock().catch(catchErrorWs);
       });
   }

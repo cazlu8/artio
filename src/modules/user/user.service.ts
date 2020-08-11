@@ -305,9 +305,11 @@ export class UserService {
 
   private readCsvUsers(csvReadStream, eventId: number) {
     return StringStream.from(csvReadStream)
-      .setOptions({ maxParallel: 8 })
+      .setOptions({ maxParallel: 16 })
       .lines()
       .CSVParse()
+      .map(emails => [...new Set([...emails])])
+      .map(emails => emails.filter(x => x.trim().length > 1))
       .do(async (emails: string[]) => {
         await this.userQueue.add('preSaveUserAndBindToEvent', {
           emails: emails.filter(x => x.trim() !== ''),
