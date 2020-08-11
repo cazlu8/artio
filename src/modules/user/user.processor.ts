@@ -26,7 +26,7 @@ export class UserProcessor {
       const emailsToSend = emailsToNotSend.length
         ? emails.filter(x => !emailsToNotSend.some(y => x === y))
         : emails;
-      if (emailsToSend.length) {
+      if (emailsToSend?.length) {
         const ticketCode = await this.service.preSaveUsersAndBindToEvent(
           emailsToSend,
           eventId,
@@ -68,13 +68,11 @@ export class UserProcessor {
 
   async sendEmails(data: SendEmailTicketCode) {
     const { emails } = data;
-    if (emails.length >= 50) {
-      const currentEmails = emails.splice(0, 50);
+    if (emails.length >= 49) {
+      const currentEmails = emails.splice(0, 49);
       await this.sendToQueue({ ...data, emails: currentEmails });
       await this.sendEmails({ ...data, emails });
-    } else {
-      await this.sendToQueue(data);
-    }
+    } else if (emails.length) await this.sendToQueue(data);
   }
 
   async sendToQueue(data: SendEmailTicketCode) {

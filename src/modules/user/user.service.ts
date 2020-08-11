@@ -12,10 +12,12 @@ import { StringStream } from 'scramjet';
 import * as short from 'short-uuid';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { ConfigService } from '@nestjs/config';
+import CognitoIdentityServiceProvider from 'aws-sdk/clients/cognitoidentityserviceprovider';
+import S3 from 'aws-sdk/clients/s3';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';
-import { s3Config, cognitoConfig } from '../../shared/config/AWS';
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
 import { UserRepository } from './user.repository';
@@ -27,10 +29,12 @@ import { Role } from '../role/role.entity';
 import { UserEventsService } from '../userEvents/userEvents.service';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
 
-const cognito = new AWS.CognitoIdentityServiceProvider(cognitoConfig());
-
 @Injectable()
 export class UserService {
+  private cognito: CognitoIdentityServiceProvider;
+
+  private s3: S3;
+
   constructor(
     private readonly repository: UserRepository,
     private readonly userEventsService: UserEventsService,
@@ -41,12 +45,17 @@ export class UserService {
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
     @InjectQueue('user') private readonly userQueue: Queue,
-  ) {}
+    private configService: ConfigService,
+  ) {
+    this.cognito = new AWS.CognitoIdentityServiceProvider(
+      this.configService.get('cognito'),
+    );
+    this.s3 = new AWS.S3(this.configService.get('s3'));
+  }
 
   findOne(guid: string): Promise<Partial<User> | void> {
     return this.repository.findOneOrFail({ guid }).catch(error => {
       if (error.name === 'EntityNotFound') throw new NotFoundException();
-      throw new InternalServerErrorException(error);
     });
   }
 
@@ -66,7 +75,7 @@ export class UserService {
       UserPoolId: process.env.COGNITO_USER_POOL_ID,
       Filter: `email= "${checkUserExistsDto.email}"`,
     };
-    const { Users }: any = await cognito.listUsers(params).promise();
+    const { Users }: any = await this.cognito.listUsers(params).promise();
     return Users.length > 0;
   }
 
@@ -87,35 +96,30 @@ export class UserService {
   async createAvatar(
     createAvatarDto: CreateAvatarDto,
   ): Promise<void | ObjectLiteral> {
-    try {
-      const { avatarImgUrl, id: userId } = createAvatarDto;
-      const avatarId: string = short.generate();
-      const { user, sharpedImage } = await this.processAvatarImage(
-        avatarImgUrl,
-        userId,
-        avatarId,
-      );
-      const params = {
-        Bucket: process.env.S3_BUCKET_AVATAR,
-        Key: `${avatarId}.png`,
-        Body: sharpedImage,
-        ACL: 'private',
-        ContentEncoding: 'base64',
-        ContentType: `image/png`,
-      };
-      const { Bucket } = params;
-      const s3 = new AWS.S3(s3Config());
-      const functions: any = [
-        ...this.updateAvatarImage(s3, params, userId, avatarId),
-        this.deleteAvatar(user, s3, Bucket),
-      ];
-      await Promise.all(functions);
-      return {
-        url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
-      };
-    } catch (error) {
-      throw new InternalServerErrorException(error);
-    }
+    const { avatarImgUrl, id: userId } = createAvatarDto;
+    const avatarId: string = short.generate();
+    const { user, sharpedImage } = await this.processAvatarImage(
+      avatarImgUrl,
+      userId,
+      avatarId,
+    );
+    const params = {
+      Bucket: process.env.S3_BUCKET_AVATAR,
+      Key: `${avatarId}.png`,
+      Body: sharpedImage,
+      ACL: 'private',
+      ContentEncoding: 'base64',
+      ContentType: `image/png`,
+    };
+    const { Bucket } = params;
+    const functions: any = [
+      ...this.updateAvatarImage(params, userId, avatarId),
+      this.deleteAvatar(user, Bucket),
+    ];
+    await Promise.all(functions);
+    return {
+      url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
+    };
   }
 
   private async processAvatarImage(
@@ -134,24 +138,19 @@ export class UserService {
     return { sharpedImage, user, avatarId };
   }
 
-  private deleteAvatar(user: any, s3: AWS.S3, Bucket: string) {
+  private deleteAvatar(user: any, Bucket: string) {
     if (user?.avatarImgUrl) {
       const { avatarImgUrl: formerUrl } = user;
       const lastIndex = formerUrl.lastIndexOf('/');
       const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
-      return s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
+      return this.s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
     }
     return Promise.resolve();
   }
 
-  private updateAvatarImage(
-    s3: AWS.S3,
-    params: any,
-    userId: number,
-    avatarId: string,
-  ) {
+  private updateAvatarImage(params: any, userId: number, avatarId: string) {
     return [
-      s3.upload(params).promise(),
+      this.s3.upload(params).promise(),
       this.update(userId, {
         avatarImgUrl: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
       }),
@@ -182,10 +181,9 @@ export class UserService {
       where: { id },
     });
     const updateAvatarUrl = this.repository.removeAvatarUrl(id);
-    const s3 = new AWS.S3(s3Config());
     const Bucket = process.env.S3_BUCKET_AVATAR;
     await Promise.all([getUserFromAvatar, updateAvatarUrl]).then(
-      async ([user]) => await this.deleteAvatar(user, s3, Bucket),
+      async ([user]) => await this.deleteAvatar(user, Bucket),
     );
   }
 
@@ -229,7 +227,6 @@ export class UserService {
 
   async processCsvFile(file, eventId) {
     try {
-      const s3 = new AWS.S3(s3Config());
       const id = short.generate();
       const params = {
         Bucket: process.env.S3_BUCKET_CSV_USERS,
@@ -239,8 +236,8 @@ export class UserService {
         ContentEncoding: 'utf-8',
         ContentType: `text/csv`,
       };
-      await s3.upload(params).promise();
-      const csvReadStream = s3
+      await this.s3.upload(params).promise();
+      const csvReadStream = this.s3
         .getObject({
           Bucket: params.Bucket,
           Key: `${id}.csv`,

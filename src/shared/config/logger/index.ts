@@ -1,4 +1,6 @@
-const CloudWatchConfig = () => ({
+import { registerAs } from '@nestjs/config';
+
+export default registerAs('cloudWatch', () => ({
   logGroupName: process.env.CLOUDWATCH_GROUP_NAME,
   logStreamName: process.env.CLOUDWATCH_LOG_STREAM,
   awsAccessKeyId: process.env.CLOUDWATCH_ACCESS_KEY,
@@ -8,6 +10,4 @@ const CloudWatchConfig = () => ({
     `[${level}] : ${message} \nAdditional Info: ${JSON.stringify(
       additionalInfo,
     )}}`,
-});
-
-export { CloudWatchConfig };
+}));
