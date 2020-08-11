@@ -24,6 +24,7 @@ import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { UserEvents } from '../userEvents/userEvents.entity';
 import { UserEventsRoles } from '../userEventsRoles/user.events.roles.entity';
 import { Role } from '../role/role.entity';
+import { LoggerService } from '../../shared/services/logger.service';
 import { UserEventsService } from '../userEvents/userEvents.service';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
 
@@ -40,6 +41,7 @@ export class UserService {
     private readonly userEventsRolesRepository: Repository<UserEventsRoles>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    private readonly loggerService: LoggerService,
     @InjectQueue('user') private readonly userQueue: Queue,
   ) {}
 
@@ -50,11 +52,13 @@ export class UserService {
     });
   }
 
-  updateUserInfo(
+  async updateUserInfo(
     id: number,
     updateUserDto: UpdateUserDto,
   ): Promise<UpdateResult> {
-    return this.update(id, updateUserDto);
+    const user = await this.update(id, updateUserDto);
+    this.loggerService.info(`User ${id} updated`);
+    return user;
   }
 
   getUserGuid(id) {
@@ -81,6 +85,7 @@ export class UserService {
     }
     return this.repository
       .save(newUser)
+      .then(usr => this.loggerService.info(`User ${usr.id} Created`))
       .catch(err => validateEntityUserException.check(err));
   }
 
@@ -110,6 +115,7 @@ export class UserService {
         this.deleteAvatar(user, s3, Bucket),
       ];
       await Promise.all(functions);
+      this.loggerService.info(`User Avatar id(${userId}) Created`);
       return {
         url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
       };
@@ -139,6 +145,7 @@ export class UserService {
       const { avatarImgUrl: formerUrl } = user;
       const lastIndex = formerUrl.lastIndexOf('/');
       const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
+      this.loggerService.info(`User Avatar ${formerUrl} was deleted`);
       return s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
     }
     return Promise.resolve();
@@ -224,11 +231,18 @@ export class UserService {
     const { userEvents_userId } = await this.userEventsService.checkCode(
       redeemEventCodeDTO,
     );
-    return await this.userEventsService.redeemEventCode(userEvents_userId);
+    const redeem = await this.userEventsService.redeemEventCode(
+      userEvents_userId,
+    );
+    this.loggerService.info(
+      `Code ${redeemEventCodeDTO.ticketCode} was redeemed by user ${redeemEventCodeDTO.userId}`,
+    );
+    return redeem;
   }
 
   async processCsvFile(file, eventId) {
     try {
+      this.loggerService.info(`CSV file refering to ${eventId} was uploaded`);
       const s3 = new AWS.S3(s3Config());
       const id = short.generate();
       const params = {
@@ -314,11 +328,15 @@ export class UserService {
     userId: number,
     eventId: number,
   ): Promise<any> {
-    return await this.userEventsRepository.save({
+    const linkUserAndCodeToEvent = await this.userEventsRepository.save({
       ticketCode,
       userId,
       eventId,
     });
+    this.loggerService.info(
+      `User ${userId} has been linked to event ${eventId} with ticketcode: ${ticketCode}, with redeem status = false;`,
+    );
+    return linkUserAndCodeToEvent;
   }
 
   private async linkUserAndRoleToEvent(
@@ -327,12 +345,16 @@ export class UserService {
     userId: number,
     eventId: number,
   ): Promise<any> {
-    return await this.userEventsRolesRepository.save({
+    const linkUserAndRoleToEvent = await this.userEventsRolesRepository.save({
       userEventsId,
       roleId,
       userEventsUserId: userId,
       userEventsEventId: eventId,
     });
+    this.loggerService.info(
+      `User ${userId} has been linked to event ${eventId} with role ${roleId}, with redeem status = true;`,
+    );
+    return linkUserAndRoleToEvent;
   }
 
   private getUserIdByEmail(email): Promise<User> {
@@ -347,7 +369,12 @@ export class UserService {
       });
   }
 
-  private update(id: number, userData: Partial<User>): Promise<UpdateResult> {
-    return this.repository.update(id, userData);
+  private async update(
+    id: number,
+    userData: Partial<User>,
+  ): Promise<UpdateResult> {
+    const user = await this.repository.update(id, userData);
+    this.loggerService.info(`User ${id} has been updated`);
+    return user;
   }
 }

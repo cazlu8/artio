@@ -17,6 +17,7 @@ import { handleBase64 } from '../../shared/utils/image.utils';
 import { SponsorRepository } from './sponsor.repository';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import { EventSponsors } from '../eventSponsors/eventSponsors.entity';
+import { LoggerService } from '../../shared/services/logger.service';
 
 @Injectable()
 export class SponsorService {
@@ -24,6 +25,7 @@ export class SponsorService {
     private readonly repository: SponsorRepository,
     @InjectRepository(EventSponsors)
     private readonly eventSponsorRepository: Repository<EventSponsors>,
+    private readonly loggerService: LoggerService,
   ) {}
 
   findOne(guid: string): Promise<Partial<Sponsor> | void> {
@@ -48,6 +50,11 @@ export class SponsorService {
           sponsorId: id.id,
           eventId: createSponsorDto.eventId,
         }),
+      )
+      .then(sponsor =>
+        this.loggerService.info(
+          `Sponsor ${sponsor.id} Created and binded with event ${sponsor.eventId}`,
+        ),
       )
       .catch(err => validateEntityUserException.check(err));
   }
@@ -78,6 +85,7 @@ export class SponsorService {
         this.deleteLogo(entity, s3, Bucket),
       ];
       await Promise.all(functions);
+      this.loggerService.info(`Sponsor logo id(${sponsorId}) was created`);
       return {
         url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${logoId}.png`,
       };
@@ -107,6 +115,7 @@ export class SponsorService {
       const { logo: formerUrl } = entity;
       const lastIndex = formerUrl.lastIndexOf('/');
       const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
+      this.loggerService.info(`Sponsor logo ${formerUrl} was deleted`);
       return s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
     }
     return Promise.resolve();
@@ -155,10 +164,12 @@ export class SponsorService {
     await this.deleteLogo(entity, s3, Bucket);
   }
 
-  private update(
+  private async update(
     id: number,
     entityData: Partial<Sponsor>,
   ): Promise<UpdateResult> {
-    return this.repository.update(id, entityData);
+    const sponsor = await this.repository.update(id, entityData);
+    this.loggerService.info(`Sponsor ${id} has been updated`);
+    return sponsor;
   }
 }
