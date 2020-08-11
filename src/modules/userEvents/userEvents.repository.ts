@@ -17,11 +17,11 @@ export class UserEventsRepository extends Repository<UserEvents> {
       .getRawOne();
   }
 
-  redeemEventCode(userId) {
+  redeemEventCode(userId, ticketCode) {
     return this.createQueryBuilder()
       .update()
       .set({ redeemed: true })
-      .where(`"userId" = ${userId}`)
+      .where(`"ticketCode" = '${ticketCode}' and "userId" = ${userId}`)
       .execute();
   }
 
