@@ -200,7 +200,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     const roomsLength = +(await this.redisClient.llen(
       `event-${eventId}:rooms`,
     ));
-    if (roomsLength < 4) {
+    if (roomsLength < 8) {
       await this.service.addCreateRoomOnQueue(eventId, true);
     }
   }
