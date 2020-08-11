@@ -95,7 +95,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
           }
           lock.extend(4000).then(async extendLock => {
             await this.redisClient.del(`event-${eventId}:availableRoom`);
-            await extendLock.unlock().catch(console.log);
+            await extendLock.unlock().catch(catchErrorWs);
           });
         }
       });
@@ -116,7 +116,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
         if (newRoom?.uniqueName) socket.emit(`switchRoom`, newRoom);
         else socket.emit(`switchRoom`, false);
         await this.redisClient.del(`event-${eventId}:switchRoom`);
-        await lock.unlock();
+        await lock.unlock().catch(catchErrorWs);
       });
   }
 
@@ -143,7 +143,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
             uniqueName,
           );
         }
-        await lock.unlock();
+        await lock.unlock().catch(catchErrorWs);
       });
   }
 
@@ -170,7 +170,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
       .then(async lock => {
         this.leaveRoom(socket);
         await this.redisClient.del(`event-${userId}:leaveRoom`);
-        await lock.unlock();
+        await lock.unlock().catch(catchErrorWs);
       });
   }
 
