@@ -181,7 +181,7 @@ export class UserController extends BaseWithoutAuthController {
     type: Event,
     description: 'Event code was successfully redeemed',
   })
-  @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
+  @UseGuards(AuthGuard)
   @Put('redeemCode')
   redeemEventCode(
     @Res() res,
