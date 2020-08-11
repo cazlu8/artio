@@ -10,8 +10,8 @@ export class UserEventsService {
     return await this.repository.checkCode(redeemEventCodeDTO);
   }
 
-  async redeemEventCode(eventId: number) {
-    return await this.repository.redeemEventCode(eventId);
+  async redeemEventCode(userId: number, ticketCode: string) {
+    return await this.repository.redeemEventCode(userId, ticketCode);
   }
 
   async bindUsersToEvent(

@@ -236,6 +236,7 @@ export class UserService {
     );
     const redeem = await this.userEventsService.redeemEventCode(
       userEvents_userId,
+      redeemEventCodeDTO.ticketCode,
     );
     this.loggerService.info(
       `Code ${redeemEventCodeDTO.ticketCode} was redeemed by user ${redeemEventCodeDTO.userId}`,
