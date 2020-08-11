@@ -11,7 +11,6 @@ export class UserEventsRepository extends Repository<UserEvents> {
 
   checkCode(redeemEventCodeDTO: RedeemEventCodeDTO) {
     const { userId, ticketCode } = redeemEventCodeDTO;
-    console.log(redeemEventCodeDTO);
     return this.createQueryBuilder('userEvents')
       .select('userEvents.eventId')
       .where(`"ticketCode" = '${ticketCode}' and "userId" = ${userId}`)
