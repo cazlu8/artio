@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as winston from 'winston';
 import * as WinstonCloudWatch from 'winston-cloudwatch';
-import { CloudWatchConfigError, CloudWatchConfigInfo } from '../config/logger';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class LoggerService {
@@ -9,7 +9,7 @@ export class LoggerService {
 
   private winstonLoggerError: winston.Logger;
 
-  constructor() {
+  constructor(private configService: ConfigService) {
     const infoLogger = winston.createLogger({
       format: winston.format.json(),
       transports: [new winston.transports.Console()],
@@ -21,8 +21,12 @@ export class LoggerService {
     });
 
     if (process.env.NODE_ENV === 'production') {
-      infoLogger.add(new WinstonCloudWatch(CloudWatchConfigInfo()));
-      errorLogger.add(new WinstonCloudWatch(CloudWatchConfigError()));
+      infoLogger.add(
+        new WinstonCloudWatch(this.configService.get('cloudWatchLogInfo')),
+      );
+      errorLogger.add(
+        new WinstonCloudWatch(this.configService.get('cloudWatchLogError')),
+      );
     }
     this.winstonLoggerInfo = infoLogger;
     this.winstonLoggerError = errorLogger;

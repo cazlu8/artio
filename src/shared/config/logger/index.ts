@@ -1,8 +1,8 @@
 import { registerAs } from '@nestjs/config';
 
-const CloudWatchConfigError = registerAs('cloudWatch', () => ({
+const cloudWatchConfigError = registerAs('cloudWatchLogError', () => ({
   logGroupName: process.env.CLOUDWATCH_GROUP_NAME,
-  logStreamName: process.env.CLOUDWATCH_LOG_STREAM,
+  logStreamName: process.env.CLOUDWATCH_ERROR_LOG_STREAM,
   awsAccessKeyId: process.env.CLOUDWATCH_ACCESS_KEY,
   awsSecretKey: process.env.CLOUDWATCH_SECRET_ACCESS_KEY,
   awsRegion: process.env.CLOUDWATCH_REGION,
@@ -12,7 +12,7 @@ const CloudWatchConfigError = registerAs('cloudWatch', () => ({
     )}}`,
 }));
 
-const CloudWatchConfigInfo = registerAs('cloudWatch', () => ({
+const cloudWatchConfigInfo = registerAs('cloudWatchLogInfo', () => ({
   logGroupName: process.env.CLOUDWATCH_GROUP_NAME,
   logStreamName: process.env.CLOUDWATCH_INFO_LOG_STREAM,
   awsAccessKeyId: process.env.CLOUDWATCH_ACCESS_KEY,
@@ -21,3 +21,4 @@ const CloudWatchConfigInfo = registerAs('cloudWatch', () => ({
   messageFormatter: ({ level, message }) => `[${level}] : ${message}`,
 }));
 
+export { cloudWatchConfigError, cloudWatchConfigInfo };

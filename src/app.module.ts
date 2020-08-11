@@ -13,7 +13,10 @@ import * as ormconfig from './ormconfig';
 import redisConfig from './shared/config/redis';
 import { JwtService } from './shared/services/jwt.service';
 import { cognitoConfig, s3Config, sesConfig } from './shared/config/AWS';
-import cloudWatchConfig from './shared/config/logger';
+import {
+  cloudWatchConfigError,
+  cloudWatchConfigInfo,
+} from './shared/config/logger';
 // read all modules folders and load all available modules
 const modules: DynamicModule[] = loadModules();
 const providers = [JwtService];
@@ -22,7 +25,14 @@ const providers = [JwtService];
   imports: [
     ConfigModule,
     ConfigModule.forRoot({
-      load: [redisConfig, s3Config, cognitoConfig, sesConfig, cloudWatchConfig],
+      load: [
+        redisConfig,
+        s3Config,
+        cognitoConfig,
+        sesConfig,
+        cloudWatchConfigError,
+        cloudWatchConfigInfo,
+      ],
       isGlobal: true,
     }),
     RedisModule.forRootAsync({
