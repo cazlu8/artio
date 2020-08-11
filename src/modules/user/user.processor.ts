@@ -62,7 +62,7 @@ export class UserProcessor {
       await this.sendEmails(data);
       jobDone();
     } catch (error) {
-      console.log('error pre save users', error);
+      console.log('error send email', error);
     }
   }
 
@@ -71,8 +71,12 @@ export class UserProcessor {
     if (emails.length >= 49) {
       const currentEmails = emails.splice(0, 49);
       await this.sendToQueue({ ...data, emails: currentEmails });
+      console.log('emails:', JSON.stringify(emails));
       await this.sendEmails({ ...data, emails });
-    } else if (emails.length) await this.sendToQueue(data);
+    } else if (emails.length) {
+      await this.sendToQueue(data);
+      console.log('emails:', JSON.stringify(emails));
+    }
   }
 
   async sendToQueue(data: SendEmailTicketCode) {
