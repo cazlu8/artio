@@ -70,9 +70,17 @@ export class UserService {
     return Users.length > 0;
   }
 
-  create(createUserDto: CreateUserDto): Promise<void | ObjectLiteral> {
+  async create(createUserDto: CreateUserDto): Promise<void | ObjectLiteral> {
+    const newUser: any = { ...createUserDto };
+    const user = await this.repository.get({
+      where: { email: createUserDto.email },
+      select: ['id'],
+    });
+    if (user?.id) {
+      newUser.id = user.id;
+    }
     return this.repository
-      .save(createUserDto)
+      .save(newUser)
       .catch(err => validateEntityUserException.check(err));
   }
 
@@ -238,7 +246,7 @@ export class UserService {
           Key: `${id}.csv`,
         })
         .createReadStream();
-      this.readCsvUsers(csvReadStream, eventId);
+      await this.readCsvUsers(csvReadStream, eventId);
     } catch (error) {
       throw new BadRequestException(error);
     }
@@ -285,7 +293,7 @@ export class UserService {
       .CSVParse()
       .do(async (emails: string[]) => {
         await this.userQueue.add('preSaveUserAndBindToEvent', {
-          emails,
+          emails: emails.filter(x => x !== ''),
           eventId,
         });
       });

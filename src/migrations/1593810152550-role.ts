@@ -8,6 +8,8 @@ export class role1593810152550 implements MigrationInterface {
     await queryRunner.query(
       `CREATE TABLE "role" ("id" SERIAL NOT NULL, "name" "role_name_enum" DEFAULT '1', CONSTRAINT "PK_b36bcfe02fc8de3c57a8b2391c2" PRIMARY KEY ("id"))`,
     );
+    await queryRunner.query(`INSERT INTO role (id, name) VALUES (1, '1')`);
+    await queryRunner.query(`INSERT INTO role (id, name) VALUES (2, '2')`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

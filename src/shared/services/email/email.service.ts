@@ -18,7 +18,7 @@ export class EmailService {
         eventName,
         eventImg,
         eventDate,
-        artioLogo: process.env.LOGO_EMAIL,
+        artioLogo: process.env.LOGO_EMAIL_IMG,
         artioUrl: process.env.FRONT_END_URL,
       };
       const params = {
@@ -29,6 +29,7 @@ export class EmailService {
       };
       await ses.sendBulkTemplatedEmail(params).promise();
     } catch (error) {
+      console.log('error email', error);
       throw new Error(error);
     }
   }
