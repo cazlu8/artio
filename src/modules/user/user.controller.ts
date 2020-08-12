@@ -131,7 +131,7 @@ export class UserController extends BaseWithoutAuthController {
     type: User,
     description: 'User by email was successfully retrieved',
   })
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
   @Get('/email/:email')
   async getUserByEmail(@Param('email') email): Promise<User | void> {
     return await this.userService.getUserByEmail(email);
