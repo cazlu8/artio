@@ -124,7 +124,7 @@ export class NetworkRoomGateway
         } else {
           socket.emit(`requestAvailableRoom`, false);
         }
-        lock.extend(1000).then(async extendLock => {
+        return lock.extend(1000).then(async extendLock => {
           return await extendLock.unlock().catch(catchErrorWs);
         });
       }
@@ -140,9 +140,14 @@ export class NetworkRoomGateway
     this.redlock.lock(`locks:event-${eventId}`, 5000).then(async lock => {
       await this.leaveRoom(socket);
       const newRoom = await this.service.getAvailableRoom(currentRoom);
-      if (newRoom?.uniqueName) socket.emit(`switchRoom`, newRoom);
-      else socket.emit(`switchRoom`, false);
-      return await lock.unlock().catch(catchErrorWs);
+      const lastSwitchRoom = await this.getLastSwitchRoom(eventId);
+      if (newRoom?.uniqueName && newRoom?.uniqueName !== lastSwitchRoom) {
+        await this.setLastSwitchRoom(eventId, newRoom.uniqueName);
+        socket.emit(`switchRoom`, newRoom);
+      } else socket.emit(`switchRoom`, false);
+      return lock.extend(1000).then(async extendLock => {
+        return await extendLock.unlock().catch(catchErrorWs);
+      });
     });
   }
 
@@ -261,6 +266,21 @@ export class NetworkRoomGateway
   private async setLastAvailableRoom(eventId: number, uniqueName: string) {
     await this.redisClient.set(
       `event-${eventId}:lastAvailableRoom`,
+      uniqueName,
+      'EX',
+      15,
+    );
+  }
+
+  private async getLastSwitchRoom(eventId: number) {
+    return (
+      (await this.redisClient.get(`event-${eventId}:lastSwitchRoom`)) || ''
+    );
+  }
+
+  private async setLastSwitchRoom(eventId: number, uniqueName: string) {
+    await this.redisClient.set(
+      `event-${eventId}:lastSwitchRoom`,
       uniqueName,
       'EX',
       15,
