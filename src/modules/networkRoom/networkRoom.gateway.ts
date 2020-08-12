@@ -104,33 +104,27 @@ export class NetworkRoomGateway
   ): Promise<void> {
     const { eventId } = data;
     this.redlock.lock(`locks:event-${eventId}`, 2000).then(async lock => {
-      const lastTwilioRoom = await this.redisClient.lpop(
-        `event-${eventId}:currentTwilioRoom`,
-      );
-      if (lastTwilioRoom)
+      const lastTwilioRoom = await this.getLastTwilioRoom(eventId);
+      if (lastTwilioRoom) {
+        await this.leaveRoom(socket);
         socket.emit(`requestAvailableRoom`, {
           uniqueName: lastTwilioRoom,
         });
-      else {
+      } else {
         const availableRoom = await this.service.getAvailableRoom();
-        const lastAvailableRoom = await this.redisClient.get(
-          `event-${eventId}:lastAvailableRoom`,
-        );
+        const lastAvailableRoom = await this.getLastAvailableRoom(eventId);
         if (
           availableRoom?.uniqueName &&
-          availableRoom?.uniqueName === lastAvailableRoom
+          availableRoom?.uniqueName !== lastAvailableRoom
         ) {
-          await this.redisClient.set(
-            `event-${eventId}:lastAvailableRoom`,
-            availableRoom.uniqueName,
-          );
           await this.leaveRoom(socket);
+          await this.setLastAvailableRoom(eventId, availableRoom.uniqueName);
           socket.emit(`requestAvailableRoom`, availableRoom);
           console.log(`request AvailableRoom`, availableRoom);
         } else {
           socket.emit(`requestAvailableRoom`, false);
         }
-        lock.extend(3000).then(async extendLock => {
+        lock.extend(1000).then(async extendLock => {
           return await extendLock.unlock().catch(catchErrorWs);
         });
       }
@@ -169,10 +163,7 @@ export class NetworkRoomGateway
       if (room?.length === 3) {
         console.log('room', room);
         const { uniqueName } = await this.send(eventId);
-        await this.redisClient.rpush(
-          `event-${eventId}:currentTwilioRoom`,
-          uniqueName,
-        );
+        await this.setLastTwilioRoom(eventId, uniqueName);
       }
       return await lock.unlock().catch(catchErrorWs);
     });
@@ -248,6 +239,32 @@ export class NetworkRoomGateway
     if (roomsLength < 8) {
       await this.service.addCreateRoomOnQueue(eventId, true);
     }
+  }
+
+  private async getLastTwilioRoom(eventId: number) {
+    return await this.redisClient.lpop(`event-${eventId}:currentTwilioRoom`);
+  }
+
+  private async setLastTwilioRoom(eventId: number, uniqueName: string) {
+    await this.redisClient.rpush(
+      `event-${eventId}:currentTwilioRoom`,
+      uniqueName,
+    );
+  }
+
+  private async getLastAvailableRoom(eventId: number) {
+    return (
+      (await this.redisClient.get(`event-${eventId}:lastAvailableRoom`)) || ''
+    );
+  }
+
+  private async setLastAvailableRoom(eventId: number, uniqueName: string) {
+    await this.redisClient.set(
+      `event-${eventId}:lastAvailableRoom`,
+      uniqueName,
+      'EX',
+      15,
+    );
   }
 
   private leaveRoom(socket: any): Promise<unknown> {
