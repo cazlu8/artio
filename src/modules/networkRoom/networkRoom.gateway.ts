@@ -124,7 +124,7 @@ export class NetworkRoomGateway
         } else {
           socket.emit(`requestAvailableRoom`, false);
         }
-        return lock.extend(1000).then(async extendLock => {
+        lock.extend(1000).then(async extendLock => {
           return await extendLock.unlock().catch(catchErrorWs);
         });
       }
@@ -145,7 +145,7 @@ export class NetworkRoomGateway
         await this.setLastSwitchRoom(eventId, newRoom.uniqueName);
         socket.emit(`switchRoom`, newRoom);
       } else socket.emit(`switchRoom`, false);
-      return lock.extend(1000).then(async extendLock => {
+      lock.extend(1000).then(async extendLock => {
         return await extendLock.unlock().catch(catchErrorWs);
       });
     });
