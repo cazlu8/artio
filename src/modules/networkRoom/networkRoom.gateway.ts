@@ -73,22 +73,29 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     data: NetworkRoomRequestAvailableRoomDto,
   ): Promise<void> {
     const { eventId } = data;
-    await this.redisClient.set(`event-${eventId}:availableRoom`, 1);
     this.redlock
       .lock(`locks:event-${eventId}:availableRoom`, 4000)
       .then(async lock => {
-        const availableRoom = await this.service.getAvailableRoom();
-        if (availableRoom?.uniqueName) {
-          socket.emit(`requestAvailableRoom`, availableRoom);
-          this.leaveRoom(socket);
-          console.log(`request AvailableRoom`, availableRoom);
-        } else {
-          socket.emit(`requestAvailableRoom`, false);
+        const lastTwilioRoom = await this.redisClient.lpop(
+          `event-${eventId}:currentTwilioRoom`,
+        );
+        if (lastTwilioRoom)
+          socket.emit(`requestAvailableRoom`, {
+            uniqueName: lastTwilioRoom,
+          });
+        else {
+          const availableRoom = await this.service.getAvailableRoom();
+          if (availableRoom?.uniqueName) {
+            socket.emit(`requestAvailableRoom`, availableRoom);
+            this.leaveRoom(socket);
+            console.log(`request AvailableRoom`, availableRoom);
+          } else {
+            socket.emit(`requestAvailableRoom`, false);
+          }
+          lock.extend(4000).then(async extendLock => {
+            await extendLock.unlock().catch(catchErrorWs);
+          });
         }
-        lock.extend(2000).then(async extendLock => {
-          extendLock.unlock();
-          await this.redisClient.del(`event-${eventId}:availableRoom`);
-        });
       });
   }
 
@@ -98,7 +105,6 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
     const { currentRoom, eventId } = data;
-    await this.redisClient.set(`event-${eventId}:switchRoom`, 1);
     this.redlock
       .lock(`locks:event-${eventId}:switchRoom`, 5000)
       .then(async lock => {
@@ -106,8 +112,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
         const newRoom = await this.service.getAvailableRoom(currentRoom);
         if (newRoom?.uniqueName) socket.emit(`switchRoom`, newRoom);
         else socket.emit(`switchRoom`, false);
-        lock.unlock().catch(catchErrorWs);
-        await this.redisClient.del(`event-${eventId}:switchRoom`);
+        await lock.unlock().catch(catchErrorWs);
       });
   }
 
@@ -128,9 +133,13 @@ export class NetworkRoomGateway implements OnGatewayConnection {
           `event-${eventId}:room-${+lastRoom}`
         ];
         if (length === 3) {
-          await this.send(eventId);
+          const { uniqueName } = await this.send(eventId);
+          await this.redisClient.rpush(
+            `event-${eventId}:currentTwilioRoom`,
+            uniqueName,
+          );
         }
-        lock.unlock().catch(catchErrorWs);
+        await lock.unlock().catch(catchErrorWs);
       });
   }
 
@@ -149,15 +158,12 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
-    const { userId } = socket;
     const { eventId } = data;
-    await this.redisClient.set(`event-${eventId}:leaveRoom`, 1);
     this.redlock
       .lock(`locks:event-${eventId}:leaveRoom`, 2000)
       .then(async lock => {
         this.leaveRoom(socket);
-        lock.unlock().catch(catchErrorWs);
-        await this.redisClient.del(`event-${userId}:leaveRoom`);
+        await lock.unlock().catch(catchErrorWs);
       });
   }
 
@@ -170,11 +176,13 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     );
   }
 
-  async send(eventId: number): Promise<void> {
-    await this.sendTwillioRoomToSockets(eventId);
+  async send(eventId: number): Promise<{ uniqueName: string }> {
+    return await this.sendTwillioRoomToSockets(eventId);
   }
 
-  async sendTwillioRoomToSockets(eventId: number): Promise<void> {
+  async sendTwillioRoomToSockets(
+    eventId: number,
+  ): Promise<{ uniqueName: string }> {
     console.log('sending message');
     const lastRoom = await this.redisClient.get(`event-${eventId}:lastRoom`);
     const newTwillioRoom = await this.getNewTwillioRoom(eventId);
@@ -188,6 +196,7 @@ export class NetworkRoomGateway implements OnGatewayConnection {
     console.log(
       `${newTwillioRoom.uniqueName}/${process.pid}/${+lastRoom}/${counter}`,
     );
+    return newTwillioRoom;
   }
 
   async getNewTwillioRoom(eventId: number): Promise<{ uniqueName: string }> {

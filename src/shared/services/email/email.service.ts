@@ -1,12 +1,17 @@
 import * as AWS from 'aws-sdk';
 import { Injectable } from '@nestjs/common';
-import { sesConfig } from '../../config/AWS';
+import { ConfigService } from '@nestjs/config';
+import SES from 'aws-sdk/clients/ses';
 import { SendEmailTicketCode } from '../../types/user';
-
-const ses = new AWS.SES(sesConfig());
 
 @Injectable()
 export class EmailService {
+  private ses: SES;
+
+  constructor(private configService: ConfigService) {
+    this.ses = new AWS.SES(this.configService.get('ses'));
+  }
+
   async sendBulkTicketCode(data: SendEmailTicketCode) {
     try {
       const { emails, ticketCode, eventName, eventImg, eventDate } = data;
@@ -27,7 +32,7 @@ export class EmailService {
         Template: 'sendTicketCode',
         DefaultTemplateData: JSON.stringify(variables),
       };
-      await ses.sendBulkTemplatedEmail(params).promise();
+      await this.ses.sendBulkTemplatedEmail(params).promise();
     } catch (error) {
       console.log('error email', error);
       throw new Error(error);
