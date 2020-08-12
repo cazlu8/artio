@@ -2,7 +2,6 @@ import {
   BaseWsExceptionFilter,
   MessageBody,
   OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -33,8 +32,7 @@ import { NetworkRoomRequestAvailableRoomDto } from './dto/NetworkRoomRequestAvai
   transports: ['websocket'],
   origins: process.env.ALLOWED_ORIGINS,
 })
-export class NetworkRoomGateway
-  implements OnGatewayConnection, OnGatewayDisconnect {
+export class NetworkRoomGateway implements OnGatewayConnection {
   @WebSocketServer()
   readonly server: any;
 
@@ -57,40 +55,12 @@ export class NetworkRoomGateway
     this.redlock.on('clientError', catchErrorWs);
   }
 
-  async handleDisconnect(@ConnectedSocket() socket: any) {
-    if (socket.userId) {
-      await this.redisClient.del(`users:${socket.userId}`);
-    }
-  }
-
   async handleConnection(@ConnectedSocket() socket: any): Promise<void> {
     try {
       if (process.env.NODE_ENV === 'development') return;
       const { token } = socket.handshake.query;
       const { sub } = await this.jwtService.validateToken(token);
-      const canConnect = await this.redisClient.set(
-        `users:${sub}`,
-        socket.id,
-        'NX',
-        'EX',
-        30,
-      );
-      if (!canConnect) {
-        this.server.adapter.remoteDisconnect(socket.id, true);
-        return;
-      }
       socket.userId = sub;
-      socket.conn.on('packet', async packet => {
-        if (socket.userId && packet.type === 'ping') {
-          await this.redisClient.set(
-            `users:${socket.userId}`,
-            socket.id,
-            'XX',
-            'EX',
-            30,
-          );
-        }
-      });
     } catch (err) {
       this.server.adapter.remoteDisconnect(socket.id, true);
     }
