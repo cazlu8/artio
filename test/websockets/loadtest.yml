@@ -2,12 +2,13 @@ config:
   target: "ws://localhost:3030/networkRoom"
   socketio:
     transports: ["websocket"]
+    upgrade: false
   ensure:
     maxErrorRate: 1
   phases:
     - duration: 10
-      arrivalRate: 20
-      rampTo: 20
+      arrivalRate: 200
+      rampTo: 200
       name: "Warming up"
 
 scenarios:
