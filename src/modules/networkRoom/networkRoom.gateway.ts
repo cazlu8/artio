@@ -103,32 +103,32 @@ export class NetworkRoomGateway
     data: NetworkRoomRequestAvailableRoomDto,
   ): Promise<void> {
     const { eventId } = data;
-    this.redlock.lock(`locks:event-${eventId}`, 3000).then(async lock => {
-      const lastTwilioRoom = await this.getLastTwilioRoom(eventId);
-      if (lastTwilioRoom) {
-        await this.leaveRoom(socket);
-        socket.emit(`requestAvailableRoom`, {
-          uniqueName: lastTwilioRoom,
-        });
-      } else {
-        const availableRoom = await this.service.getAvailableRoom();
-        const lastAvailableRoom = await this.getLastAvailableRoom(eventId);
-        if (
-          availableRoom?.uniqueName &&
-          availableRoom?.uniqueName !== lastAvailableRoom
-        ) {
+    this.redlock
+      .lock(`locks:event-${eventId}:availableRoom`, 3000)
+      .then(async lock => {
+        const lastTwilioRoom = await this.getLastTwilioRoom(eventId);
+        if (lastTwilioRoom) {
           await this.leaveRoom(socket);
-          await this.setLastAvailableRoom(eventId, availableRoom.uniqueName);
-          socket.emit(`requestAvailableRoom`, availableRoom);
-          console.log(`request AvailableRoom`, availableRoom);
+          socket.emit(`requestAvailableRoom`, {
+            uniqueName: lastTwilioRoom,
+          });
         } else {
-          socket.emit(`requestAvailableRoom`, false);
+          const availableRoom = await this.service.getAvailableRoom();
+          const lastAvailableRoom = await this.getLastAvailableRoom(eventId);
+          if (
+            availableRoom?.uniqueName &&
+            availableRoom?.uniqueName !== lastAvailableRoom
+          ) {
+            await this.leaveRoom(socket);
+            await this.setLastAvailableRoom(eventId, availableRoom.uniqueName);
+            socket.emit(`requestAvailableRoom`, availableRoom);
+            console.log(`request AvailableRoom`, availableRoom);
+          } else {
+            socket.emit(`requestAvailableRoom`, false);
+          }
+          await lock.unlock().catch(catchErrorWs);
         }
-        lock.extend(1000).then(async extendLock => {
-          return await extendLock.unlock().catch(catchErrorWs);
-        });
-      }
-    });
+      });
   }
 
   @SubscribeMessage('switchRoom')
@@ -137,18 +137,18 @@ export class NetworkRoomGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
     const { currentRoom, eventId } = data;
-    this.redlock.lock(`locks:event-${eventId}`, 5000).then(async lock => {
-      await this.leaveRoom(socket);
-      const newRoom = await this.service.getAvailableRoom(currentRoom);
-      const lastSwitchRoom = await this.getLastSwitchRoom(eventId);
-      if (newRoom?.uniqueName && newRoom?.uniqueName !== lastSwitchRoom) {
-        await this.setLastSwitchRoom(eventId, newRoom.uniqueName);
-        socket.emit(`switchRoom`, newRoom);
-      } else socket.emit(`switchRoom`, false);
-      lock.extend(1000).then(async extendLock => {
-        return await extendLock.unlock().catch(catchErrorWs);
+    this.redlock
+      .lock(`locks:event-${eventId}:switchRoom`, 5000)
+      .then(async lock => {
+        await this.leaveRoom(socket);
+        const newRoom = await this.service.getAvailableRoom(currentRoom);
+        const lastSwitchRoom = await this.getLastSwitchRoom(eventId);
+        if (newRoom?.uniqueName && newRoom?.uniqueName !== lastSwitchRoom) {
+          await this.setLastSwitchRoom(eventId, newRoom.uniqueName);
+          socket.emit(`switchRoom`, newRoom);
+        } else socket.emit(`switchRoom`, false);
+        return await lock.unlock().catch(catchErrorWs);
       });
-    });
   }
 
   @SubscribeMessage('requestRoom')
@@ -157,21 +157,23 @@ export class NetworkRoomGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
     const { eventId } = data;
-    this.redlock.lock(`locks:event-${eventId}`, 5000).then(async lock => {
-      await this.bindSocketToRoom(socket, eventId);
-      const lastRoom =
-        +(await this.redisClient.get(`event-${eventId}:lastRoom`)) || 0;
-      const room = this.server.adapter.rooms[
-        `event-${eventId}:room-${+lastRoom}`
-      ];
-      console.log(room?.length);
-      if (room?.length === 3) {
-        console.log('room', room);
-        const { uniqueName } = await this.send(eventId);
-        await this.setLastTwilioRoom(eventId, uniqueName);
-      }
-      return await lock.unlock().catch(catchErrorWs);
-    });
+    this.redlock
+      .lock(`locks:event-${eventId}:requestRoom`, 5000)
+      .then(async lock => {
+        await this.bindSocketToRoom(socket, eventId);
+        const lastRoom =
+          +(await this.redisClient.get(`event-${eventId}:lastRoom`)) || 0;
+        const room = this.server.adapter.rooms[
+          `event-${eventId}:room-${+lastRoom}`
+        ];
+        console.log(room?.length);
+        if (room?.length === 3) {
+          console.log('room', room);
+          const { uniqueName } = await this.send(eventId);
+          await this.setLastTwilioRoom(eventId, uniqueName);
+        }
+        return await lock.unlock().catch(catchErrorWs);
+      });
   }
 
   @SubscribeMessage('requestRoomToken')
