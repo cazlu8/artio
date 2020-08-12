@@ -103,7 +103,7 @@ export class NetworkRoomGateway
     data: NetworkRoomRequestAvailableRoomDto,
   ): Promise<void> {
     const { eventId } = data;
-    this.redlock.lock(`locks:event-${eventId}`, 2000).then(async lock => {
+    this.redlock.lock(`locks:event-${eventId}`, 3000).then(async lock => {
       const lastTwilioRoom = await this.getLastTwilioRoom(eventId);
       if (lastTwilioRoom) {
         await this.leaveRoom(socket);
