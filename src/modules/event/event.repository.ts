@@ -136,7 +136,7 @@ export class EventRepository extends Repository<Event> {
     const attributes = ['*'];
     return this.createQueryBuilder('event')
       .select(attributes)
-      .orderBy('start_date', 'DESC')
+      .orderBy('start_date', 'ASC')
       .where(qb => {
         const subQuery = qb
           .subQuery()
