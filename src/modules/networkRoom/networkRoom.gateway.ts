@@ -31,7 +31,6 @@ import { NetworkRoomRequestAvailableRoomDto } from './dto/NetworkRoomRequestAvai
 @WebSocketGateway(3030, {
   namespace: 'networkRoom',
   transports: ['websocket'],
-  origins: process.env.ALLOWED_ORIGINS,
 })
 export class NetworkRoomGateway
   implements OnGatewayConnection, OnGatewayDisconnect {
@@ -108,7 +107,6 @@ export class NetworkRoomGateway
             await this.leaveRoom(socket, eventId);
             await this.setLastAvailableRoom(eventId, availableRoom.uniqueName);
             socket.emit(`requestAvailableRoom`, availableRoom);
-            console.log(`request AvailableRoom`, availableRoom);
           } else {
             socket.emit(`requestAvailableRoom`, false);
           }
@@ -165,7 +163,6 @@ export class NetworkRoomGateway
     @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomTokenDto,
   ): void {
-    console.log(`requestRoomToken`, data);
     const token = this.service.videoToken(data);
     socket.emit('requestRoomToken', token);
   }
@@ -201,7 +198,6 @@ export class NetworkRoomGateway
   async sendTwillioRoomToSockets(
     eventId: number,
   ): Promise<{ uniqueName: string }> {
-    console.log('sending message');
     const newTwillioRoom = await this.getNewTwillioRoom(eventId);
     const socketIds = await this.redisClient.smembers(
       `event-${eventId}:usersRequestedRoomSocketId`,
@@ -209,7 +205,11 @@ export class NetworkRoomGateway
     socketIds?.forEach(id =>
       this.server.to(id).emit('requestRoom', newTwillioRoom),
     );
-    console.log(`${newTwillioRoom.uniqueName}/${process.pid}`);
+    this.loggerService.info(
+      `ws:requestRoom: room ${
+        newTwillioRoom.uniqueName
+      } sent to sockets ${JSON.stringify(socketIds)} for the event ${eventId}`,
+    );
     return newTwillioRoom;
   }
 

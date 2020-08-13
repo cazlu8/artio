@@ -11,12 +11,8 @@ export class ValidationSchemaWsPipe implements PipeTransform<any> {
     }
     const object = plainToClass(metatype, value);
     const errors = await validate(object);
-    const errorMessage = errors.reduce((acc, cur) => {
-      acc += `${Object.values(cur.constraints)} `;
-      return acc;
-    }, '');
     if (errors.length > 0) {
-      throw new WsException(errorMessage);
+      throw new WsException(JSON.stringify(errors));
     }
     return value;
   }

@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
@@ -87,7 +86,6 @@ export class EventService {
   getEvent(id: number): Promise<Partial<Event> | void> {
     return this.repository.findOneOrFail({ id }).catch(error => {
       if (error.name === 'EntityNotFound') throw new NotFoundException();
-      throw new InternalServerErrorException(error);
     });
   }
 
@@ -98,7 +96,6 @@ export class EventService {
   getEvents(): Promise<Partial<Event[]> | void> {
     return this.repository.find().catch(error => {
       if (error.name === 'EntityNotFound') throw new NotFoundException();
-      throw new InternalServerErrorException(error);
     });
   }
 
@@ -217,38 +214,34 @@ export class EventService {
   async createHeroImage(
     createHeroImage: CreateHeroImage,
   ): Promise<void | ObjectLiteral> {
-    try {
-      const { heroImageUrl, id: eventId } = createHeroImage;
-      const heroImageId: string = uuid();
-      const { user, sharpedImage } = await this.processAvatarImage(
-        heroImageUrl,
-        eventId,
-        heroImageId,
-      );
-      const params = {
-        Bucket: process.env.S3_BUCKET_HERO_IMAGE,
-        Key: `${heroImageId}.png`,
-        Body: sharpedImage,
-        ACL: 'private',
-        ContentEncoding: 'base64',
-        ContentType: `image/png`,
-      };
-      const { Bucket } = params;
-      const s3 = new AWS.S3(s3Config());
-      const functions: any = [
-        ...this.updateAvatarImage(s3, params, eventId, heroImageId),
-        this.deleteHeroImage(user, s3, Bucket),
-      ];
-      await Promise.all(functions);
-      this.loggerService.info(
-        `Event hero image for event id(${eventId}) was created`,
-      );
-      return {
-        url: `${process.env.S3_BUCKET_HERO_IMAGE_PREFIX_URL}${heroImageId}.png`,
-      };
-    } catch (error) {
-      throw new InternalServerErrorException(error);
-    }
+    const { heroImageUrl, id: eventId } = createHeroImage;
+    const heroImageId: string = uuid();
+    const { user, sharpedImage } = await this.processAvatarImage(
+      heroImageUrl,
+      eventId,
+      heroImageId,
+    );
+    const params = {
+      Bucket: process.env.S3_BUCKET_HERO_IMAGE,
+      Key: `${heroImageId}.png`,
+      Body: sharpedImage,
+      ACL: 'private',
+      ContentEncoding: 'base64',
+      ContentType: `image/png`,
+    };
+    const { Bucket } = params;
+    const s3 = new AWS.S3(s3Config());
+    const functions: any = [
+      ...this.updateAvatarImage(s3, params, eventId, heroImageId),
+      this.deleteHeroImage(user, s3, Bucket),
+    ];
+    await Promise.all(functions);
+    this.loggerService.info(
+      `Event hero image for event id(${eventId}) was created`,
+    );
+    return {
+      url: `${process.env.S3_BUCKET_HERO_IMAGE_PREFIX_URL}${heroImageId}.png`,
+    };
   }
 
   private deleteHeroImage(event: any, s3: AWS.S3, Bucket: string) {

@@ -32,7 +32,7 @@ export class LoggerService {
     this.winstonLoggerError = errorLogger;
   }
 
-  errorLog(level, error, request: any = {}) {
+  private errorRequestLog(level, error, request: any = {}) {
     this.winstonLoggerError.log(
       level,
       `Requesting ${request?.raw?.method} ${request?.raw?.originalUrl}`,
@@ -47,12 +47,20 @@ export class LoggerService {
     );
   }
 
-  infoLog(level, message) {
+  private errorLog(level: string, message, error: any) {
+    this.winstonLoggerError.log(level, message, JSON.stringify(error));
+  }
+
+  private infoLog(level, message) {
     this.winstonLoggerInfo.log(level, `${message}`);
   }
 
-  error(error, request) {
-    this.errorLog('error', error, request);
+  errorRequest(error, request) {
+    this.errorRequestLog('error', error, request);
+  }
+
+  error(message, error) {
+    this.errorLog('error', message, error);
   }
 
   info(message) {

@@ -2,14 +2,11 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import * as redisIoAdapter from 'socket.io-redis';
 
 export default class RedisIoAdapter extends IoAdapter {
-  private readonly host: any;
+  private options: any;
 
-  private readonly port: number;
-
-  constructor(app: any, host: string, port: number) {
+  constructor(app: any, options: any) {
     super(app);
-    this.host = host;
-    this.port = port;
+    this.options = options;
   }
 
   createIOServer(port: number): any {
@@ -17,11 +14,12 @@ export default class RedisIoAdapter extends IoAdapter {
       connectTimeout: 10000,
     });
     const redisAdapter = redisIoAdapter({
-      host: this.host,
-      port: this.port,
+      host: this.options.host,
+      port: this.options.port,
       requestsTimeout: 20000,
     });
     server.adapter(redisAdapter);
+    server.origins(this.options.origins.split(','));
     return server;
   }
 }

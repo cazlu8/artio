@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -58,7 +57,6 @@ export class UserService {
   findOne(guid: string): Promise<Partial<User> | void> {
     return this.repository.findOneOrFail({ guid }).catch(error => {
       if (error.name === 'EntityNotFound') throw new NotFoundException();
-      throw new InternalServerErrorException(error);
     });
   }
 
@@ -102,35 +100,31 @@ export class UserService {
   async createAvatar(
     createAvatarDto: CreateAvatarDto,
   ): Promise<void | ObjectLiteral> {
-    try {
-      const { avatarImgUrl, id: userId } = createAvatarDto;
-      const avatarId: string = short.generate();
-      const { user, sharpedImage } = await this.processAvatarImage(
-        avatarImgUrl,
-        userId,
-        avatarId,
-      );
-      const params = {
-        Bucket: process.env.S3_BUCKET_AVATAR,
-        Key: `${avatarId}.png`,
-        Body: sharpedImage,
-        ACL: 'private',
-        ContentEncoding: 'base64',
-        ContentType: `image/png`,
-      };
-      const { Bucket } = params;
-      const functions: any = [
-        ...this.updateAvatarImage(params, userId, avatarId),
-        this.deleteAvatar(user, Bucket),
-      ];
-      await Promise.all(functions);
-      this.loggerService.info(`User Avatar id(${userId}) Created`);
-      return {
-        url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
-      };
-    } catch (error) {
-      throw new InternalServerErrorException(error);
-    }
+    const { avatarImgUrl, id: userId } = createAvatarDto;
+    const avatarId: string = short.generate();
+    const { user, sharpedImage } = await this.processAvatarImage(
+      avatarImgUrl,
+      userId,
+      avatarId,
+    );
+    const params = {
+      Bucket: process.env.S3_BUCKET_AVATAR,
+      Key: `${avatarId}.png`,
+      Body: sharpedImage,
+      ACL: 'private',
+      ContentEncoding: 'base64',
+      ContentType: `image/png`,
+    };
+    const { Bucket } = params;
+    const functions: any = [
+      ...this.updateAvatarImage(params, userId, avatarId),
+      this.deleteAvatar(user, Bucket),
+    ];
+    await Promise.all(functions);
+    this.loggerService.info(`User Avatar id(${userId}) Created`);
+    return {
+      url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
+    };
   }
 
   private async processAvatarImage(
@@ -183,7 +177,6 @@ export class UserService {
       })
       .catch(error => {
         if (error.name === 'EntityNotFound') throw new NotFoundException();
-        throw new InternalServerErrorException(error);
       });
   }
 
@@ -216,20 +209,6 @@ export class UserService {
     return (await isRoleValid) && (await bindUserToEvent);
   }
 
-  async bindUserEventCode(
-    linkToEventWithCodeDTO,
-  ): Promise<ObjectLiteral | void> {
-    const { eventId, userEmail } = linkToEventWithCodeDTO;
-    const ticketCode: string = short.generate();
-    const { id: userId } = await this.getUserIdByEmail(userEmail);
-    const { id } = await this.linkUserAndCodeToEvent(
-      ticketCode,
-      userId,
-      eventId,
-    );
-    return await this.linkUserAndRoleToEvent(id, 2, userId, eventId);
-  }
-
   async redeemEventCode(redeemEventCodeDTO): Promise<UpdateResult> {
     const { userEvents_userId } = await this.userEventsService.checkCode(
       redeemEventCodeDTO,
@@ -246,7 +225,6 @@ export class UserService {
 
   async processCsvFile(file, eventId) {
     try {
-      this.loggerService.info(`CSV file refering to ${eventId} was uploaded`);
       const id = short.generate();
       const params = {
         Bucket: process.env.S3_BUCKET_CSV_USERS,
@@ -264,6 +242,7 @@ export class UserService {
         })
         .createReadStream();
       await this.readCsvUsers(csvReadStream, eventId);
+      this.loggerService.info(`CSV file refering to ${eventId} was uploaded`);
     } catch (error) {
       throw new BadRequestException(error);
     }
@@ -328,22 +307,6 @@ export class UserService {
       .then(({ id }) => id);
   }
 
-  private async linkUserAndCodeToEvent(
-    ticketCode: string,
-    userId: number,
-    eventId: number,
-  ): Promise<any> {
-    const linkUserAndCodeToEvent = await this.userEventsRepository.save({
-      ticketCode,
-      userId,
-      eventId,
-    });
-    this.loggerService.info(
-      `User ${userId} has been linked to event ${eventId} with ticketcode: ${ticketCode}, with redeem status = false;`,
-    );
-    return linkUserAndCodeToEvent;
-  }
-
   private async linkUserAndRoleToEvent(
     userEventsId: number,
     roleId: number,
@@ -360,18 +323,6 @@ export class UserService {
       `User ${userId} has been linked to event ${eventId} with role ${roleId}, with redeem status = true;`,
     );
     return linkUserAndRoleToEvent;
-  }
-
-  private getUserIdByEmail(email): Promise<User> {
-    return this.repository
-      .findOneOrFail({
-        select: ['id'],
-        where: { email },
-      })
-      .catch(error => {
-        if (error.name === 'EntityNotFound') throw new NotFoundException();
-        throw new InternalServerErrorException(error);
-      });
   }
 
   private async update(
