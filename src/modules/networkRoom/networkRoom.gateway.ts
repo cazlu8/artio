@@ -15,7 +15,6 @@ import * as Redlock from 'redlock';
 import { UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
 import { LoggerService } from '../../shared/services/logger.service';
 import { NetworkRoomService } from './networkRoom.service';
-import { catchErrorWs } from '../../shared/utils/errorHandler.utils';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 import { WsAuthGuard } from '../../shared/guards/wsAuth.guard';
 import { ErrorsInterceptor } from '../../shared/interceptors/errors.interceptor';
@@ -53,7 +52,9 @@ export class NetworkRoomGateway
       retryDelay: 100,
       retryCount: Infinity,
     });
-    this.redlock.on('clientError', catchErrorWs);
+    this.redlock.on('clientError', err =>
+      this.loggerService.error('redlockError: clientError', err),
+    );
   }
 
   async handleDisconnect(socket: any) {
@@ -89,7 +90,7 @@ export class NetworkRoomGateway
   ): Promise<void> {
     const { eventId } = data;
     this.redlock
-      .lock(`locks:event-${eventId}:availableRoom`, 3000)
+      .lock(`locks:event-${eventId}:availableRoom`, 6000)
       .then(async lock => {
         const lastTwilioRoom = await this.getLastTwilioRoom(eventId);
         if (lastTwilioRoom) {
@@ -110,8 +111,10 @@ export class NetworkRoomGateway
           } else {
             socket.emit(`requestAvailableRoom`, false);
           }
-          await lock.unlock().catch(catchErrorWs);
         }
+        lock.extend(2000).then(async extendLock => {
+          await extendLock.unlock();
+        });
       });
   }
 
@@ -131,7 +134,7 @@ export class NetworkRoomGateway
           await this.setLastSwitchRoom(eventId, newRoom.uniqueName);
           socket.emit(`switchRoom`, newRoom);
         } else socket.emit(`switchRoom`, false);
-        return await lock.unlock().catch(catchErrorWs);
+        return await lock.unlock();
       });
   }
 
@@ -154,7 +157,7 @@ export class NetworkRoomGateway
           await this.setLastTwilioRoom(eventId, uniqueName);
           await this.clearUserRequestRoom(eventId);
         }
-        return await lock.unlock().catch(catchErrorWs);
+        return await lock.unlock();
       });
   }
 
@@ -175,7 +178,7 @@ export class NetworkRoomGateway
     const { eventId } = data;
     this.redlock.lock(`locks:event-${eventId}`, 2000).then(async lock => {
       await this.leaveRoom(socket, eventId);
-      return await lock.unlock().catch(catchErrorWs);
+      return await lock.unlock();
     });
   }
 
