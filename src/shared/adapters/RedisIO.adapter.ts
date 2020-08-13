@@ -19,7 +19,7 @@ export default class RedisIoAdapter extends IoAdapter {
       requestsTimeout: 20000,
     });
     server.adapter(redisAdapter);
-    server.origins(this.options.origins.split(','));
+    server.origins(this.options.origins);
     return server;
   }
 }
