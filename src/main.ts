@@ -23,8 +23,9 @@ async function bootstrap() {
       bodyLimit: +process.env.BODY_LIMIT,
     }),
   );
+  const origins = process.env.ALLOWED_ORIGINS.split(',');
   app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS.split(','),
+    origin: origins[0] === '*' ? true : origins,
     methods: process.env.ALLOWED_METHODS,
   });
   app.useWebSocketAdapter(
