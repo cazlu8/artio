@@ -24,10 +24,15 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS,
+    origin: process.env.ALLOWED_ORIGINS.split(','),
+    methods: process.env.ALLOWED_METHODS,
   });
   app.useWebSocketAdapter(
-    new RedisIoAdapter(app, process.env.REDIS_HOST, +process.env.REDIS_PORT),
+    new RedisIoAdapter(app, {
+      host: process.env.REDIS_HOST,
+      port: +process.env.REDIS_PORT,
+      origins: process.env.ALLOWED_ORIGINS.split(','),
+    }),
   );
   app.enableShutdownHooks();
   // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
@@ -68,15 +73,12 @@ async function bootstrap() {
 }
 
 if (cluster.isMaster) {
-  console.log(`Master ${process.pid} is running`);
   for (let i = 0; i < numCPUs; i++) {
     cluster.fork();
   }
-
   cluster.on('exit', () => {
     cluster.fork();
   });
 } else {
   bootstrap();
-  console.log(`Worker ${process.pid} started`);
 }

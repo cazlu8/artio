@@ -22,7 +22,6 @@ import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIs
 import { UpdateUserDto } from './dto/user.update.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
 import { RedeemEventCodeDTO } from '../userEvents/dto/userEvents.redeemEventCode.dto';
-import { LinkToEventWithCodeDTO } from './dto/user.linkToEventWithCode.dto';
 import { LinkToEventWithRoleDTO } from './dto/user.linkToEventWithRole.dto';
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
@@ -96,23 +95,6 @@ export class UserController extends BaseWithoutAuthController {
     return this.userService
       .bindUserEvent(linkToEventWithRoleDTO)
       .then(() => res.status(201).send());
-  }
-
-  @ApiParam({ name: 'userId and eventId', type: 'number' })
-  @ApiCreatedResponse({
-    type: Event,
-    description: 'Success on link a user with code to a event',
-  })
-  @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
-  @Post('linkEventCode')
-  bindUserEventCode(
-    @Res() res,
-    @Body() linkToEventWithCodeDTO: LinkToEventWithCodeDTO,
-  ): Promise<void | ObjectLiteral> {
-    return this.userService
-      .bindUserEventCode(linkToEventWithCodeDTO)
-      .then(() => res.status(201).send())
-      .catch(() => res.status(404).send());
   }
 
   @ApiParam({ name: 'id', type: 'number' })

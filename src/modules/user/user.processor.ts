@@ -4,6 +4,7 @@ import { UserService } from './user.service';
 import { EmailService } from '../../shared/services/email/email.service';
 import { EventRepository } from '../event/event.repository';
 import { SendEmailTicketCode } from '../../shared/types/user';
+import { LoggerService } from '../../shared/services/logger.service';
 
 const numCPUs = require('os').cpus().length;
 
@@ -14,6 +15,7 @@ export class UserProcessor {
     private readonly eventRepository: EventRepository,
     private readonly emailService: EmailService,
     @InjectQueue('user') private readonly userQueue: Queue,
+    private readonly loggerService: LoggerService,
   ) {}
 
   @Process({ name: 'preSaveUserAndBindToEvent', concurrency: numCPUs })
@@ -37,9 +39,17 @@ export class UserProcessor {
           ticketCode,
         });
       }
+      this.loggerService.info(
+        `preSaveUserAndBindToEvent: users with emails: ${JSON.stringify(
+          emails,
+        )} were pre saved and linked to event: ${eventId}`,
+      );
       jobDone();
     } catch (error) {
-      console.log('error pre save users', error);
+      this.loggerService.error(
+        `preSaveUserAndBindToEvent: ${JSON.stringify(job?.data || {})}`,
+        error,
+      );
     }
   }
 
@@ -60,9 +70,17 @@ export class UserProcessor {
         eventDate,
       };
       await this.sendEmails(data);
+      this.loggerService.info(
+        `sendTicketCodeEmail: the emails sent to: ${JSON.stringify(
+          emails,
+        )} about the ${eventId}`,
+      );
       jobDone();
     } catch (error) {
-      console.log('error send email', error);
+      this.loggerService.error(
+        `sendTicketCodeEmail: ${JSON.stringify(job?.data || {})}`,
+        error,
+      );
     }
   }
 
@@ -71,13 +89,9 @@ export class UserProcessor {
     if (emails.length > 49) {
       const currentEmails = emails.splice(0, 49);
       await this.sendToQueue({ ...data, emails: currentEmails });
-      console.log('emails:', JSON.stringify(currentEmails));
-      console.log('emails.length', currentEmails.length);
       await this.sendEmails({ ...data, emails });
     } else if (emails.length) {
       await this.sendToQueue(data);
-      console.log('emails:', JSON.stringify(emails));
-      console.log('emails.length', emails.length);
     }
   }
 

@@ -7,6 +7,7 @@ import { NetworkRoomService } from './networkRoom.service';
 import { parallel } from '../../shared/utils/controlFlow.utils';
 import { UserEvents } from '../userEvents/userEvents.entity';
 import { catchError } from '../../shared/utils/errorHandler.utils';
+import { LoggerService } from '../../shared/services/logger.service';
 
 const numCPUs = require('os').cpus().length;
 
@@ -20,6 +21,7 @@ export class NetworkRoomProcessor {
     private readonly userEventsRepository: Repository<UserEvents>,
     private readonly service: NetworkRoomService,
     private readonly redisService: RedisService,
+    private readonly loggerService: LoggerService,
   ) {
     this.redisClient = this.redisService.getClient();
   }
@@ -36,10 +38,14 @@ export class NetworkRoomProcessor {
         this.createRoom(eventId),
       );
       parallel(createRoomFns, () => jobDone(), 32);
-      console.log('createRooms');
+      this.loggerService.info(
+        `createRooms: twilio rooms created for event: ${eventId}`,
+      );
     } catch (error) {
-      console.log('deu pau', error);
-      catchError(error);
+      this.loggerService.error(
+        `createRooms: ${JSON.stringify(job?.data || {})}`,
+        error,
+      );
     }
   }
 
@@ -48,7 +54,6 @@ export class NetworkRoomProcessor {
     try {
       const { eventId } = job.data;
       await this.redisClient.del(`event-${eventId}:rooms`).catch(catchError);
-      console.log(`matou as rooms`);
       const isOnIntermission = await this.redisClient.get(
         `event-${eventId}:isOnIntermission`,
       );
@@ -63,10 +68,15 @@ export class NetworkRoomProcessor {
           { delay: 270000 },
         );
       }
+      this.loggerService.info(
+        `clearExpiredRooms: cleared rooms for event: ${eventId}`,
+      );
       jobDone();
     } catch (error) {
-      console.log('deu pau', error);
-      catchError(error);
+      this.loggerService.error(
+        `clearExpiredRooms: ${JSON.stringify(job?.data || {})}`,
+        error,
+      );
     }
   }
 

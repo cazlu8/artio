@@ -13,6 +13,7 @@ import { JwtService } from '../../shared/services/jwt.service';
 
 @Module({
   imports: [
+    BaseModule,
     EventQueue,
     NetworkRoomModule,
     BaseModule,

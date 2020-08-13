@@ -12,9 +12,11 @@ import { UserProcessor } from './user.processor';
 import UserQueue from './user.queue';
 import { EmailService } from '../../shared/services/email/email.service';
 import { EventRepository } from '../event/event.repository';
+import { BaseModule } from '../../shared/modules/base.module';
 
 @Module({
   imports: [
+    BaseModule,
     UserQueue,
     TypeOrmModule.forFeature([
       User,

@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
 import * as sharp from 'sharp';
 import * as AWS from 'aws-sdk';
@@ -31,7 +27,6 @@ export class SponsorService {
   findOne(guid: string): Promise<Partial<Sponsor> | void> {
     return this.repository.findOneOrFail({ guid }).catch(error => {
       if (error.name === 'EntityNotFound') throw new NotFoundException();
-      throw new InternalServerErrorException(error);
     });
   }
 
@@ -62,36 +57,32 @@ export class SponsorService {
   async uploadLogo(
     createLogoDto: CreateLogoDto,
   ): Promise<void | ObjectLiteral> {
-    try {
-      const { logo, id: sponsorId } = createLogoDto;
-      const logoId: string = uuid();
-      const { entity, sharpedImage } = await this.processLogoImage(
-        logo,
-        sponsorId,
-        logoId,
-      );
-      const params = {
-        Bucket: process.env.S3_BUCKET_SPONSOR,
-        Key: `${logoId}.png`,
-        Body: sharpedImage,
-        ACL: 'private',
-        ContentEncoding: 'base64',
-        ContentType: `image/png`,
-      };
-      const { Bucket } = params;
-      const s3 = new AWS.S3(s3Config());
-      const functions: any = [
-        ...this.updateLogoImage(s3, params, sponsorId, logoId),
-        this.deleteLogo(entity, s3, Bucket),
-      ];
-      await Promise.all(functions);
-      this.loggerService.info(`Sponsor logo id(${sponsorId}) was created`);
-      return {
-        url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${logoId}.png`,
-      };
-    } catch (error) {
-      throw new InternalServerErrorException(error);
-    }
+    const { logo, id: sponsorId } = createLogoDto;
+    const logoId: string = uuid();
+    const { entity, sharpedImage } = await this.processLogoImage(
+      logo,
+      sponsorId,
+      logoId,
+    );
+    const params = {
+      Bucket: process.env.S3_BUCKET_SPONSOR,
+      Key: `${logoId}.png`,
+      Body: sharpedImage,
+      ACL: 'private',
+      ContentEncoding: 'base64',
+      ContentType: `image/png`,
+    };
+    const { Bucket } = params;
+    const s3 = new AWS.S3(s3Config());
+    const functions: any = [
+      ...this.updateLogoImage(s3, params, sponsorId, logoId),
+      this.deleteLogo(entity, s3, Bucket),
+    ];
+    await Promise.all(functions);
+    this.loggerService.info(`Sponsor logo id(${sponsorId}) was created`);
+    return {
+      url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${logoId}.png`,
+    };
   }
 
   private async processLogoImage(
@@ -149,7 +140,6 @@ export class SponsorService {
       })
       .catch(error => {
         if (error.name === 'EntityNotFound') throw new NotFoundException();
-        throw new InternalServerErrorException(error);
       });
   }
 

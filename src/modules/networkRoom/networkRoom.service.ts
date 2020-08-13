@@ -52,7 +52,7 @@ export class NetworkRoomService {
     );
     return participants.list({ status: 'connected' }).then(roomParticipants => {
       if (
-        roomParticipants.length > 1 &&
+        roomParticipants.length >= 1 &&
         roomParticipants.length <= roomLength
       ) {
         return Promise.resolve({ uniqueName: roomUniqueName, sid: roomSid });

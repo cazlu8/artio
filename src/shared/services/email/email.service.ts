@@ -13,29 +13,24 @@ export class EmailService {
   }
 
   async sendBulkTicketCode(data: SendEmailTicketCode) {
-    try {
-      const { emails, ticketCode, eventName, eventImg, eventDate } = data;
-      const destinations = emails.map(email => ({
-        Destination: { ToAddresses: [email] },
-      }));
-      const variables = {
-        ticketCode,
-        eventName,
-        eventImg,
-        eventDate,
-        artioLogo: process.env.LOGO_EMAIL_IMG,
-        artioUrl: process.env.FRONT_END_URL,
-      };
-      const params = {
-        Destinations: destinations,
-        Source: process.env.EMAIL_NO_REPLY,
-        Template: 'sendTicketCode',
-        DefaultTemplateData: JSON.stringify(variables),
-      };
-      await this.ses.sendBulkTemplatedEmail(params).promise();
-    } catch (error) {
-      console.log('error email', error);
-      throw new Error(error);
-    }
+    const { emails, ticketCode, eventName, eventImg, eventDate } = data;
+    const destinations = emails.map(email => ({
+      Destination: { ToAddresses: [email] },
+    }));
+    const variables = {
+      ticketCode,
+      eventName,
+      eventImg,
+      eventDate,
+      artioLogo: process.env.LOGO_EMAIL_IMG,
+      artioUrl: process.env.FRONT_END_URL,
+    };
+    const params = {
+      Destinations: destinations,
+      Source: process.env.EMAIL_NO_REPLY,
+      Template: 'sendTicketCode',
+      DefaultTemplateData: JSON.stringify(variables),
+    };
+    await this.ses.sendBulkTemplatedEmail(params).promise();
   }
 }
