@@ -31,7 +31,7 @@ async function bootstrap() {
     new RedisIoAdapter(app, {
       host: process.env.REDIS_HOST,
       port: +process.env.REDIS_PORT,
-      origins: process.env.ALLOWED_ORIGINS,
+      origins: process.env.ALLOWED_ORIGINS.split(','),
     }),
   );
   app.enableShutdownHooks();
