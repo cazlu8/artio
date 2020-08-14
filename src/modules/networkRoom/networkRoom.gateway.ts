@@ -90,7 +90,7 @@ export class NetworkRoomGateway
   ): Promise<void> {
     const { eventId } = data;
     this.redlock
-      .lock(`locks:event-${eventId}:availableRoom`, 6000)
+      .lock(`locks:event-${eventId}:availableRoom`, 10000)
       .then(async lock => {
         const lastTwilioRoom = await this.getLastTwilioRoom(eventId);
         if (lastTwilioRoom) {
@@ -112,7 +112,7 @@ export class NetworkRoomGateway
             socket.emit(`requestAvailableRoom`, false);
           }
         }
-        lock.extend(2000).then(async extendLock => {
+        lock.extend(4000).then(async extendLock => {
           await extendLock.unlock();
         });
       });
