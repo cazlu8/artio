@@ -6,15 +6,15 @@ config:
   ensure:
     maxErrorRate: 1
   phases:
-    - duration: 10
-      arrivalRate: 200
-      rampTo: 200
+    - duration: 5
+      arrivalRate: 40
+      rampTo: 40
       name: "Warming up"
 
 scenarios:
   - engine: "socketio"
     flow:
       - emit:
-          channel: "requestRoom"
+          channel: "requestAvailableRoom"
 
 

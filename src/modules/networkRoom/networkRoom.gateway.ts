@@ -13,6 +13,7 @@ import { Queue } from 'bull';
 import { RedisService } from 'nestjs-redis';
 import * as Redlock from 'redlock';
 import { UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import * as sleep from 'sleep';
 import { LoggerService } from '../../shared/services/logger.service';
 import { NetworkRoomService } from './networkRoom.service';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
@@ -49,7 +50,7 @@ export class NetworkRoomGateway
   ) {
     this.redisClient = this.redisService.getClient();
     this.redlock = new Redlock([this.redisClient], {
-      retryDelay: 100,
+      retryDelay: 200,
       retryCount: Infinity,
     });
     this.redlock.on('clientError', err =>
@@ -92,6 +93,7 @@ export class NetworkRoomGateway
     this.redlock
       .lock(`locks:event-${eventId}:availableRoom`, 10000)
       .then(async lock => {
+        sleep.msleep(1000);
         const lastTwilioRoom = await this.getLastTwilioRoom(eventId);
         if (lastTwilioRoom) {
           await this.leaveRoom(socket, eventId);
@@ -112,9 +114,7 @@ export class NetworkRoomGateway
             socket.emit(`requestAvailableRoom`, false);
           }
         }
-        lock.extend(4000).then(async extendLock => {
-          await extendLock.unlock();
-        });
+        return await lock.unlock();
       });
   }
 
