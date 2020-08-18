@@ -11,7 +11,7 @@ export class VerifyIfIsAuthenticatedUserGuard implements CanActivate {
   }
 
   async validateRequest(request: any) {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV !== 'production') {
       return true;
     }
     const { sub: authenticatedUserGuid } = request.raw?.user;

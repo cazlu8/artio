@@ -11,7 +11,7 @@ export class AuthGuard implements CanActivate {
   }
 
   validateRequest(request: any) {
-    if (process.env.NODE_ENV !== 'development') {
+    if (process.env.NODE_ENV === 'production') {
       const { user } = request.raw;
       return typeof user === 'object';
     }

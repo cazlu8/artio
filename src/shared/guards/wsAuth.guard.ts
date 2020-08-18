@@ -12,7 +12,7 @@ export class WsAuthGuard implements CanActivate {
     context: ExecutionContext,
   ): Promise<boolean | Promise<boolean> | Observable<boolean>> {
     try {
-      if (process.env.NODE_ENV === 'development') return true;
+      if (process.env.NODE_ENV !== 'production') return true;
       const {
         auth: { token },
       } = context.switchToWs().getData();
