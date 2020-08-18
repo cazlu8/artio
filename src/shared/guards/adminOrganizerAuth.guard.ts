@@ -13,9 +13,7 @@ export class AdminOrganizerAuthGuard implements CanActivate {
   validateRequest(request: any) {
     if (process.env.NODE_ENV !== 'development') {
       const toValidate = request.raw.user['cognito:groups'];
-      return !!toValidate.some(
-        (e: string) => e === 'Organizer' || e === 'Admin',
-      );
+      return toValidate.some((e: string) => e === 'Organizer' || e === 'Admin');
     }
     return true;
   }
