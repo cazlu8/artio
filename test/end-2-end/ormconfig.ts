@@ -1,9 +1,6 @@
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { User } from '../../src/modules/user/user.entity';
-import { UserEvents } from '../../src/modules/userEvents/userEvents.entity';
-import { Event } from '../../src/modules/event/event.entity';
 
 const data: any = fs.existsSync('.env')
   ? dotenv.parse(fs.readFileSync('.env'))
