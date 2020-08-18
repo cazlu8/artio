@@ -11,6 +11,15 @@ services:
     environment:
       POSTGRES_PASSWORD: root
 
+  postgres-test:
+    container_name: postgres
+    image: postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5433"
+    environment:
+      POSTGRES_PASSWORD: root
+
   # REDIS DB
   redis:
     container_name: redis

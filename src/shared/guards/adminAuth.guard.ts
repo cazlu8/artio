@@ -11,7 +11,7 @@ export class AdminAuthGuard implements CanActivate {
   }
 
   validateRequest(request: any) {
-    if (process.env.NODE_ENV !== 'development') {
+    if (process.env.NODE_ENV === 'production') {
       const toValidate = request.raw.user['cognito:groups'];
       const role = ['Admin'];
       return Array.isArray(role)

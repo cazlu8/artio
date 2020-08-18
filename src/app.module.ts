@@ -39,7 +39,6 @@ const providers = [JwtService];
       useFactory: (configService: ConfigService) => configService.get('redis'),
       inject: [ConfigService],
     }) as DynamicModule,
-    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       useFactory: async () => ormconfig as any,
     }),
@@ -49,7 +48,7 @@ const providers = [JwtService];
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    if (process.env.NODE_ENV !== 'development')
+    if (process.env.NODE_ENV === 'production')
       consumer
         .apply(AuthMiddleware)
         .exclude(
