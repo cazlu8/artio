@@ -8,6 +8,6 @@ export class RedeemEventCodeDTO {
   userId: string;
 
   @IsNotEmpty()
-  @ApiProperty({ type: 'number' })
-  ticketCode: number;
+  @ApiProperty({ type: 'string' })
+  ticketCode: string;
 }
