@@ -26,8 +26,7 @@ import { LinkToEventWithRoleDTO } from './dto/user.linkToEventWithRole.dto';
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
-import { AdminAuthGuard } from '../../shared/guards/adminAuth.guard';
-import { OrganizerAuthGuard } from '../../shared/guards/organizerAuth.guard';
+import { AdminOrganizerAuthGuard } from '../../shared/guards/adminOrganizerAuth.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -86,7 +85,7 @@ export class UserController extends BaseWithoutAuthController {
     type: Event,
     description: 'Success on link a user with role to a event',
   })
-  @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
+  @UseGuards(AdminOrganizerAuthGuard)
   @Post('linkEvent')
   bindUserEvent(
     @Res() res,
@@ -113,7 +112,7 @@ export class UserController extends BaseWithoutAuthController {
     type: User,
     description: 'User by email was successfully retrieved',
   })
-  @UseGuards(AdminAuthGuard || OrganizerAuthGuard)
+  @UseGuards(AdminOrganizerAuthGuard)
   @Get('/email/:email')
   async getUserByEmail(@Param('email') email): Promise<User | void> {
     return await this.userService.getUserByEmail(email);
