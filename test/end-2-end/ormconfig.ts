@@ -9,11 +9,11 @@ const data: any = fs.existsSync('.env')
 // Check typeORM documentation for more information.
 const config: TypeOrmModuleOptions = {
   type: 'postgres',
-  host: data.DATABASE_HOST,
-  port: +data.DATABASE_PORT,
-  username: data.DATABASE_USER,
-  password: data.DATABASE_PASSWORD,
-  database: 'test',
+  host: data.DATABASE_TEST_HOST,
+  port: +data.DATABASE_TEST_PORT,
+  username: data.DATABASE_TEST_USER,
+  password: data.DATABASE_TEST_PASSWORD,
+  database: data.DATABASE_TEST_DBNAME,
   entities: [`${__dirname}/../../src/**/*.entity{.ts,.js}`],
   keepConnectionAlive: true,
   synchronize: false,
