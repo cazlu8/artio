@@ -30,7 +30,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run test:e2e"
+      "pre-commit": "test:e2e"
     }
   },
   "dependencies": {
