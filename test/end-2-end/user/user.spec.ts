@@ -54,6 +54,20 @@ describe('Users', () => {
     done();
   });
 
+  it(`/POST user exists on cognito`, async done => {
+    const { body } = await app
+      .post(`/users/checkUserExists`)
+      .send({
+        email: 'otavio@artio.events',
+      })
+      .set('Accept', 'application/json')
+      .expect(201);
+
+    expect(body).toEqual(true);
+
+    done();
+  });
+
   it(`/POST create user avatar`, async done => {
     await repository.save(saveUser);
     await app
