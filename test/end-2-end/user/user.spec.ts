@@ -6,7 +6,12 @@ import { UserModule } from '../../../src/modules/user/user.module';
 import { User } from '../../../src/modules/user/user.entity';
 import * as ormconfig from '../ormconfig';
 import server from '../server';
-import { saveUser } from './data';
+import { saveUser, createAvatar } from './data';
+import {
+  cognitoConfig,
+  s3Config,
+  sesConfig,
+} from '../../../src/shared/config/AWS';
 
 describe('Users', () => {
   let app: any;
@@ -15,7 +20,10 @@ describe('Users', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
+        ConfigModule.forRoot({
+          load: [s3Config, cognitoConfig, sesConfig],
+          isGlobal: true,
+        }),
         TypeOrmModule.forRootAsync({
           useFactory: async () => ormconfig as any,
         }),
@@ -24,7 +32,7 @@ describe('Users', () => {
     }).compile();
 
     app = await server(moduleRef);
-    repository = moduleRef.get('UserRepository');
+    repository = await moduleRef.get('UserRepository');
   });
 
   it(`/POST users`, async () => {
@@ -44,7 +52,27 @@ describe('Users', () => {
     );
   });
 
-  it(`/GET users`, async () => {
+  it(`/POST create user avatar`, async done => {
+    await repository.save(saveUser);
+    await app
+      .post('/users/create-avatar')
+      .send(createAvatar)
+      .set('Accept', 'application/json')
+      .expect(201);
+
+    const user = await repository.findOne(1);
+    expect(user).toEqual(
+      expect.objectContaining({
+        email: 'test@hotmail.com',
+        id: 1,
+        isNew: true,
+      }),
+    );
+    expect(user.avatarImgUrl).toBeTruthy();
+    done();
+  });
+
+  it(`/GET users by guid`, async () => {
     const { guid } = saveUser;
     await repository.save(saveUser);
 
