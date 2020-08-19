@@ -88,6 +88,30 @@ describe('Users', () => {
     done();
   });
 
+  it(`/DELETE delete user avatar`, async done => {
+    await repository.save(saveUser);
+    await app
+      .post('/users/create-avatar')
+      .send(createAvatar)
+      .set('Accept', 'application/json')
+      .expect(201);
+    await app
+      .delete('/users/removeAvatar/1')
+      .set('Accept', 'application/json')
+      .expect(200);
+
+    const user = await repository.findOne(1);
+    expect(user).toEqual(
+      expect.objectContaining({
+        email: 'test@hotmail.com',
+        id: 1,
+        isNew: true,
+      }),
+    );
+    expect(user.avatarImgUrl).toBeFalsy();
+    done();
+  });
+
   it(`/GET users by guid`, async done => {
     const { guid } = saveUser;
     await repository.save(saveUser);

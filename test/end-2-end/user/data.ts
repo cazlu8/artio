@@ -1,6 +1,11 @@
 import { uuid } from 'uuidv4';
 
 export const saveUser = { guid: uuid(), email: 'test@hotmail.com' };
+export const saveUserWithImgUrl = {
+  guid: uuid(),
+  email: 'test@hotmail.com',
+  avatarImgUrl: 'hhtps',
+};
 
 export const createAvatar = {
   id: 1,
