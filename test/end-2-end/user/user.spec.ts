@@ -68,11 +68,34 @@ describe('Users', () => {
     );
   });
 
+  it(`/GET users by email`, async () => {
+    await repository.save(saveUser);
+
+    const { body } = await app
+      .get(`/users/email/test@hotmail.com`)
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(200);
+
+    expect(body).toEqual(
+      expect.objectContaining({
+        email: 'test@hotmail.com',
+        firstName: null,
+        gender: null,
+        id: 1,
+        isNew: true,
+        socialUrls: {
+          urls: [],
+        },
+      }),
+    );
+  });
+
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);
   });
 
   afterAll(async () => {
-    await app.close();
+    app.close();
   });
 });
