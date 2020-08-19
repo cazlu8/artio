@@ -17,7 +17,7 @@ describe('Users', () => {
   let app: any;
   let repository: Repository<User>;
 
-  beforeAll(async () => {
+  beforeAll(async done => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
@@ -33,9 +33,10 @@ describe('Users', () => {
 
     app = await server(moduleRef);
     repository = await moduleRef.get('UserRepository');
+    done();
   });
 
-  it(`/POST users`, async () => {
+  it(`/POST users`, async done => {
     await app
       .post(`/users`)
       .send(saveUser)
@@ -50,6 +51,7 @@ describe('Users', () => {
         isNew: true,
       }),
     );
+    done();
   });
 
   it(`/POST create user avatar`, async done => {
@@ -72,7 +74,7 @@ describe('Users', () => {
     done();
   });
 
-  it(`/GET users by guid`, async () => {
+  it(`/GET users by guid`, async done => {
     const { guid } = saveUser;
     await repository.save(saveUser);
 
@@ -94,9 +96,10 @@ describe('Users', () => {
         },
       }),
     );
+    done();
   });
 
-  it(`/GET users by email`, async () => {
+  it(`/GET users by email`, async done => {
     await repository.save(saveUser);
 
     const { body } = await app
@@ -117,6 +120,7 @@ describe('Users', () => {
         },
       }),
     );
+    done();
   });
 
   afterEach(async () => {
