@@ -21,16 +21,14 @@
     "test:watch": "cross-env NODE_ENV=test jest --watch  --forceExit",
     "test:cov": "cross-env NODE_ENV=test jest --coverage --forceExit",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "cross-env NODE_ENV=test jest ./test/end-2-end --forceExit ",
+    "test:e2e": "cross-env NODE_ENV=test jest ./test/end-2-end --forceExit",
     "test:ws": "artillery run ./test/websockets/loadtest.yml --output result.json",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --config src/ormconfig.ts",
     "typeorm:migrate": "npm run typeorm migration:generate -- -n",
     "typeorm:run": "npm run typeorm migration:run",
     "typeorm:revert": "npm run typeorm migration:revert"
   },
-  "pre-commit": [
-    "test:e2e"
-  ],
+  "pre-commit": "test:e2e",
   "dependencies": {
     "@nestjs/bull": "^0.1.1",
     "@nestjs/common": "7.1.0",
