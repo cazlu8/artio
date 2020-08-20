@@ -120,7 +120,7 @@ export class UserService {
       ...this.updateAvatarImage(params, userId, avatarId),
       this.deleteAvatar(user, Bucket),
     ];
-    await Promise.all(functions).catch(err => console.log(err));
+    await Promise.all(functions);
     this.loggerService.info(`User Avatar id(${userId}) Created`);
     return {
       url: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
