@@ -1,17 +1,34 @@
 import { Repository } from 'typeorm';
 import { UserModule } from '../../../src/modules/user/user.module';
 import { User } from '../../../src/modules/user/user.entity';
-import { saveUser, saveAvatarUrl, createAvatar } from './data';
+import {
+  saveUser,
+  saveAvatarUrl,
+  createAvatar,
+  // linkUserToEventWithRole,
+} from './data';
 import Application from '../main.test';
+// import { UserEventsModule } from '../../../src/modules/userEvents/userEvents.module';
+// import { UserEvents } from '../../../src/modules/userEvents/userEvents.entity';
+// import { UserEventsRoles } from '../../../src/modules/userEventsRoles/user.events.roles.entity';
+// import { EventModule } from '../../../src/modules/event/event.module';
 
 describe('Users', () => {
   let app: any;
   let repository: Repository<User>;
+  // let userEventsRepository: Repository<UserEvents>;
+  // let userEventsRoleRepository: Repository<UserEventsRoles>;
 
   beforeAll(async () => {
-    const { server, moduleRef } = await Application(UserModule);
+    const { server, moduleRef } = await Application([
+      // EventModule,
+      UserModule,
+      // UserEventsModule,
+    ]);
     app = server;
     repository = moduleRef.get('UserRepository');
+    // userEventsRepository = moduleRef.get('UserEventsRepository');
+    // userEventsRoleRepository = moduleRef.get('UserEventsRoleRepository');
   });
 
   it(`/POST users`, async done => {
@@ -90,6 +107,15 @@ describe('Users', () => {
   });
 
   // link user to event
+  //
+  // it(`/POST users linkEvent`, async done => {
+  //   await app
+  //     .post(`/users/linkEvent`)
+  //     .send(linkUserToEventWithRole)
+  //     .set('Accept', 'application/json')
+  //     .expect(201);
+  //   done();
+  // });
 
   it(`/GET user avatar by id`, async done => {
     await repository.save(saveUser);

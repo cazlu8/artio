@@ -16,3 +16,16 @@ export const createAvatar = {
 };
 
 export const saveAvatarUrl = faker.image.image();
+
+export const saveUserEvents = {
+  userId: 1,
+  eventId: 1,
+  ticketCode: 'ARTIO',
+  redeemed: false,
+};
+
+export const linkUserToEventWithRole = {
+  roleId: 2,
+  userId: 1,
+  eventId: 1,
+};
