@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Post,
@@ -23,7 +24,7 @@ import { Event } from './event.entity';
 import UpdateEventDTO from './dto/event.update.dto';
 import { AuthGuard } from '../../shared/guards/auth.guard';
 import { AdminAuthGuard } from '../../shared/guards/adminAuth.guard';
-import { CreateHeroImage } from './dto/event.create.heroImage.dto';
+import CreateHeroImage from './dto/event.create.heroImage.dto';
 import EventStartIntermissionDto from './dto/event.startIntermission.dto';
 
 @ApiTags('Events')
@@ -39,8 +40,24 @@ export class EventController extends BaseWithoutAuthController {
   })
   @Post()
   @UseGuards(AdminAuthGuard)
-  create(@Body() createEventDto: CreateEventDTO) {
+  async create(@Body() createEventDto: CreateEventDTO) {
     return this.service.create(createEventDto);
+  }
+
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiCreatedResponse({
+    type: UpdateEventDTO,
+    description: 'The event has been successfully updated',
+  })
+  @UseGuards(AuthGuard)
+  @HttpCode(204)
+  @Put('/:id')
+  async update(
+    @Res() res,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateEventDto: UpdateEventDTO,
+  ): Promise<void | UpdateResult> {
+    return this.service.updateEventInfo(id, updateEventDto);
   }
 
   @ApiCreatedResponse({
@@ -200,23 +217,6 @@ export class EventController extends BaseWithoutAuthController {
   @Get('/subscribed/:eventId')
   getSubscribed(@Param('eventId', ParseIntPipe) eventId: number): Promise<any> {
     return this.service.getSubscribed(eventId);
-  }
-
-  @ApiParam({ name: 'id', type: 'number' })
-  @ApiCreatedResponse({
-    type: UpdateEventDTO,
-    description: 'The event has been successfully updated',
-  })
-  @UseGuards(AuthGuard)
-  @Put('/:id')
-  update(
-    @Res() res,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateEventDto: UpdateEventDTO,
-  ): Promise<void | UpdateResult> {
-    return this.service
-      .updateEventInfo(id, updateEventDto)
-      .then(() => res.status(204).send());
   }
 
   @ApiParam({ name: 'startIntermission' })
