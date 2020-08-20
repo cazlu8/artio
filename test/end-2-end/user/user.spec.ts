@@ -107,7 +107,32 @@ describe('Users', () => {
     done();
   });
 
-  it('/GET users', async done => {
+  // get user by email
+
+  it('/GET users by email', async done => {
+    const { email } = saveUser;
+    await repository.save(saveUser);
+
+    const { body } = await app
+      .get(`/users/email/${email}`)
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(200);
+
+    expect(body).toEqual(
+      expect.objectContaining({
+        email,
+        id: 1,
+        isNew: true,
+        socialUrls: {
+          urls: [],
+        },
+      }),
+    );
+    done();
+  });
+
+  it('/GET users by guid', async done => {
     const { guid, email } = saveUser;
     await repository.save(saveUser);
 
