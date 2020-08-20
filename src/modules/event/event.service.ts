@@ -12,6 +12,8 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RedisService } from 'nestjs-redis';
+import S3 from 'aws-sdk/clients/s3';
+import { ConfigService } from '@nestjs/config';
 import { Event } from './event.entity';
 import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
@@ -21,8 +23,7 @@ import EventPastListDto from './dto/event.past.dto';
 import CreateEventDTO from './dto/event.create.dto';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import UpdateEventDTO from './dto/event.update.dto';
-import { s3Config } from '../../shared/config/AWS';
-import { CreateHeroImage } from './dto/event.create.heroImage.dto';
+import CreateHeroImage from './dto/event.create.heroImage.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
 import { NetworkRoomService } from '../networkRoom/networkRoom.service';
 import { UserEvents } from '../userEvents/userEvents.entity';
@@ -34,6 +35,8 @@ import { LoggerService } from '../../shared/services/logger.service';
 export class EventService {
   private redisClient: any;
 
+  private s3: S3;
+
   constructor(
     private readonly repository: EventRepository,
     private readonly networkRoomService: NetworkRoomService,
@@ -43,8 +46,10 @@ export class EventService {
     private readonly userEventsRepository: Repository<UserEvents>,
     private readonly redisService: RedisService,
     private readonly loggerService: LoggerService,
+    private configService: ConfigService,
   ) {
     this.redisClient = this.redisService.getClient();
+    this.s3 = new AWS.S3(this.configService.get('s3'));
   }
 
   async create(createEventDTO: CreateEventDTO): Promise<void | ObjectLiteral> {
@@ -206,9 +211,8 @@ export class EventService {
       where: { id },
     });
     await this.repository.removeHeroImage(id);
-    const s3 = new AWS.S3(s3Config());
     const Bucket = process.env.S3_BUCKET_HERO_IMAGE;
-    await this.deleteHeroImage(user, s3, Bucket);
+    await this.deleteHeroImage(user, Bucket);
   }
 
   async createHeroImage(
@@ -230,12 +234,11 @@ export class EventService {
       ContentType: `image/png`,
     };
     const { Bucket } = params;
-    const s3 = new AWS.S3(s3Config());
     const functions: any = [
-      ...this.updateAvatarImage(s3, params, eventId, heroImageId),
-      this.deleteHeroImage(user, s3, Bucket),
+      ...this.updateAvatarImage(params, eventId, heroImageId),
+      this.deleteHeroImage(user, Bucket),
     ];
-    await Promise.all(functions);
+    await Promise.all(functions).catch(err => console.log(err));
     this.loggerService.info(
       `Event hero image for event id(${eventId}) was created`,
     );
@@ -244,13 +247,13 @@ export class EventService {
     };
   }
 
-  private deleteHeroImage(event: any, s3: AWS.S3, Bucket: string) {
+  private deleteHeroImage(event: any, Bucket: string) {
     if (event?.heroImgUrl) {
       const { heroImgUrl: formerUrl } = event;
       const lastIndex = formerUrl.lastIndexOf('/');
       const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
       this.loggerService.info(`Event Hero Image ${formerUrl} was deleted`);
-      return s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
+      return this.s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
     }
     return Promise.resolve();
   }
@@ -271,14 +274,9 @@ export class EventService {
     return { sharpedImage, user, heroImageId };
   }
 
-  private updateAvatarImage(
-    s3: AWS.S3,
-    params: any,
-    eventId: number,
-    heroImageId: string,
-  ) {
+  private updateAvatarImage(params: any, eventId: number, heroImageId: string) {
     return [
-      s3.upload(params).promise(),
+      this.s3.upload(params).promise(),
       this.update(eventId, {
         heroImgUrl: `${process.env.S3_BUCKET_HERO_IMAGE_PREFIX_URL}${heroImageId}.png`,
       }),

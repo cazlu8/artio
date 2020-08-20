@@ -1,6 +1,8 @@
 import { Test } from '@nestjs/testing';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { RedisModule } from 'nestjs-redis';
+import { DynamicModule } from '@nestjs/common';
 import * as ormconfig from './ormconfig.test';
 import redisConfig from '../../src/shared/config/redis';
 import {
@@ -30,6 +32,11 @@ export default async modules =>
       TypeOrmModule.forRootAsync({
         useFactory: async () => ormconfig as any,
       }),
+      RedisModule.forRootAsync({
+        useFactory: (configService: ConfigService) =>
+          configService.get('redis'),
+        inject: [ConfigService],
+      }) as DynamicModule,
       ...modules,
     ],
   }).compile();
