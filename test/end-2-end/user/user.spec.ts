@@ -1,33 +1,21 @@
-import { Test } from '@nestjs/testing';
 import { Repository } from 'typeorm';
-import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from '../../../src/modules/user/user.module';
 import { User } from '../../../src/modules/user/user.entity';
-import * as ormconfig from '../ormconfig';
-import server from '../server';
 import { saveUser } from './data';
+import Application from '../main.test';
 
 describe('Users', () => {
   let app: any;
   let repository: Repository<User>;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        TypeOrmModule.forRootAsync({
-          useFactory: async () => ormconfig as any,
-        }),
-        UserModule,
-      ],
-    }).compile();
-
-    app = await server(moduleRef);
+    const { server, moduleRef } = await Application(UserModule);
+    app = server;
     repository = moduleRef.get('UserRepository');
   });
 
   it(`/POST users`, async () => {
+    const { email } = saveUser;
     await app
       .post(`/users`)
       .send(saveUser)
@@ -37,15 +25,15 @@ describe('Users', () => {
     const user = await repository.findOne(1);
     expect(user).toEqual(
       expect.objectContaining({
-        email: 'test@hotmail.com',
+        email,
         id: 1,
         isNew: true,
       }),
     );
   });
 
-  it(`/GET users`, async () => {
-    const { guid } = saveUser;
+  it('/GET users', async () => {
+    const { guid, email } = saveUser;
     await repository.save(saveUser);
 
     const { body } = await app
@@ -56,9 +44,7 @@ describe('Users', () => {
 
     expect(body).toEqual(
       expect.objectContaining({
-        email: 'test@hotmail.com',
-        firstName: null,
-        gender: null,
+        email,
         id: 1,
         isNew: true,
         socialUrls: {
