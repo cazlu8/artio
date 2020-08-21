@@ -116,7 +116,7 @@ describe('Users', () => {
       .set('Accept', 'application/json')
       .expect(201);
     const body = await userEventsRepository.findOne({ userId: 1 });
-    expect(body).toEqual(
+    await expect(body).toEqual(
       expect.objectContaining({
         id: 1,
         userId: 1,
@@ -125,6 +125,7 @@ describe('Users', () => {
         redeemed: true,
       }),
     );
+    await repository.query(`truncate table "event" restart identity cascade;`);
     done();
   });
 
