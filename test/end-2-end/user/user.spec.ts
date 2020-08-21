@@ -191,7 +191,27 @@ describe('Users', () => {
     done();
   });
 
-  // get events by user id
+  it('/GET events by user id', async done => {
+    await repository.save(saveUser);
+    await eventRepository.save(saveEvent);
+
+    await app
+      .post(`/users/linkEvent`)
+      .send(linkUserToEventWithRole)
+      .set('Accept', 'application/json')
+      .expect(201);
+
+    const { body } = await app
+      .get(`/users/events/1`)
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(200);
+
+    await expect(body).toBeTruthy();
+    await repository.query(`truncate table "event" restart identity cascade;`);
+
+    done();
+  });
 
   // update user
 
