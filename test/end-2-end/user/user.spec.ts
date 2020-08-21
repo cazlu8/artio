@@ -5,30 +5,31 @@ import {
   saveUser,
   saveAvatarUrl,
   createAvatar,
-  // linkUserToEventWithRole,
+  linkUserToEventWithRole,
 } from './data';
 import Application from '../main.test';
-// import { UserEventsModule } from '../../../src/modules/userEvents/userEvents.module';
-// import { UserEvents } from '../../../src/modules/userEvents/userEvents.entity';
-// import { UserEventsRoles } from '../../../src/modules/userEventsRoles/user.events.roles.entity';
-// import { EventModule } from '../../../src/modules/event/event.module';
+import { UserEventsModule } from '../../../src/modules/userEvents/userEvents.module';
+import { UserEvents } from '../../../src/modules/userEvents/userEvents.entity';
+import { Event } from '../../../src/modules/event/event.entity';
+import { EventModule } from '../../../src/modules/event/event.module';
+import { saveEvent } from '../event/data';
 
 describe('Users', () => {
   let app: any;
   let repository: Repository<User>;
-  // let userEventsRepository: Repository<UserEvents>;
-  // let userEventsRoleRepository: Repository<UserEventsRoles>;
+  let userEventsRepository: Repository<UserEvents>;
+  let eventRepository: Repository<Event>;
 
   beforeAll(async () => {
     const { server, moduleRef } = await Application([
-      // EventModule,
+      EventModule,
       UserModule,
-      // UserEventsModule,
+      UserEventsModule,
     ]);
     app = server;
     repository = moduleRef.get('UserRepository');
-    // userEventsRepository = moduleRef.get('UserEventsRepository');
-    // userEventsRoleRepository = moduleRef.get('UserEventsRoleRepository');
+    userEventsRepository = moduleRef.get('UserEventsRepository');
+    eventRepository = moduleRef.get('EventRepository');
   });
 
   it(`/POST users`, async done => {
@@ -106,16 +107,26 @@ describe('Users', () => {
     done();
   });
 
-  // link user to event
-  //
-  // it(`/POST users linkEvent`, async done => {
-  //   await app
-  //     .post(`/users/linkEvent`)
-  //     .send(linkUserToEventWithRole)
-  //     .set('Accept', 'application/json')
-  //     .expect(201);
-  //   done();
-  // });
+  it(`/POST users linkEvent`, async done => {
+    await repository.save(saveUser);
+    await eventRepository.save(saveEvent);
+    await app
+      .post(`/users/linkEvent`)
+      .send(linkUserToEventWithRole)
+      .set('Accept', 'application/json')
+      .expect(201);
+    const body = await userEventsRepository.findOne({ userId: 1 });
+    expect(body).toEqual(
+      expect.objectContaining({
+        id: 1,
+        userId: 1,
+        eventId: 1,
+        ticketCode: null,
+        redeemed: true,
+      }),
+    );
+    done();
+  });
 
   it(`/GET user avatar by id`, async done => {
     await repository.save(saveUser);
@@ -132,8 +143,6 @@ describe('Users', () => {
     expect(body.avatarImgUrl).toBeTruthy();
     done();
   });
-
-  // get user by email
 
   it('/GET users by email', async done => {
     const { email } = saveUser;
