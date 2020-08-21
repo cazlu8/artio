@@ -94,7 +94,15 @@ describe('Users', () => {
     done();
   });
 
-  // upload users CSV
+  it(`/POST upload users`, async done => {
+    await eventRepository.save(saveEvent);
+    await app
+      .post(`/users/uploadUsers/1`)
+      .attach('file', 'test/end-2-end/user/assets/users.csv')
+      .expect(201);
+    await repository.query(`truncate table "event" restart identity cascade;`);
+    done();
+  });
 
   it(`/POST user exists on cognito`, async done => {
     const { body } = await app
@@ -229,6 +237,8 @@ describe('Users', () => {
 
     done();
   });
+
+  // redeem code
 
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);
