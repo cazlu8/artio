@@ -6,6 +6,7 @@ import {
   saveAvatarUrl,
   createAvatar,
   linkUserToEventWithRole,
+  updateUser,
 } from './data';
 import Application from '../main.test';
 import { UserEventsModule } from '../../../src/modules/userEvents/userEvents.module';
@@ -116,7 +117,7 @@ describe('Users', () => {
       .set('Accept', 'application/json')
       .expect(201);
     const body = await userEventsRepository.findOne({ userId: 1 });
-    await expect(body).toEqual(
+    expect(body).toEqual(
       expect.objectContaining({
         id: 1,
         userId: 1,
@@ -207,15 +208,27 @@ describe('Users', () => {
       .expect('Content-Type', /json/)
       .expect(200);
 
-    await expect(body).toBeTruthy();
+    expect(body).toBeTruthy();
     await repository.query(`truncate table "event" restart identity cascade;`);
 
     done();
   });
 
-  // update user
+  it(`/PUT users`, async done => {
+    await repository.save(saveUser);
 
-  // redeem code
+    await app
+      .put(`/users/1`)
+      .send(updateUser)
+      .set('Accept', 'application/json')
+      .expect(204);
+
+    const user = await repository.findOne(1);
+
+    expect(user).toEqual(expect.objectContaining(updateUser));
+
+    done();
+  });
 
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);
