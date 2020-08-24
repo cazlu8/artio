@@ -6,6 +6,7 @@ import {
   saveUserError,
   saveAvatarUrl,
   createAvatar,
+  createAvatarError,
   linkUserToEventWithRole,
   updateUser,
 } from './data';
@@ -251,6 +252,18 @@ describe('Users', () => {
       .expect(400);
 
     expect(body.message).toHaveLength(2);
+
+    done();
+  });
+
+  it(`/POST create user avatar without avatarImgUrl error`, async done => {
+    const { body } = await app
+      .post('/users/create-avatar')
+      .send(createAvatarError)
+      .set('Accept', 'application/json')
+      .expect(400);
+
+    expect(body.message).toHaveLength(1);
 
     done();
   });

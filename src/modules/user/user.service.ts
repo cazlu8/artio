@@ -132,6 +132,9 @@ export class UserService {
     userId: number,
     avatarId: string,
   ): Promise<any> {
+    await this.repository.findOneOrFail({ id: userId }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    });
     const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
     const sharpedImage = await sharp(base64Data)
       .resize(400, 400)
