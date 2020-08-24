@@ -268,6 +268,18 @@ describe('Users', () => {
     done();
   });
 
+  it(`/POST create user avatar with wrong userId error`, async done => {
+    const { body } = await app
+      .post('/users/create-avatar')
+      .send(createAvatar)
+      .set('Accept', 'application/json')
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+
+    done();
+  });
+
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);
   });
