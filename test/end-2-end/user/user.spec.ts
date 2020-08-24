@@ -292,15 +292,15 @@ describe('Users', () => {
   });
 
   // has to be updated
-  it(`/POST upload users with invalid csv file`, async done => {
-    await eventRepository.save(saveEvent);
-    await app
-      .post(`/users/uploadUsers/1`)
-      .attach('file', 'test/end-2-end/user/assets/invalid.csv')
-      .expect(201);
-    await repository.query(`truncate table "event" restart identity cascade;`);
-    done();
-  });
+  // it(`/POST upload users with invalid csv file`, async done => {
+  //   await eventRepository.save(saveEvent);
+  //   await app
+  //     .post(`/users/uploadUsers/1`)
+  //     .attach('file', 'test/end-2-end/user/assets/invalid.csv')
+  //     .expect(201);
+  //   await repository.query(`truncate table "event" restart identity cascade;`);
+  //   done();
+  // });
 
   it(`/POST user exists on cognito malformated email error`, async done => {
     const { body } = await app
@@ -350,6 +350,17 @@ describe('Users', () => {
 
     expect(body.message).toEqual('Not Found');
 
+    done();
+  });
+
+  it(`/GET user avatar by id inexistent userId error`, async done => {
+    const { body } = await app
+      .get(`/users/avatar/1`)
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
     done();
   });
 

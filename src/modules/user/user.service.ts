@@ -170,10 +170,14 @@ export class UserService {
   }
 
   getAvatarUrl(id): Promise<Partial<User> | void> {
-    return this.repository.findOne({
-      select: ['avatarImgUrl'],
-      where: { id },
-    });
+    return this.repository
+      .findOneOrFail({
+        select: ['avatarImgUrl'],
+        where: { id },
+      })
+      .catch(error => {
+        if (error.name === 'EntityNotFound') throw new NotFoundException();
+      });
   }
 
   getUserByEmail(email): Promise<User | void> {
