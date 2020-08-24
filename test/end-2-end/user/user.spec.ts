@@ -54,7 +54,7 @@ describe('Users', () => {
     done();
   });
 
-  it(`/POST create user avatar`, async done => {
+  it(`/POST users/create-avatar`, async done => {
     await repository.save(saveUser);
     await app
       .post('/users/create-avatar')
@@ -73,7 +73,7 @@ describe('Users', () => {
     done();
   });
 
-  it(`/DELETE delete user avatar`, async done => {
+  it(`/DELETE users/removeAvatar`, async done => {
     await repository.save(saveUser);
     await app
       .post('/users/create-avatar')
@@ -96,7 +96,7 @@ describe('Users', () => {
     done();
   });
 
-  it(`/POST upload users`, async done => {
+  it(`/POST users/uploadUsers`, async done => {
     await eventRepository.save(saveEvent);
     await app
       .post(`/users/uploadUsers/1`)
@@ -106,7 +106,7 @@ describe('Users', () => {
     done();
   });
 
-  it(`/POST user exists on cognito`, async done => {
+  it(`/POST users/checkUserExists`, async done => {
     const { body } = await app
       .post(`/users/checkUserExists`)
       .send({
@@ -118,7 +118,7 @@ describe('Users', () => {
     done();
   });
 
-  it(`/POST users linkEvent`, async done => {
+  it(`/POST users/linkEventCode`, async done => {
     await repository.save(saveUser);
     await eventRepository.save(saveEvent);
     await app
@@ -140,7 +140,7 @@ describe('Users', () => {
     done();
   });
 
-  it(`/GET user avatar by id`, async done => {
+  it(`/GET users/avatar`, async done => {
     await repository.save(saveUser);
     await repository.update(
       { email: saveUser.email },
@@ -156,7 +156,7 @@ describe('Users', () => {
     done();
   });
 
-  it('/GET users by email', async done => {
+  it('/GET users/email by email', async done => {
     const { email } = saveUser;
     await repository.save(saveUser);
 
@@ -202,7 +202,7 @@ describe('Users', () => {
     done();
   });
 
-  it('/GET events by user id', async done => {
+  it('/GET user/events', async done => {
     await repository.save(saveUser);
     await eventRepository.save(saveEvent);
 
@@ -280,7 +280,7 @@ describe('Users', () => {
     done();
   });
 
-  it(`/DELETE user avatar with inexistent userId error`, async done => {
+  it(`/DELETE user avatar with invalid userId error`, async done => {
     const { body } = await app
       .delete('/users/removeAvatar/1')
       .set('Accept', 'application/json')
@@ -314,7 +314,7 @@ describe('Users', () => {
     done();
   });
 
-  it(`/POST user exists on cognito inexistent email error`, async done => {
+  it(`/POST user exists on cognito invalid email error`, async done => {
     const { body } = await app
       .post(`/users/checkUserExists`)
       .send({
@@ -353,7 +353,7 @@ describe('Users', () => {
     done();
   });
 
-  it(`/GET user avatar by id inexistent userId error`, async done => {
+  it(`/GET user avatar by id invalid userId error`, async done => {
     const { body } = await app
       .get(`/users/avatar/1`)
       .set('Accept', 'application/json')
@@ -375,7 +375,7 @@ describe('Users', () => {
     done();
   });
 
-  it('/GET users by guid with inexistent guid error', async done => {
+  it('/GET users by guid with invalid guid error', async done => {
     const { body } = await app
       .get(`/users/2d09879a-0ae9-4cc9-acd0-70b3a563387b`)
       .set('Accept', 'application/json')
@@ -387,7 +387,7 @@ describe('Users', () => {
     done();
   });
 
-  it('/GET events by user id with invalid user id', async done => {
+  it('/GET events by user id with invalid user id error', async done => {
     const { body } = await app
       .get(`/users/events/1`)
       .set('Accept', 'application/json')
@@ -399,7 +399,7 @@ describe('Users', () => {
     done();
   });
 
-  it(`/PUT users with wrong id`, async done => {
+  it(`/PUT users with invalid user id error`, async done => {
     const { body } = await app
       .put(`/users/1`)
       .send(updateUser)
