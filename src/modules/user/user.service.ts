@@ -25,6 +25,7 @@ import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { UserEvents } from '../userEvents/userEvents.entity';
 import { UserEventsRoles } from '../userEventsRoles/user.events.roles.entity';
 import { Role } from '../role/role.entity';
+import { Event } from '../event/event.entity';
 import { LoggerService } from '../../shared/services/logger.service';
 import { UserEventsService } from '../userEvents/userEvents.service';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
@@ -44,6 +45,8 @@ export class UserService {
     private readonly userEventsRolesRepository: Repository<UserEventsRoles>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectRepository(Event)
+    private readonly eventRepository: Repository<Event>,
     private readonly loggerService: LoggerService,
     private configService: ConfigService,
     @InjectQueue('user') private readonly userQueue: Queue,
@@ -208,6 +211,12 @@ export class UserService {
     eventId: number;
   }): Promise<boolean | void> {
     const { roleId, userId, eventId } = linkToEventWithRoleDTO;
+    await this.repository.findOneOrFail({ id: userId }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    });
+    await this.eventRepository.findOneOrFail({ id: eventId }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    });
     const bindUserToEvent = this.linkUserToEvent(userId, eventId).then(id =>
       this.linkUserAndRoleToEvent(id, roleId, userId, eventId),
     );

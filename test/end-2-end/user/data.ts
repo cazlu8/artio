@@ -29,9 +29,9 @@ const CreateAvatarErrorDtoFactory = Factory.Sync.makeFactory<CreateAvatarDto>({
 const LinkToEventWithRoleDTOFactory = Factory.Sync.makeFactory<
   LinkToEventWithRoleDTO
 >({
-  roleId: 2,
   userId: 1,
   eventId: 1,
+  roleId: 2,
 });
 
 const updateUserDtoFactory = Factory.Sync.makeFactory<UpdateUserDto>({

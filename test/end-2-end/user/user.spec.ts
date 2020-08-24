@@ -326,6 +326,33 @@ describe('Users', () => {
     done();
   });
 
+  it(`/POST users linkEvent invalid user id error`, async done => {
+    await eventRepository.save(saveEvent);
+    const { body } = await app
+      .post(`/users/linkEvent`)
+      .send(linkUserToEventWithRole)
+      .set('Accept', 'application/json')
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+
+    await repository.query(`truncate table "event" restart identity cascade;`);
+    done();
+  });
+
+  it(`/POST users linkEvent invalid event id error`, async done => {
+    await repository.save(saveUser);
+    const { body } = await app
+      .post(`/users/linkEvent`)
+      .send(linkUserToEventWithRole)
+      .set('Accept', 'application/json')
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+
+    done();
+  });
+
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);
   });
