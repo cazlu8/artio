@@ -314,6 +314,18 @@ describe('Users', () => {
     done();
   });
 
+  it(`/POST user exists on cognito inexistent email error`, async done => {
+    const { body } = await app
+      .post(`/users/checkUserExists`)
+      .send({
+        email: 'test@artio.events',
+      })
+      .set('Accept', 'application/json')
+      .expect(201);
+    expect(body).toEqual(false);
+    done();
+  });
+
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);
   });
