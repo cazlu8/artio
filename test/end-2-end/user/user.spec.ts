@@ -364,6 +364,17 @@ describe('Users', () => {
     done();
   });
 
+  it('/GET users by email with invalid email', async done => {
+    const { body } = await app
+      .get(`/users/email/test`)
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+    done();
+  });
+
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);
   });
