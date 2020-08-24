@@ -206,6 +206,9 @@ export class UserService {
   }
 
   async getEventsByUserId(id: number) {
+    await this.repository.findOneOrFail({ id }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    });
     return await this.repository.getEventsByUserId(id);
   }
 

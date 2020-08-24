@@ -387,6 +387,18 @@ describe('Users', () => {
     done();
   });
 
+  it('/GET events by user id with invalid user id', async done => {
+    const { body } = await app
+      .get(`/users/events/1`)
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+
+    done();
+  });
+
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);
   });
