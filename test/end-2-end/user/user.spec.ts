@@ -3,6 +3,7 @@ import { UserModule } from '../../../src/modules/user/user.module';
 import { User } from '../../../src/modules/user/user.entity';
 import {
   saveUser,
+  saveUserError,
   saveAvatarUrl,
   createAvatar,
   linkUserToEventWithRole,
@@ -239,6 +240,20 @@ describe('Users', () => {
   });
 
   // redeem code
+
+  // error cases
+
+  it(`/POST users error`, async done => {
+    const { body } = await app
+      .post(`/users`)
+      .send(saveUserError)
+      .set('Accept', 'application/json')
+      .expect(400);
+
+    expect(body.message).toHaveLength(2);
+
+    done();
+  });
 
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);

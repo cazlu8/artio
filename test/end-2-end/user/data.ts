@@ -10,6 +10,11 @@ const createUserDtoFactory = Factory.Sync.makeFactory<CreateUserDto>({
   email: faker.internet.email(),
 });
 
+const createUserErrorDtoFactory = Factory.Sync.makeFactory<CreateUserDto>({
+  guid: '',
+  email: 'error.com.br',
+});
+
 const CreateAvatarDtoFactory = Factory.Sync.makeFactory<CreateAvatarDto>({
   id: 1,
   avatarImgUrl:
@@ -37,6 +42,8 @@ const updateUserDtoFactory = Factory.Sync.makeFactory<UpdateUserDto>({
 export const saveAvatarUrl = faker.image.image();
 
 export const saveUser = createUserDtoFactory.build();
+
+export const saveUserError = createUserErrorDtoFactory.build();
 
 export const updateUser = updateUserDtoFactory.build();
 
