@@ -57,3 +57,10 @@ export const createAvatar = CreateAvatarDtoFactory.build();
 export const createAvatarError = CreateAvatarErrorDtoFactory.build();
 
 export const linkUserToEventWithRole = LinkToEventWithRoleDTOFactory.build();
+
+export const linkUserToEventWithCode = {
+  userId: 1,
+  eventId: 1,
+  ticketCode: 'ARTIO',
+  redeemed: false,
+};

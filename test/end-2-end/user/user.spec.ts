@@ -9,6 +9,7 @@ import {
   createAvatarError,
   linkUserToEventWithRole,
   updateUser,
+  linkUserToEventWithCode,
 } from './data';
 import Application from '../main.test';
 import { UserEventsModule } from '../../../src/modules/userEvents/userEvents.module';
@@ -240,7 +241,36 @@ describe('Users', () => {
     done();
   });
 
-  // redeem code
+  it(`/POST users/redeemCode`, async done => {
+    const { userId, eventId, ticketCode } = linkUserToEventWithCode;
+
+    await repository.save(saveUser);
+    await eventRepository.save(saveEvent);
+    await userEventsRepository.save(linkUserToEventWithCode);
+
+    await app
+      .put(`/users/redeemCode`)
+      .send({
+        userId,
+        ticketCode,
+      })
+      .set('Accept', 'application/json')
+      .expect(200);
+
+    const redeem = await userEventsRepository.findOne({ userId: 1 });
+    expect(redeem).toEqual(
+      expect.objectContaining({
+        userId,
+        eventId,
+        ticketCode,
+        redeemed: true,
+      }),
+    );
+
+    await repository.query(`truncate table "event" restart identity cascade;`);
+
+    done();
+  });
 
   // error cases
 
