@@ -291,6 +291,29 @@ describe('Users', () => {
     done();
   });
 
+  // has to be updated
+  it(`/POST upload users with invalid csv file`, async done => {
+    await eventRepository.save(saveEvent);
+    await app
+      .post(`/users/uploadUsers/1`)
+      .attach('file', 'test/end-2-end/user/assets/invalid.csv')
+      .expect(201);
+    await repository.query(`truncate table "event" restart identity cascade;`);
+    done();
+  });
+
+  it(`/POST user exists on cognito malformated email error`, async done => {
+    const { body } = await app
+      .post(`/users/checkUserExists`)
+      .send({
+        email: '@artio.events',
+      })
+      .set('Accept', 'application/json')
+      .expect(400);
+    expect(body.message).toHaveLength(1);
+    done();
+  });
+
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);
   });
