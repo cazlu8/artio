@@ -184,6 +184,9 @@ export class UserService {
   }
 
   async removeAvatar(id: number) {
+    await this.repository.findOneOrFail({ id }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    });
     const getUserFromAvatar: any = this.repository.get({
       select: ['avatarImgUrl'],
       where: { id },

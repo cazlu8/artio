@@ -280,6 +280,17 @@ describe('Users', () => {
     done();
   });
 
+  it(`/DELETE user avatar with inexistent userId error`, async done => {
+    const { body } = await app
+      .delete('/users/removeAvatar/1')
+      .set('Accept', 'application/json')
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+
+    done();
+  });
+
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);
   });
