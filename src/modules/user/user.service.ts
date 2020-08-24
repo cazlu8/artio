@@ -67,6 +67,9 @@ export class UserService {
     id: number,
     updateUserDto: UpdateUserDto,
   ): Promise<UpdateResult> {
+    await this.repository.findOneOrFail({ id }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    });
     const user = await this.update(id, updateUserDto);
     this.loggerService.info(`User ${id} updated`);
     return user;

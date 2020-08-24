@@ -399,6 +399,18 @@ describe('Users', () => {
     done();
   });
 
+  it(`/PUT users with wrong id`, async done => {
+    const { body } = await app
+      .put(`/users/1`)
+      .send(updateUser)
+      .set('Accept', 'application/json')
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+
+    done();
+  });
+
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);
   });
