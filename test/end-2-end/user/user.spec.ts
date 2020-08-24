@@ -375,6 +375,18 @@ describe('Users', () => {
     done();
   });
 
+  it('/GET users by guid with inexistent guid error', async done => {
+    const { body } = await app
+      .get(`/users/2d09879a-0ae9-4cc9-acd0-70b3a563387b`)
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+
+    done();
+  });
+
   afterEach(async () => {
     await repository.query(`truncate table "user" restart identity cascade;`);
   });
