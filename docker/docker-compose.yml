@@ -7,16 +7,16 @@ services:
     image: postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_PASSWORD: root
 
-  postgres-test:
-    container_name: postgres
+  postgresTest:
+    container_name: postgresTest
     image: postgres
     restart: unless-stopped
     ports:
-      - "5433:5433"
+      - '5433:5432'
     environment:
       POSTGRES_PASSWORD: root
 
@@ -25,6 +25,6 @@ services:
     container_name: redis
     image: redis
     restart: unless-stopped
-   # Command: redis-server --requirepass RedisArtio2020!
+    # Command: redis-server --requirepass RedisArtio2020!
     ports:
-      - "6379:6379"
+      - '6379:6379'

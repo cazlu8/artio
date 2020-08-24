@@ -25,6 +25,7 @@ import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { UserEvents } from '../userEvents/userEvents.entity';
 import { UserEventsRoles } from '../userEventsRoles/user.events.roles.entity';
 import { Role } from '../role/role.entity';
+import { Event } from '../event/event.entity';
 import { LoggerService } from '../../shared/services/logger.service';
 import { UserEventsService } from '../userEvents/userEvents.service';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
@@ -44,6 +45,8 @@ export class UserService {
     private readonly userEventsRolesRepository: Repository<UserEventsRoles>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectRepository(Event)
+    private readonly eventRepository: Repository<Event>,
     private readonly loggerService: LoggerService,
     private configService: ConfigService,
     @InjectQueue('user') private readonly userQueue: Queue,
@@ -64,6 +67,9 @@ export class UserService {
     id: number,
     updateUserDto: UpdateUserDto,
   ): Promise<UpdateResult> {
+    await this.repository.findOneOrFail({ id }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    });
     const user = await this.update(id, updateUserDto);
     this.loggerService.info(`User ${id} updated`);
     return user;
@@ -132,6 +138,9 @@ export class UserService {
     userId: number,
     avatarId: string,
   ): Promise<any> {
+    await this.repository.findOneOrFail({ id: userId }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    });
     const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
     const sharpedImage = await sharp(base64Data)
       .resize(400, 400)
@@ -164,10 +173,14 @@ export class UserService {
   }
 
   getAvatarUrl(id): Promise<Partial<User> | void> {
-    return this.repository.findOne({
-      select: ['avatarImgUrl'],
-      where: { id },
-    });
+    return this.repository
+      .findOneOrFail({
+        select: ['avatarImgUrl'],
+        where: { id },
+      })
+      .catch(error => {
+        if (error.name === 'EntityNotFound') throw new NotFoundException();
+      });
   }
 
   getUserByEmail(email): Promise<User | void> {
@@ -181,6 +194,9 @@ export class UserService {
   }
 
   async removeAvatar(id: number) {
+    await this.repository.findOneOrFail({ id }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    });
     const getUserFromAvatar: any = this.repository.get({
       select: ['avatarImgUrl'],
       where: { id },
@@ -193,6 +209,9 @@ export class UserService {
   }
 
   async getEventsByUserId(id: number) {
+    await this.repository.findOneOrFail({ id }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    });
     return await this.repository.getEventsByUserId(id);
   }
 
@@ -202,6 +221,12 @@ export class UserService {
     eventId: number;
   }): Promise<boolean | void> {
     const { roleId, userId, eventId } = linkToEventWithRoleDTO;
+    await this.repository.findOneOrFail({ id: userId }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    });
+    await this.eventRepository.findOneOrFail({ id: eventId }).catch(error => {
+      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    });
     const bindUserToEvent = this.linkUserToEvent(userId, eventId).then(id =>
       this.linkUserAndRoleToEvent(id, roleId, userId, eventId),
     );
