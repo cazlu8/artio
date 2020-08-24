@@ -364,7 +364,7 @@ describe('Users', () => {
     done();
   });
 
-  it('/GET users by email with invalid email', async done => {
+  it('/GET users by email with invalid email error', async done => {
     const { body } = await app
       .get(`/users/email/test`)
       .set('Accept', 'application/json')
