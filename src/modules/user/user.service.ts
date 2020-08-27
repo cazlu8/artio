@@ -1,19 +1,26 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ObjectLiteral, UpdateResult, Repository } from 'typeorm';
+import {
+  ObjectLiteral,
+  UpdateResult,
+  Repository,
+  In,
+  Transaction,
+  TransactionRepository,
+} from 'typeorm';
 import * as sharp from 'sharp';
 import * as AWS from 'aws-sdk';
 import { StringStream } from 'scramjet';
-import * as short from 'short-uuid';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import CognitoIdentityServiceProvider from 'aws-sdk/clients/cognitoidentityserviceprovider';
-import S3 from 'aws-sdk/clients/s3';
 import { ConfigService } from '@nestjs/config';
+import * as short from 'short-uuid';
+import { validate as validateEmail } from 'email-validator';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';
@@ -22,23 +29,21 @@ import { handleBase64 } from '../../shared/utils/image.utils';
 import { UserRepository } from './user.repository';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
-import { UserEvents } from '../userEvents/userEvents.entity';
-import { UserEventsRoles } from '../userEventsRoles/user.events.roles.entity';
+import { UserEventsRoles } from '../userEventsRoles/userEventsRoles.entity';
 import { Role } from '../role/role.entity';
-import { Event } from '../event/event.entity';
 import { LoggerService } from '../../shared/services/logger.service';
 import { UserEventsService } from '../userEvents/userEvents.service';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
-
+import { EventRepository } from '../event/event.repository';
+import { UserEvents } from '../userEvents/userEvents.entity';
+import { Event } from '../event/event.entity';
+import { UploadService } from '../../shared/services/uploadService';
 @Injectable()
 export class UserService {
   private cognito: CognitoIdentityServiceProvider;
 
-  private s3: S3;
-
   constructor(
     private readonly repository: UserRepository,
-    private readonly userEventsService: UserEventsService,
     @InjectRepository(UserEvents)
     private readonly userEventsRepository: UserEventsRepository,
     @InjectRepository(UserEventsRoles)
@@ -46,15 +51,16 @@ export class UserService {
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(Event)
-    private readonly eventRepository: Repository<Event>,
+    private readonly eventRepository: EventRepository,
+    private readonly uploadService: UploadService,
     private readonly loggerService: LoggerService,
+    private readonly userEventsService: UserEventsService,
     private configService: ConfigService,
     @InjectQueue('user') private readonly userQueue: Queue,
   ) {
     this.cognito = new AWS.CognitoIdentityServiceProvider(
       this.configService.get('cognito'),
     );
-    this.s3 = new AWS.S3(this.configService.get('s3'));
   }
 
   findOne(guid: string): Promise<Partial<User> | void> {
@@ -97,10 +103,13 @@ export class UserService {
     if (user?.id) {
       newUser.id = user.id;
     }
-    return this.repository
-      .save(newUser)
-      .then(usr => this.loggerService.info(`User ${usr.id} Created`))
-      .catch(err => validateEntityUserException.check(err));
+    if (typeof user === 'undefined' || user.isNew) {
+      return this.repository
+        .save(newUser)
+        .then(usr => this.loggerService.info(`User ${usr.id} Created`))
+        .catch(err => validateEntityUserException.check(err));
+    }
+    return Promise.resolve();
   }
 
   async createAvatar(
@@ -158,14 +167,14 @@ export class UserService {
       const lastIndex = formerUrl.lastIndexOf('/');
       const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
       this.loggerService.info(`User Avatar ${formerUrl} was deleted`);
-      return this.s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
+      return this.uploadService.deleteObject({ Bucket, Key: `${currentKey}` });
     }
     return Promise.resolve();
   }
 
   private updateAvatarImage(params: any, userId: number, avatarId: string) {
     return [
-      this.s3.upload(params).promise(),
+      this.uploadService.uploadObject(params),
       this.update(userId, {
         avatarImgUrl: `${process.env.S3_BUCKET_AVATAR_PREFIX_URL}${avatarId}.png`,
       }),
@@ -248,78 +257,111 @@ export class UserService {
     return redeem;
   }
 
-  async processCsvFile(file, eventId) {
+  async processCsvFile(readStream, eventId) {
     try {
-      const id = short.generate();
-      const params = {
-        Bucket: process.env.S3_BUCKET_CSV_USERS,
-        Key: `${id}.csv`,
-        Body: file.data,
-        ACL: 'private',
-        ContentEncoding: 'utf-8',
-        ContentType: `text/csv`,
-      };
-      await this.s3.upload(params).promise();
-      const csvReadStream = this.s3
-        .getObject({
-          Bucket: params.Bucket,
-          Key: `${id}.csv`,
-        })
-        .createReadStream();
-      await this.readCsvUsers(csvReadStream, eventId);
-      this.loggerService.info(`CSV file refering to ${eventId} was uploaded`);
+      await this.readCsvUsers(readStream, eventId);
+      this.loggerService.info(`CSV file referring to ${eventId} was uploaded`);
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new UnprocessableEntityException(error);
     }
   }
 
-  async preSaveUsersAndBindToEvent(emails: string[], eventId: number) {
-    const ticketCode = short.generate();
-    const userIds: any[] = await this.preSaveUsers(emails);
-    await this.userEventsService.bindUsersToEvent(userIds, eventId, ticketCode);
-    return ticketCode;
-  }
-
-  async getUserEmailsBindedToEvent(emails: string[], eventId: number) {
-    return await this.userEventsRepository.getUserEmailsBindedToEventByEmail(
+  @Transaction()
+  async preSaveUsersAndBindToEvent(
+    emails: string[],
+    eventId: number,
+    @TransactionRepository()
+    userTransactionRepository?: UserRepository,
+    @TransactionRepository()
+    userEventsTransactionRepository?: UserEventsRepository,
+  ) {
+    const userIds: number[] = await this.preSaveUsers(
       emails,
+      userTransactionRepository,
+    );
+    return await this.bindUsersToEvent(
+      userIds,
       eventId,
+      userEventsTransactionRepository,
     );
   }
 
-  private async preSaveUsers(emails: string[]) {
-    const getUserId = email =>
-      this.repository.get({ where: { email }, select: ['id'] });
-    const preSaveUserFn = email =>
-      this.repository.preSaveUser({ email }).then(({ raw }) => raw[0].id);
-    const preSaveFns: any = emails.map(email =>
-      getUserId(email).then(async id =>
-        id !== undefined ? Promise.resolve(id) : await preSaveUserFn(email),
-      ),
-    );
-    return await Promise.all(preSaveFns).then((...ids: any[]) =>
-      ids.flatMap(x => {
-        if (Array.isArray(x)) {
-          return x.flatMap(y => (y.id !== undefined ? y.id : y));
-        }
-        return x.id !== undefined ? x.id : x;
-      }),
-    );
+  async filterAlreadyRegisteredEmails(
+    emails: string[],
+    eventId: number,
+  ): Promise<string[]> {
+    const emailsToNotSend = (
+      await this.userEventsRepository.getUserEmailsBindedToEventByEmail(
+        emails,
+        eventId,
+      )
+    )?.map(x => x.user_email);
+    return emailsToNotSend.length
+      ? emails.filter(x => !emailsToNotSend.some(y => x === y))
+      : emails;
   }
 
-  private readCsvUsers(csvReadStream, eventId: number) {
-    return StringStream.from(csvReadStream)
+  private async readCsvUsers(csvReadStream, eventId: number) {
+    await StringStream.from(csvReadStream)
       .setOptions({ maxParallel: 16 })
       .lines()
       .CSVParse()
-      .map(emails => [...new Set([...emails])])
-      .map(emails => emails.filter(x => x.trim().length > 1))
-      .do(async (emails: string[]) => {
-        await this.userQueue.add('preSaveUserAndBindToEvent', {
-          emails: emails.filter(x => x.trim() !== ''),
-          eventId,
-        });
-      });
+      .map(emails => [...new Set(emails)])
+      .map(emails =>
+        emails.filter(x => validateEmail(x) && x.trim().length > 1),
+      )
+      .do((emails: string[]) => {
+        if (emails?.length)
+          this.userQueue.add('preSaveUserAndBindToEvent', {
+            emails,
+            eventId,
+          });
+      })
+      .run();
+  }
+
+  private async preSaveUsers(
+    emailsToSave: string[],
+    userTransactionRepository: UserRepository,
+  ) {
+    if (!emailsToSave.length) return [];
+    const mapToId = (users: any) =>
+      (users?.raw || users)?.length
+        ? (users.raw || users).map(({ id }) => id)
+        : [];
+    const usersToSave = emailsToSave.map(email => ({ email }));
+    const alreadyExistsUserIds = userTransactionRepository
+      .find({
+        where: { email: In(emailsToSave) },
+        select: ['id'],
+      })
+      .then(mapToId);
+    const savedUsers = userTransactionRepository
+      .preSaveUser(usersToSave)
+      .then(mapToId);
+    const [existingIds, newIds] = await Promise.all([
+      alreadyExistsUserIds,
+      savedUsers,
+    ]);
+    return [...existingIds, ...newIds];
+  }
+
+  private async bindUsersToEvent(
+    userIds: number[],
+    eventId: number,
+    userEventsTransactionRepository: UserEventsRepository,
+  ) {
+    const { guid: ticketCode } = await this.eventRepository.findOne({
+      where: { id: eventId },
+      select: ['guid'],
+    });
+    const userEvents = userIds.map(userId => ({
+      userId,
+      eventId,
+      ticketCode,
+    }));
+    await userEventsTransactionRepository.save(userEvents);
+    return ticketCode;
   }
 
   private async verifyUserRole(id: number): Promise<boolean> {

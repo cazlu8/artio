@@ -79,7 +79,7 @@ export class NetworkRoomGateway
       const { sub } = await this.jwtService.validateToken(token);
       socket.userId = sub;
     } catch (err) {
-      this.server.adapter.remoteDisconnect(socket.id, true);
+      socket.disconnect();
     }
   }
 

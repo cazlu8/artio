@@ -98,12 +98,14 @@ export class NetworkRoomService {
     return token.toJwt();
   }
 
-  async addCreateRoomOnQueue(eventId: number, isRepeat = false) {
-    await this.networkRoomQueue.add('createRooms', { eventId, isRepeat });
-    await this.networkRoomQueue.add(
-      `clearExpiredRooms`,
-      { eventId },
-      { delay: 270000 },
-    );
+  addCreateRoomOnQueue(eventId: number, isRepeat = false) {
+    return [
+      this.networkRoomQueue.add('createRooms', { eventId, isRepeat }),
+      this.networkRoomQueue.add(
+        `clearExpiredRooms`,
+        { eventId },
+        { delay: 270000 },
+      ),
+    ];
   }
 }

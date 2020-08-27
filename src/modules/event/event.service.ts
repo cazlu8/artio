@@ -5,15 +5,13 @@ import {
 } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
 import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
-import * as AWS from 'aws-sdk';
 import { uuid } from 'uuidv4';
 import * as sharp from 'sharp';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RedisService } from 'nestjs-redis';
-import S3 from 'aws-sdk/clients/s3';
-import { ConfigService } from '@nestjs/config';
+import * as bluebird from 'bluebird';
 import { Event } from './event.entity';
 import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
@@ -30,12 +28,11 @@ import { UserEvents } from '../userEvents/userEvents.entity';
 import EventStartIntermissionDto from './dto/event.startIntermission.dto';
 import { EventGateway } from './event.gateway';
 import { LoggerService } from '../../shared/services/logger.service';
+import { UploadService } from '../../shared/services/uploadService';
 
 @Injectable()
 export class EventService {
   private redisClient: any;
-
-  private s3: S3;
 
   constructor(
     private readonly repository: EventRepository,
@@ -45,11 +42,10 @@ export class EventService {
     @InjectRepository(UserEvents)
     private readonly userEventsRepository: Repository<UserEvents>,
     private readonly redisService: RedisService,
+    private readonly uploadService: UploadService,
     private readonly loggerService: LoggerService,
-    private configService: ConfigService,
   ) {
-    this.redisClient = this.redisService.getClient();
-    this.s3 = new AWS.S3(this.configService.get('s3'));
+    this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
   async create(createEventDTO: CreateEventDTO): Promise<void | ObjectLiteral> {
@@ -99,9 +95,7 @@ export class EventService {
   }
 
   getEvents(): Promise<Partial<Event[]> | void> {
-    return this.repository.find().catch(error => {
-      if (error.name === 'EntityNotFound') throw new NotFoundException();
-    });
+    return this.repository.find();
   }
 
   updateEventInfo(
@@ -140,17 +134,32 @@ export class EventService {
   ) {
     const { eventId, intermissionTime } = eventStartIntermissionDto;
     if (!(await this.eventIsOnIntermission(eventId))) {
-      await this.networkRoomService.addCreateRoomOnQueue(eventId);
-      await this.redisClient.set(`event-${eventId}:isOnIntermission`, true);
-      await this.finishIntermission(eventId, intermissionTime);
-      await this.redisClient.set(
+      const addCreateRoomOnQueuefn = this.networkRoomService.addCreateRoomOnQueue(
+        eventId,
+      );
+      const setIntermissionOnFn = this.redisClient.set(
+        `event-${eventId}:isOnIntermission`,
+        true,
+      );
+      const finishIntermissionFn = this.finishIntermission(
+        eventId,
+        intermissionTime,
+      );
+      const setIntermissionStartedAtFn = this.redisClient.set(
         `event-${eventId}:intermissionStartedAt`,
         new Date().toISOString(),
       );
-      await this.redisClient.set(
+      const setIntermissionTimeFn = this.redisClient.set(
         `event-${eventId}:intermissionTime`,
         intermissionTime,
       );
+      await Promise.all([
+        addCreateRoomOnQueuefn,
+        setIntermissionOnFn,
+        finishIntermissionFn,
+        setIntermissionStartedAtFn,
+        setIntermissionTimeFn,
+      ]);
       this.eventGateway.server.emit('startIntermission', { eventId });
     } else
       throw new BadRequestException(
@@ -176,12 +185,16 @@ export class EventService {
       `event-${eventId}:isOnIntermission`,
     ));
     if (ongoing) {
-      const startedAt = await this.redisClient.get(
+      const getStartedAtFn = this.redisClient.get(
         `event-${eventId}:intermissionStartedAt`,
       );
-      const duration = await this.redisClient.get(
+      const getDurationFn = this.redisClient.get(
         `event-${eventId}:intermissionTime`,
       );
+      const [startedAt, duration] = await Promise.all([
+        getStartedAtFn,
+        getDurationFn,
+      ]);
       return { ongoing, startedAt, duration };
     }
     return false;
@@ -194,15 +207,15 @@ export class EventService {
   }
 
   async finishLive(eventId) {
-    const eventToUpdate = await this.repository.findOne(eventId);
-    eventToUpdate.onLive = false;
-    return await this.repository.save(eventToUpdate);
+    await this.repository.update(eventId, {
+      onLive: false,
+    });
   }
 
   async startLive(eventId) {
-    const eventToUpdate = await this.repository.findOne(eventId);
-    eventToUpdate.onLive = true;
-    return await this.repository.save(eventToUpdate);
+    await this.repository.update(eventId, {
+      onLive: true,
+    });
   }
 
   async removeHeroImage(id: number) {
@@ -210,9 +223,9 @@ export class EventService {
       select: ['heroImgUrl'],
       where: { id },
     });
+    const bucket = process.env.S3_BUCKET_HERO_IMAGE;
     await this.repository.removeHeroImage(id);
-    const Bucket = process.env.S3_BUCKET_HERO_IMAGE;
-    await this.deleteHeroImage(user, Bucket);
+    await this.deleteHeroImage(user, bucket);
   }
 
   async createHeroImage(
@@ -220,7 +233,7 @@ export class EventService {
   ): Promise<void | ObjectLiteral> {
     const { heroImageUrl, id: eventId } = createHeroImage;
     const heroImageId: string = uuid();
-    const { user, sharpedImage } = await this.processAvatarImage(
+    const { event, sharpedImage } = await this.processHeroImage(
       heroImageUrl,
       eventId,
       heroImageId,
@@ -235,10 +248,10 @@ export class EventService {
     };
     const { Bucket } = params;
     const functions: any = [
-      ...this.updateAvatarImage(params, eventId, heroImageId),
-      this.deleteHeroImage(user, Bucket),
+      ...this.updateHeroImage(params, eventId, heroImageId),
+      this.deleteHeroImage(event, Bucket),
     ];
-    await Promise.all(functions).catch(err => console.log(err));
+    await Promise.all(functions);
     this.loggerService.info(
       `Event hero image for event id(${eventId}) was created`,
     );
@@ -247,18 +260,18 @@ export class EventService {
     };
   }
 
-  private deleteHeroImage(event: any, Bucket: string) {
+  private deleteHeroImage(event: Event, Bucket: string) {
     if (event?.heroImgUrl) {
       const { heroImgUrl: formerUrl } = event;
       const lastIndex = formerUrl.lastIndexOf('/');
       const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
       this.loggerService.info(`Event Hero Image ${formerUrl} was deleted`);
-      return this.s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
+      return this.uploadService.deleteObject({ Bucket, Key: `${currentKey}` });
     }
     return Promise.resolve();
   }
 
-  private async processAvatarImage(
+  private async processHeroImage(
     heroImageUrl: string,
     eventId: number,
     heroImageId: string,
@@ -267,16 +280,16 @@ export class EventService {
     const sharpedImage = await sharp(base64Data)
       .resize(800, 600)
       .png();
-    const user: any = await this.repository.get({
+    const event: any = await this.repository.get({
       select: ['heroImgUrl'],
       where: { id: eventId },
     });
-    return { sharpedImage, user, heroImageId };
+    return { sharpedImage, event, heroImageId };
   }
 
-  private updateAvatarImage(params: any, eventId: number, heroImageId: string) {
+  private updateHeroImage(params: any, eventId: number, heroImageId: string) {
     return [
-      this.s3.upload(params).promise(),
+      this.uploadService.uploadObject(params),
       this.update(eventId, {
         heroImgUrl: `${process.env.S3_BUCKET_HERO_IMAGE_PREFIX_URL}${heroImageId}.png`,
       }),

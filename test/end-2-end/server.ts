@@ -7,8 +7,14 @@ import { TestingModule } from '@nestjs/testing';
 import { ValidationPipe } from '@nestjs/common';
 
 export default async function load(module: TestingModule) {
+  const fastifyAdapter = new FastifyAdapter();
+  fastifyAdapter
+    .getInstance()
+    .addContentTypeParser('application/octet-stream', (request, done) =>
+      done(),
+    );
   const app = module.createNestApplication<NestFastifyApplication>(
-    new FastifyAdapter(),
+    fastifyAdapter,
   );
   app.useGlobalPipes(
     new ValidationPipe({

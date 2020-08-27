@@ -21,7 +21,7 @@
     "test:watch": "cross-env NODE_ENV=test jest --watch  --forceExit",
     "test:cov": "cross-env NODE_ENV=test jest --coverage --forceExit",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "cross-env NODE_ENV=test jest ./test/end-2-end --forceExit --maxWorkers=7",
+    "test:e2e": "cross-env NODE_ENV=test jest ./test/end-2-end --runInBand --forceExit",
     "test:ws": "artillery run ./test/websockets/loadtest.yml --output result.json",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --config src/ormconfig.ts",
     "typeorm:migrate": "npm run typeorm migration:generate -- -n",
@@ -49,6 +49,7 @@
     "cors": "^2.8.5",
     "cross-env": "^7.0.2",
     "dotenv": "^8.2.0",
+    "email-validator": "^2.0.4",
     "fastify-compress": "^2.0.1",
     "fastify-cookie": "^3.6.1",
     "fastify-cors": "^3.0.3",
@@ -118,7 +119,7 @@
       "json",
       "ts"
     ],
-    "testTimeout": 7000,
+    "testTimeout": 10000,
     "rootDir": "test",
     "testRegex": "spec.ts$",
     "transform": {

@@ -26,7 +26,7 @@ export class UserEvents {
 
   @ApiProperty()
   @Column('varchar', { length: 255, nullable: true, name: 'ticketCode' })
-  ticketCode: string;
+  ticketCode?: string;
 
   @ApiProperty()
   @Column('boolean', { default: false, name: 'redeemed' })

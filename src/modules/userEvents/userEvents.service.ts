@@ -13,20 +13,4 @@ export class UserEventsService {
   async redeemEventCode(userId: number, ticketCode: string) {
     return await this.repository.redeemEventCode(userId, ticketCode);
   }
-
-  async bindUsersToEvent(
-    userIds: number[],
-    eventId: number,
-    ticketCode: string,
-  ) {
-    const existsFn = userId => this.repository.exists({ userId, eventId });
-    const bindUserFn = userId =>
-      this.repository.bindUserToEvent({ userId, eventId, ticketCode });
-    const bindUsersToEventFns = userIds.map(userId =>
-      existsFn(userId).then(async exists =>
-        exists ? Promise.resolve() : await bindUserFn(userId),
-      ),
-    );
-    await Promise.all(bindUsersToEventFns);
-  }
 }

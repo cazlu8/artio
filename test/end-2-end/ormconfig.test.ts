@@ -19,8 +19,8 @@ const config: TypeOrmModuleOptions = {
   synchronize: false,
   subscribers: [`${__dirname}/../../src/**/*.subscriber{.ts,.js}`],
   migrationsRun: true,
-  logging: data.DATABASE_LOGGING === 'true',
-  logger: data.DATABASE_LOGGING_TYPE || null,
+  logging: false,
+  logger: null,
   migrations: [`${__dirname}/../../src/migrations/**/*{.ts,.js}`],
   cli: {
     migrationsDir: `${__dirname}/../../src/migrations`,

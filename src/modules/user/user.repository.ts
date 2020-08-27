@@ -38,10 +38,11 @@ export class UserRepository extends Repository<User> {
       .execute();
   }
 
-  preSaveUser(user: Partial<User>) {
+  preSaveUser(users: Partial<User>[]) {
     return this.createQueryBuilder()
       .insert()
-      .values(user)
+      .values(users)
+      .onConflict(`("email") DO NOTHING`)
       .execute();
   }
 }

@@ -1,4 +1,5 @@
 import { Repository } from 'typeorm';
+import * as fs from 'fs';
 import { UserModule } from '../../../src/modules/user/user.module';
 import { User } from '../../../src/modules/user/user.entity';
 import {
@@ -98,11 +99,16 @@ describe('Users', () => {
   });
 
   it(`/POST users/uploadUsers`, async done => {
-    await eventRepository.save(saveEvent);
-    await app
+    await eventRepository.save(saveEvent());
+    const request = app
       .post(`/users/uploadUsers/1`)
-      .attach('file', 'test/end-2-end/user/assets/users.csv')
+      .set('content-type', 'application/octet-stream')
       .expect(201);
+    const csvStream = fs.createReadStream(
+      'test/end-2-end/user/assets/users.csv',
+    );
+    csvStream.on('end', () => request.end(done));
+    csvStream.pipe(request, { end: false });
     await repository.query(`truncate table "event" restart identity cascade;`);
     done();
   });
@@ -121,7 +127,7 @@ describe('Users', () => {
 
   it(`/POST users/linkEventCode`, async done => {
     await repository.save(saveUser);
-    await eventRepository.save(saveEvent);
+    await eventRepository.save(saveEvent());
     await app
       .post(`/users/linkEvent`)
       .send(linkUserToEventWithRole)
@@ -205,7 +211,7 @@ describe('Users', () => {
 
   it('/GET user/events', async done => {
     await repository.save(saveUser);
-    await eventRepository.save(saveEvent);
+    await eventRepository.save(saveEvent());
 
     await app
       .post(`/users/linkEvent`)
@@ -245,7 +251,7 @@ describe('Users', () => {
     const { userId, eventId, ticketCode } = linkUserToEventWithCode;
 
     await repository.save(saveUser);
-    await eventRepository.save(saveEvent);
+    await eventRepository.save(saveEvent());
     await userEventsRepository.save(linkUserToEventWithCode);
 
     await app
@@ -321,16 +327,20 @@ describe('Users', () => {
     done();
   });
 
-  // has to be updated
-  // it(`/POST upload users with invalid csv file`, async done => {
-  //   await eventRepository.save(saveEvent);
-  //   await app
-  //     .post(`/users/uploadUsers/1`)
-  //     .attach('file', 'test/end-2-end/user/assets/invalid.csv')
-  //     .expect(201);
-  //   await repository.query(`truncate table "event" restart identity cascade;`);
-  //   done();
-  // });
+  it(`/POST upload users with invalid csv file`, async done => {
+    await eventRepository.save(saveEvent());
+    const request = app
+      .post(`/users/uploadUsers/1`)
+      .set('content-type', 'application/octet-stream')
+      .expect(422);
+    const csvStream = fs.createReadStream(
+      'test/end-2-end/user/assets/invalid.csv',
+    );
+    csvStream.on('end', () => request.end(done));
+    csvStream.pipe(request, { end: false });
+    await repository.query(`truncate table "event" restart identity cascade;`);
+    done();
+  });
 
   it(`/POST user exists on cognito malformated email error`, async done => {
     const { body } = await app
@@ -357,7 +367,7 @@ describe('Users', () => {
   });
 
   it(`/POST users linkEvent invalid user id error`, async done => {
-    await eventRepository.save(saveEvent);
+    await eventRepository.save(saveEvent());
     const { body } = await app
       .post(`/users/linkEvent`)
       .send(linkUserToEventWithRole)

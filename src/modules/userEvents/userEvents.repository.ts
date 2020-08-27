@@ -25,10 +25,10 @@ export class UserEventsRepository extends Repository<UserEvents> {
       .execute();
   }
 
-  bindUserToEvent(userEvent: Partial<UserEvents>) {
+  bindUserToEvent(userEvents: Partial<UserEvents>[]) {
     return this.createQueryBuilder()
       .insert()
-      .values(userEvent)
+      .values(userEvents)
       .execute();
   }
 

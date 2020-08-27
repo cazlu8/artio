@@ -14,16 +14,22 @@ import * as os from 'os';
 import { AppModule } from './app.module';
 import RedisIoAdapter from './shared/adapters/RedisIO.adapter';
 
+const fastifyAdapter = new FastifyAdapter({
+  bodyLimit: +process.env.BODY_LIMIT,
+});
 const numCPUs = os.cpus().length;
+
+fastifyAdapter
+  .getInstance()
+  .addContentTypeParser('application/octet-stream', (request, done) => done());
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({
-      bodyLimit: +process.env.BODY_LIMIT,
-    }),
+    fastifyAdapter,
   );
   const origins = process.env.ALLOWED_ORIGINS.split(',');
+
   app.enableCors({
     origin: origins[0] === '*' ? true : origins,
     methods: process.env.ALLOWED_METHODS,
