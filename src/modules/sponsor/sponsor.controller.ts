@@ -34,7 +34,7 @@ export class SponsorController extends BaseWithoutAuthController {
   })
   @Post()
   async create(@Body() createSponsorDto: CreateSponsorDto) {
-    return await this.sponsorService.create(createSponsorDto);
+    return this.sponsorService.create(createSponsorDto);
   }
 
   @ApiCreatedResponse({
@@ -66,7 +66,7 @@ export class SponsorController extends BaseWithoutAuthController {
   @UseGuards(AdminAuthGuard)
   @Get('/email/:email')
   async getSponsorByEmail(@Param('email') email): Promise<Sponsor | void> {
-    return await this.sponsorService.getSponsorByEmail(email);
+    return this.sponsorService.getSponsorByEmail(email);
   }
 
   @ApiParam({ name: 'guid', type: 'string' })
@@ -77,7 +77,7 @@ export class SponsorController extends BaseWithoutAuthController {
   @UseGuards(AuthGuard)
   @Get('/:guid')
   async findOne(@Param('guid') guid): Promise<Partial<Sponsor> | void> {
-    return await this.sponsorService.findOne(guid);
+    return this.sponsorService.findOne(guid);
   }
 
   @ApiParam({ name: 'id', type: 'number' })
