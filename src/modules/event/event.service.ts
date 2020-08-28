@@ -8,6 +8,9 @@ import { Queue } from 'bull';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RedisService } from 'nestjs-redis';
 import * as bluebird from 'bluebird';
+import { PromiseResult } from 'aws-sdk/lib/request';
+import { AWSError, S3 } from 'aws-sdk';
+import { ManagedUpload } from 'aws-sdk/clients/s3';
 import { Event } from './event.entity';
 import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
@@ -25,9 +28,6 @@ import EventStartIntermissionDto from './dto/event.startIntermission.dto';
 import { EventGateway } from './event.gateway';
 import { LoggerService } from '../../shared/services/logger.service';
 import { UploadService } from '../../shared/services/uploadService';
-import { PromiseResult } from 'aws-sdk/lib/request';
-import { AWSError, S3 } from 'aws-sdk';
-import { ManagedUpload } from 'aws-sdk/clients/s3';
 
 @Injectable()
 export class EventService {

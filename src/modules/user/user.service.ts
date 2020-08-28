@@ -178,14 +178,14 @@ export class UserService {
   }
 
   async bindUserEvent(linkToEventWithRoleDTO: {
-    roleId: number;
+    roleId?: number;
     userId: number;
     eventId: number;
   }): Promise<boolean | void> {
     const { roleId, userId, eventId } = linkToEventWithRoleDTO;
-    const bindUserToEvent = this.linkUserToEvent(userId, eventId).then(id =>
-      this.linkUserAndRoleToEvent(id, roleId, userId, eventId),
-    );
+    const bindUserToEvent = this.linkUserToEvent(userId, eventId).then(id => {
+      if (roleId) this.linkUserAndRoleToEvent(id, roleId, userId, eventId);
+    });
     const isRoleValid = this.verifyUserRole(roleId).then(haveRole => haveRole);
     return (await isRoleValid) && (await bindUserToEvent);
   }
