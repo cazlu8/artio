@@ -45,7 +45,9 @@ export class EventController extends BaseWithoutAuthController {
   })
   @Post()
   @UseGuards(AdminAuthGuard)
-  async create(@Body() createEventDto: CreateEventDTO) {
+  async create(
+    @Body() createEventDto: CreateEventDTO,
+  ): Promise<void | ObjectLiteral> {
     return this.service.create(createEventDto);
   }
 
