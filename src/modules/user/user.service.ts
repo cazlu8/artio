@@ -68,7 +68,7 @@ export class UserService {
     return user;
   }
 
-  getUserGuid(id) {
+  getUserGuid(id: number): Promise<Partial<User>> {
     return this.repository.findOne({ select: ['guid'], where: { id } });
   }
 
@@ -165,7 +165,7 @@ export class UserService {
     ];
   }
 
-  async removeAvatar(id: number) {
+  async removeAvatar(id: number): Promise<void> {
     const getUserFromAvatar: any = this.repository.get({
       select: ['avatarImgUrl'],
       where: { id },
@@ -204,7 +204,7 @@ export class UserService {
     return redeem;
   }
 
-  async processCsvFile(readStream, eventId) {
+  async processCsvFile(readStream: any, eventId: number): Promise<void> {
     try {
       await this.readCsvUsers(readStream, eventId);
       this.loggerService.info(`CSV file referring to ${eventId} was uploaded`);
@@ -221,7 +221,7 @@ export class UserService {
     userTransactionRepository?: UserRepository,
     @TransactionRepository()
     userEventsTransactionRepository?: UserEventsRepository,
-  ) {
+  ): Promise<any> {
     const userIds: number[] = await this.preSaveUsers(
       emails,
       userTransactionRepository,
@@ -248,7 +248,7 @@ export class UserService {
       : emails;
   }
 
-  private async readCsvUsers(csvReadStream, eventId: number) {
+  private async readCsvUsers(csvReadStream, eventId: number): Promise<void> {
     await StringStream.from(csvReadStream)
       .setOptions({ maxParallel: 16 })
       .lines()
@@ -270,7 +270,7 @@ export class UserService {
   private async preSaveUsers(
     emailsToSave: string[],
     userTransactionRepository: UserRepository,
-  ) {
+  ): Promise<any> {
     if (!emailsToSave.length) return [];
     const mapToId = (users: any) =>
       (users?.raw || users)?.length
@@ -297,7 +297,7 @@ export class UserService {
     userIds: number[],
     eventId: number,
     userEventsTransactionRepository: UserEventsRepository,
-  ) {
+  ): Promise<string> {
     const { guid: ticketCode } = await this.eventRepository.findOne({
       where: { id: eventId },
       select: ['guid'],

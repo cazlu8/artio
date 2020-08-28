@@ -49,7 +49,9 @@ export class UserController extends BaseWithoutAuthController {
     description: 'User has been successfully created',
   })
   @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
+  async create(
+    @Body() createUserDto: CreateUserDto,
+  ): Promise<void | ObjectLiteral> {
     return this.userService.create(createUserDto);
   }
 
@@ -60,7 +62,9 @@ export class UserController extends BaseWithoutAuthController {
   @UsePipes(ValidateUserId)
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post('/create-avatar')
-  createAvatar(@Body() createAvatarDto: CreateAvatarDto) {
+  createAvatar(
+    @Body() createAvatarDto: CreateAvatarDto,
+  ): Promise<void | ObjectLiteral> {
     return this.userService.createAvatar(createAvatarDto);
   }
 
@@ -74,7 +78,7 @@ export class UserController extends BaseWithoutAuthController {
   async processCSVUsers(
     @Req() req,
     @Param('eventId', ParseIntPipe) eventId: number,
-  ) {
+  ): Promise<void> {
     await this.userService.processCsvFile(req.raw, eventId);
   }
 
@@ -153,7 +157,7 @@ export class UserController extends BaseWithoutAuthController {
   @UsePipes(ValidateUserId)
   @UseGuards(AuthGuard)
   @Get('events/:id')
-  async getUserEvents(@Param('id', ParseIntPipe) id: number) {
+  async getUserEvents(@Param('id', ParseIntPipe) id: number): Promise<Event[]> {
     return this.repository.getEventsByUserId(id);
   }
 
@@ -198,7 +202,7 @@ export class UserController extends BaseWithoutAuthController {
   @UsePipes(ValidateUserId)
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Delete('removeAvatar/:id')
-  removeAvatar(@Param('id', ParseIntPipe) id: number) {
+  removeAvatar(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.userService.removeAvatar(id);
   }
 }
