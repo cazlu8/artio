@@ -1,7 +1,14 @@
 import { Repository } from 'typeorm';
 import { SponsorModule } from '../../../src/modules/sponsor/sponsor.module';
 import { Sponsor } from '../../../src/modules/sponsor/sponsor.entity';
-import { saveSponsor, createLogo, saveLogorUrl, updateSponsor } from './data';
+import {
+  saveSponsor,
+  createLogo,
+  saveLogorUrl,
+  updateSponsor,
+  saveSponsorError,
+  createLogoError,
+} from './data';
 import Application from '../main.test';
 import { UserEventsModule } from '../../../src/modules/userEvents/userEvents.module';
 import { Event } from '../../../src/modules/event/event.entity';
@@ -154,6 +161,91 @@ describe('Sponsor', () => {
       }),
     );
     expect(sponsor.logo).toBeFalsy();
+    done();
+  });
+
+  // error cases
+
+  it(`/POST sponsors error`, async done => {
+    const { body } = await app
+      .post(`/sponsors`)
+      .send(saveSponsorError)
+      .set('Accept', 'application/json')
+      .expect(400);
+
+    expect(body.message).toHaveLength(1);
+    done();
+  });
+
+  it(`/POST create sponsor logo without logo url error`, async done => {
+    await repository.save(saveSponsor);
+    const { body } = await app
+      .post('/sponsors/uploadLogo')
+      .send(createLogoError)
+      .set('Accept', 'application/json')
+      .expect(400);
+
+    expect(body.message).toHaveLength(1);
+
+    done();
+  });
+
+  it(`/DELETE sponsor logo with invalid sponsorId error`, async done => {
+    const { body } = await app
+      .delete('/sponsors/removeLogo/1')
+      .set('Accept', 'application/json')
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+
+    done();
+  });
+
+  it(`/GET sponsors logo by id invalid sponsor error`, async done => {
+    const { body } = await app
+      .get(`/sponsors/logo/1`)
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+    done();
+  });
+
+  it('/GET sponsors/email/:email with invalid email error', async done => {
+    const { email } = saveSponsor;
+
+    const { body } = await app
+      .get(`/sponsors/email/${email}`)
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+    done();
+  });
+
+  it(`/PUT sponsors with invalid sponsor id`, async done => {
+    const { body } = await app
+      .put(`/sponsors/1`)
+      .send(updateSponsor)
+      .set('Accept', 'application/json')
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+
+    done();
+  });
+
+  it('/GET sponsors by guid with invalid guid error', async done => {
+    const { body } = await app
+      .get(`/sponsors/2d09879a-0ae9-4cc9-acd0-70b3a563387b`)
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+
     done();
   });
 
