@@ -72,7 +72,7 @@ export class UserProcessor {
         eventName,
         eventDate,
       };
-      await this.sendEmails(data);
+      await this.sendToQueue(data);
       this.loggerService.info(
         `sendTicketCodeEmail: the emails sent to: ${JSON.stringify(
           emails,
@@ -87,18 +87,36 @@ export class UserProcessor {
     }
   }
 
-  async sendEmails(data: SendEmailTicketCode) {
+  async sendToQueue(data: SendEmailTicketCode) {
     const { emails } = data;
     if (emails.length > 49) {
       const currentEmails = emails.splice(0, 49);
-      await this.sendToQueue({ ...data, emails: currentEmails });
-      await this.sendEmails({ ...data, emails });
+      await this.sendEmails({ ...data, emails: currentEmails });
+      await this.sendToQueue({ ...data, emails });
     } else if (emails.length) {
-      await this.sendToQueue(data);
+      await this.sendEmails(data);
     }
   }
 
-  async sendToQueue(data: SendEmailTicketCode) {
-    await this.emailService.sendBulkTicketCode(data);
+  async sendEmails(data: SendEmailTicketCode) {
+    const { emails, ticketCode, eventName, eventImg, eventDate } = data;
+    const destinations = emails.map(email => ({
+      Destination: { ToAddresses: [email] },
+    }));
+    const variables = {
+      ticketCode,
+      eventName,
+      eventImg,
+      eventDate,
+      artioLogo: process.env.LOGO_EMAIL_IMG,
+      artioUrl: process.env.FRONT_END_URL,
+    };
+    const params = {
+      Destinations: destinations,
+      Source: process.env.EMAIL_NO_REPLY,
+      Template: 'sendTicketCode',
+      DefaultTemplateData: JSON.stringify(variables),
+    };
+    await this.emailService.sendTemplateBulk(params);
   }
 }
