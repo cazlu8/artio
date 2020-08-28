@@ -8,12 +8,11 @@ import {
   ParseIntPipe,
   Post,
   Put,
-  Res,
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
-import { ObjectLiteral, UpdateResult } from 'typeorm/index';
+import { ObjectLiteral, UpdateResult } from 'typeorm';
 import { EventService } from './event.service';
 import EventListDto from './dto/event.list.dto';
 import EventDetailsDTO from './dto/event.details.dto';
