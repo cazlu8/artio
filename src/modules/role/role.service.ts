@@ -1,6 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ObjectLiteral } from 'typeorm';
-import { Role } from './role.entity';
 import { RoleRepository } from './role.repository';
 import CreateRoleDTO from './dto/role.create.dto';
 import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
@@ -18,17 +17,5 @@ export class RoleService {
       .save(createRoleDTO)
       .then(role => this.loggerService.info(`Role ${role.name} Created`))
       .catch(err => validateEntityUserException.check(err));
-  }
-
-  getRole(id: number): Promise<Partial<Role> | void> {
-    return this.repository.findOneOrFail({ id }).catch(error => {
-      if (error.name === 'EntityNotFound') throw new NotFoundException();
-    });
-  }
-
-  getRoles(): Promise<Partial<Role[]> | void> {
-    return this.repository.find().catch(error => {
-      if (error.name === 'EntityNotFound') throw new NotFoundException();
-    });
   }
 }

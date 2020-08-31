@@ -278,8 +278,6 @@ describe('Users', () => {
     done();
   });
 
-  // error cases
-
   it(`/POST users error`, async done => {
     const { body } = await app
       .post(`/users`)

@@ -1,4 +1,9 @@
-import { EntityRepository, Repository } from 'typeorm';
+import {
+  EntityRepository,
+  ObjectLiteral,
+  Repository,
+  UpdateResult,
+} from 'typeorm';
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
 import { UserEvents } from './userEvents.entity';
 import { RedeemEventCodeDTO } from './dto/userEvents.redeemEventCode.dto';
@@ -9,7 +14,7 @@ export class UserEventsRepository extends Repository<UserEvents> {
     return this.findOne(options);
   }
 
-  checkCode(redeemEventCodeDTO: RedeemEventCodeDTO) {
+  checkCode(redeemEventCodeDTO: RedeemEventCodeDTO): Promise<ObjectLiteral> {
     const { userId, ticketCode } = redeemEventCodeDTO;
     return this.createQueryBuilder('userEvents')
       .select('userEvents.userId')
@@ -17,7 +22,7 @@ export class UserEventsRepository extends Repository<UserEvents> {
       .getRawOne();
   }
 
-  redeemEventCode(userId, ticketCode) {
+  redeemEventCode(userId, ticketCode): Promise<UpdateResult> {
     return this.createQueryBuilder()
       .update()
       .set({ redeemed: true })
@@ -25,14 +30,10 @@ export class UserEventsRepository extends Repository<UserEvents> {
       .execute();
   }
 
-  bindUserToEvent(userEvents: Partial<UserEvents>[]) {
-    return this.createQueryBuilder()
-      .insert()
-      .values(userEvents)
-      .execute();
-  }
-
-  getUserEmailsBindedToEventByEmail(emails: string[], eventId: number) {
+  getUserEmailsBindedToEventByEmail(
+    emails: string[],
+    eventId: number,
+  ): Promise<ObjectLiteral[]> {
     return this.createQueryBuilder('userEvents')
       .select('user.email')
       .innerJoin('userEvents.user', 'user')

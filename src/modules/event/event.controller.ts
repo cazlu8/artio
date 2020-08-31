@@ -8,11 +8,11 @@ import {
   ParseIntPipe,
   Post,
   Put,
-  Res,
   UseGuards,
+  UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
-import { ObjectLiteral, UpdateResult } from 'typeorm/index';
+import { ObjectLiteral, UpdateResult } from 'typeorm';
 import { EventService } from './event.service';
 import EventListDto from './dto/event.list.dto';
 import EventDetailsDTO from './dto/event.details.dto';
@@ -26,11 +26,16 @@ import { AuthGuard } from '../../shared/guards/auth.guard';
 import { AdminAuthGuard } from '../../shared/guards/adminAuth.guard';
 import CreateHeroImage from './dto/event.create.heroImage.dto';
 import EventStartIntermissionDto from './dto/event.startIntermission.dto';
+import { EventRepository } from './event.repository';
+import { ValidateEventId } from './pipes/ValidateEventId.pipe';
 
 @ApiTags('Events')
 @Controller('events')
 export class EventController extends BaseWithoutAuthController {
-  constructor(private service: EventService) {
+  constructor(
+    private service: EventService,
+    private readonly repository: EventRepository,
+  ) {
     super();
   }
 
@@ -40,7 +45,9 @@ export class EventController extends BaseWithoutAuthController {
   })
   @Post()
   @UseGuards(AdminAuthGuard)
-  async create(@Body() createEventDto: CreateEventDTO) {
+  async create(
+    @Body() createEventDto: CreateEventDTO,
+  ): Promise<void | ObjectLiteral> {
     return this.service.create(createEventDto);
   }
 
@@ -53,7 +60,6 @@ export class EventController extends BaseWithoutAuthController {
   @HttpCode(204)
   @Put('/:id')
   async update(
-    @Res() res,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateEventDto: UpdateEventDTO,
   ): Promise<void | UpdateResult> {
@@ -177,10 +183,11 @@ export class EventController extends BaseWithoutAuthController {
     type: Event,
     description: 'The event was successfully retrieved',
   })
+  @UsePipes(ValidateEventId)
   @UseGuards(AuthGuard)
   @Get('/:id')
   async findOne(@Param('id', ParseIntPipe) id): Promise<Partial<Event> | void> {
-    return this.service.getEvent(id);
+    return this.repository.findOne({ id });
   }
 
   @ApiCreatedResponse({

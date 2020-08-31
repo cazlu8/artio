@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   ObjectLiteral,
@@ -63,25 +59,16 @@ export class UserService {
     );
   }
 
-  findOne(guid: string): Promise<Partial<User> | void> {
-    return this.repository.findOneOrFail({ guid }).catch(error => {
-      if (error.name === 'EntityNotFound') throw new NotFoundException();
-    });
-  }
-
   async updateUserInfo(
     id: number,
     updateUserDto: UpdateUserDto,
   ): Promise<UpdateResult> {
-    await this.repository.findOneOrFail({ id }).catch(error => {
-      if (error.name === 'EntityNotFound') throw new NotFoundException();
-    });
     const user = await this.update(id, updateUserDto);
     this.loggerService.info(`User ${id} updated`);
     return user;
   }
 
-  getUserGuid(id) {
+  getUserGuid(id: number): Promise<Partial<User>> {
     return this.repository.findOne({ select: ['guid'], where: { id } });
   }
 
@@ -147,9 +134,6 @@ export class UserService {
     userId: number,
     avatarId: string,
   ): Promise<any> {
-    await this.repository.findOneOrFail({ id: userId }).catch(error => {
-      if (error.name === 'EntityNotFound') throw new NotFoundException();
-    });
     const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
     const sharpedImage = await sharp(base64Data)
       .resize(400, 400)
@@ -181,31 +165,7 @@ export class UserService {
     ];
   }
 
-  getAvatarUrl(id): Promise<Partial<User> | void> {
-    return this.repository
-      .findOneOrFail({
-        select: ['avatarImgUrl'],
-        where: { id },
-      })
-      .catch(error => {
-        if (error.name === 'EntityNotFound') throw new NotFoundException();
-      });
-  }
-
-  getUserByEmail(email): Promise<User | void> {
-    return this.repository
-      .findOneOrFail({
-        where: { email },
-      })
-      .catch(error => {
-        if (error.name === 'EntityNotFound') throw new NotFoundException();
-      });
-  }
-
-  async removeAvatar(id: number) {
-    await this.repository.findOneOrFail({ id }).catch(error => {
-      if (error.name === 'EntityNotFound') throw new NotFoundException();
-    });
+  async removeAvatar(id: number): Promise<void> {
     const getUserFromAvatar: any = this.repository.get({
       select: ['avatarImgUrl'],
       where: { id },
@@ -217,28 +177,15 @@ export class UserService {
     );
   }
 
-  async getEventsByUserId(id: number) {
-    await this.repository.findOneOrFail({ id }).catch(error => {
-      if (error.name === 'EntityNotFound') throw new NotFoundException();
-    });
-    return await this.repository.getEventsByUserId(id);
-  }
-
   async bindUserEvent(linkToEventWithRoleDTO: {
-    roleId: number;
+    roleId?: number;
     userId: number;
     eventId: number;
   }): Promise<boolean | void> {
     const { roleId, userId, eventId } = linkToEventWithRoleDTO;
-    await this.repository.findOneOrFail({ id: userId }).catch(error => {
-      if (error.name === 'EntityNotFound') throw new NotFoundException();
+    const bindUserToEvent = this.linkUserToEvent(userId, eventId).then(id => {
+      if (roleId) this.linkUserAndRoleToEvent(id, roleId, userId, eventId);
     });
-    await this.eventRepository.findOneOrFail({ id: eventId }).catch(error => {
-      if (error.name === 'EntityNotFound') throw new NotFoundException();
-    });
-    const bindUserToEvent = this.linkUserToEvent(userId, eventId).then(id =>
-      this.linkUserAndRoleToEvent(id, roleId, userId, eventId),
-    );
     const isRoleValid = this.verifyUserRole(roleId).then(haveRole => haveRole);
     return (await isRoleValid) && (await bindUserToEvent);
   }
@@ -257,7 +204,7 @@ export class UserService {
     return redeem;
   }
 
-  async processCsvFile(readStream, eventId) {
+  async processCsvFile(readStream: any, eventId: number): Promise<void> {
     try {
       await this.readCsvUsers(readStream, eventId);
       this.loggerService.info(`CSV file referring to ${eventId} was uploaded`);
@@ -274,7 +221,7 @@ export class UserService {
     userTransactionRepository?: UserRepository,
     @TransactionRepository()
     userEventsTransactionRepository?: UserEventsRepository,
-  ) {
+  ): Promise<any> {
     const userIds: number[] = await this.preSaveUsers(
       emails,
       userTransactionRepository,
@@ -301,7 +248,7 @@ export class UserService {
       : emails;
   }
 
-  private async readCsvUsers(csvReadStream, eventId: number) {
+  private async readCsvUsers(csvReadStream, eventId: number): Promise<void> {
     await StringStream.from(csvReadStream)
       .setOptions({ maxParallel: 16 })
       .lines()
@@ -323,7 +270,7 @@ export class UserService {
   private async preSaveUsers(
     emailsToSave: string[],
     userTransactionRepository: UserRepository,
-  ) {
+  ): Promise<any> {
     if (!emailsToSave.length) return [];
     const mapToId = (users: any) =>
       (users?.raw || users)?.length
@@ -350,7 +297,7 @@ export class UserService {
     userIds: number[],
     eventId: number,
     userEventsTransactionRepository: UserEventsRepository,
-  ) {
+  ): Promise<string> {
     const { guid: ticketCode } = await this.eventRepository.findOne({
       where: { id: eventId },
       select: ['guid'],

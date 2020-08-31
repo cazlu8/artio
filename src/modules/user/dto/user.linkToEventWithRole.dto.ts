@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class LinkToEventWithRoleDTO {
   @IsNotEmpty()
   @ApiProperty({ type: 'number' })
-  roleId: number;
+  roleId?: number;
 
   @IsNotEmpty()
   @ApiProperty({ type: 'number' })

@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
   Req,
   HttpCode,
+  UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { UpdateResult, ObjectLiteral } from 'typeorm';
@@ -27,11 +28,19 @@ import { AuthGuard } from '../../shared/guards/auth.guard';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
 import { AdminOrganizerAuthGuard } from '../../shared/guards/adminOrganizerAuth.guard';
+import { UserRepository } from './user.repository';
+import { ValidateUserGUID } from './pipes/ValidateUserGUID.pipe';
+import { ValidateUserId } from './pipes/ValidateUserId.pipe';
+import { ValidateUserEmail } from './pipes/ValidateUserEmail.pipe';
+import { ValidateEventId } from '../event/pipes/ValidateEventId.pipe';
 
 @ApiTags('Users')
 @Controller('users')
 export class UserController extends BaseWithoutAuthController {
-  constructor(private userService: UserService) {
+  constructor(
+    private userService: UserService,
+    private readonly repository: UserRepository,
+  ) {
     super();
   }
 
@@ -40,7 +49,9 @@ export class UserController extends BaseWithoutAuthController {
     description: 'User has been successfully created',
   })
   @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
+  async create(
+    @Body() createUserDto: CreateUserDto,
+  ): Promise<void | ObjectLiteral> {
     return this.userService.create(createUserDto);
   }
 
@@ -48,9 +59,12 @@ export class UserController extends BaseWithoutAuthController {
     type: CreateAvatarDto,
     description: 'Avatar has been successfully created',
   })
+  @UsePipes(ValidateUserId)
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post('/create-avatar')
-  createAvatar(@Body() createAvatarDto: CreateAvatarDto) {
+  createAvatar(
+    @Body() createAvatarDto: CreateAvatarDto,
+  ): Promise<void | ObjectLiteral> {
     return this.userService.createAvatar(createAvatarDto);
   }
 
@@ -64,7 +78,7 @@ export class UserController extends BaseWithoutAuthController {
   async processCSVUsers(
     @Req() req,
     @Param('eventId', ParseIntPipe) eventId: number,
-  ) {
+  ): Promise<void> {
     await this.userService.processCsvFile(req.raw, eventId);
   }
 
@@ -86,13 +100,12 @@ export class UserController extends BaseWithoutAuthController {
   })
   @UseGuards(AdminOrganizerAuthGuard)
   @Post('linkEvent')
+  @HttpCode(201)
+  @UsePipes(ValidateUserId, ValidateEventId)
   bindUserEvent(
-    @Res() res,
     @Body() linkToEventWithRoleDTO: LinkToEventWithRoleDTO,
-  ): Promise<void | ObjectLiteral> {
-    return this.userService
-      .bindUserEvent(linkToEventWithRoleDTO)
-      .then(() => res.status(201).send());
+  ): Promise<boolean | void> {
+    return this.userService.bindUserEvent(linkToEventWithRoleDTO);
   }
 
   @ApiParam({ name: 'id', type: 'number' })
@@ -100,10 +113,14 @@ export class UserController extends BaseWithoutAuthController {
     type: User,
     description: 'User avatar by id ',
   })
+  @UsePipes(ValidateUserId)
   @UseGuards(AuthGuard)
   @Get('/avatar/:id')
   async getAvatarUrl(@Param('id') id): Promise<Partial<User> | void> {
-    return await this.userService.getAvatarUrl(id);
+    return this.repository.findOne({
+      select: ['avatarImgUrl'],
+      where: { id },
+    });
   }
 
   @ApiParam({ name: 'email', type: 'string' })
@@ -111,10 +128,13 @@ export class UserController extends BaseWithoutAuthController {
     type: User,
     description: 'User by email was successfully retrieved',
   })
+  @UsePipes(ValidateUserEmail)
   @UseGuards(AdminOrganizerAuthGuard)
   @Get('/email/:email')
   async getUserByEmail(@Param('email') email): Promise<User | void> {
-    return await this.userService.getUserByEmail(email);
+    return this.repository.findOne({
+      where: { email },
+    });
   }
 
   @ApiParam({ name: 'guid', type: 'string' })
@@ -122,10 +142,11 @@ export class UserController extends BaseWithoutAuthController {
     type: User,
     description: 'User by guid was successfully retrieved',
   })
+  @UsePipes(ValidateUserGUID)
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/:guid')
   async findOne(@Param('guid') guid): Promise<Partial<User> | void> {
-    return await this.userService.findOne(guid);
+    return this.repository.findOne({ guid });
   }
 
   @ApiParam({ name: 'id', type: 'number' })
@@ -133,10 +154,11 @@ export class UserController extends BaseWithoutAuthController {
     type: Event,
     description: 'Events by user id were successfully retrieved',
   })
+  @UsePipes(ValidateUserId)
   @UseGuards(AuthGuard)
   @Get('events/:id')
-  async getUserEvents(@Param('id', ParseIntPipe) id: number) {
-    return await this.userService.getEventsByUserId(id);
+  async getUserEvents(@Param('id', ParseIntPipe) id: number): Promise<Event[]> {
+    return this.repository.getEventsByUserId(id);
   }
 
   @ApiParam({ name: 'id', type: 'number' })
@@ -146,14 +168,13 @@ export class UserController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Put('/:id')
+  @HttpCode(204)
   update(
-    @Res() res,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe, ValidateUserId)
+    id: number,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<void | UpdateResult> {
-    return this.userService
-      .updateUserInfo(id, updateUserDto)
-      .then(() => res.status(204).send());
+    return this.userService.updateUserInfo(id, updateUserDto);
   }
 
   @ApiParam({ name: 'userId', type: 'number' })
@@ -178,9 +199,10 @@ export class UserController extends BaseWithoutAuthController {
     type: Event,
     description: 'Avatar image by user id was successfully deleted',
   })
+  @UsePipes(ValidateUserId)
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Delete('removeAvatar/:id')
-  removeAvatar(@Param('id', ParseIntPipe) id: number) {
+  removeAvatar(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.userService.removeAvatar(id);
   }
 }

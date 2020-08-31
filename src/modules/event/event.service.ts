@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
 import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
 import { uuid } from 'uuidv4';
@@ -12,6 +8,9 @@ import { Queue } from 'bull';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RedisService } from 'nestjs-redis';
 import * as bluebird from 'bluebird';
+import { PromiseResult } from 'aws-sdk/lib/request';
+import { AWSError, S3 } from 'aws-sdk';
+import { ManagedUpload } from 'aws-sdk/clients/s3';
 import { Event } from './event.entity';
 import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
@@ -84,13 +83,7 @@ export class EventService {
       .then((event: Partial<Event>) => plainToClass(EventDetailsDTO, event));
   }
 
-  getEvent(id: number): Promise<Partial<Event> | void> {
-    return this.repository.findOneOrFail({ id }).catch(error => {
-      if (error.name === 'EntityNotFound') throw new NotFoundException();
-    });
-  }
-
-  get(properties: { where; select }) {
+  get(properties: { where; select }): Promise<ObjectLiteral> {
     return this.repository.get(properties);
   }
 
@@ -105,15 +98,18 @@ export class EventService {
     return this.update(id, updateEventDTO);
   }
 
-  getUserEventsByRole(userId: number, roleId: number) {
+  getUserEventsByRole(userId: number, roleId: number): Promise<Event[]> {
     return this.repository.getUserEventsByRole(userId, roleId);
   }
 
-  getHappeningNowByUser(userId: number) {
+  getHappeningNowByUser(userId: number): Promise<Event[]> {
     return this.repository.getHappeningNowByUser(userId);
   }
 
-  getUpcomingByUser(userId: number, skip: number) {
+  getUpcomingByUser(
+    userId: number,
+    skip: number,
+  ): Promise<{ ended: boolean; skip: number; events: EventListDto[] }> {
     const getCount: Promise<number> = this.repository.getUpcomingCount();
     const getEvents: Promise<Partial<
       Event[]
@@ -121,7 +117,10 @@ export class EventService {
     return this.paginateEvents(getCount, getEvents, skip);
   }
 
-  getPastByUser(userId: number, skip: number) {
+  getPastByUser(
+    userId: number,
+    skip: number,
+  ): Promise<{ ended: boolean; skip: number; events: EventListDto[] }> {
     const getCount: Promise<number> = this.repository.getPastCount();
     const getEvents: Promise<Partial<
       Event[]
@@ -131,7 +130,7 @@ export class EventService {
 
   async startIntermission(
     eventStartIntermissionDto: EventStartIntermissionDto,
-  ) {
+  ): Promise<void> {
     const { eventId, intermissionTime } = eventStartIntermissionDto;
     if (!(await this.eventIsOnIntermission(eventId))) {
       const addCreateRoomOnQueuefn = this.networkRoomService.addCreateRoomOnQueue(
@@ -167,7 +166,10 @@ export class EventService {
       );
   }
 
-  async finishIntermission(eventId: number, intermissionTime = 0) {
+  async finishIntermission(
+    eventId: number,
+    intermissionTime = 0,
+  ): Promise<void> {
     if (await this.eventIsOnIntermission(eventId)) {
       await this.eventQueue.add(
         'endIntermission',
@@ -200,25 +202,25 @@ export class EventService {
     return false;
   }
 
-  async getSubscribed(eventId) {
+  async getSubscribed(eventId): Promise<number> {
     return await this.userEventsRepository.count({
       where: { eventId },
     });
   }
 
-  async finishLive(eventId) {
+  async finishLive(eventId): Promise<void> {
     await this.repository.update(eventId, {
       onLive: false,
     });
   }
 
-  async startLive(eventId) {
+  async startLive(eventId): Promise<void> {
     await this.repository.update(eventId, {
       onLive: true,
     });
   }
 
-  async removeHeroImage(id: number) {
+  async removeHeroImage(id: number): Promise<void> {
     const user: any = await this.repository.get({
       select: ['heroImgUrl'],
       where: { id },
@@ -260,7 +262,10 @@ export class EventService {
     };
   }
 
-  private deleteHeroImage(event: Event, Bucket: string) {
+  private deleteHeroImage(
+    event: Event,
+    Bucket: string,
+  ): Promise<PromiseResult<S3.DeleteObjectOutput, AWSError> | void> {
     if (event?.heroImgUrl) {
       const { heroImgUrl: formerUrl } = event;
       const lastIndex = formerUrl.lastIndexOf('/');
@@ -287,7 +292,11 @@ export class EventService {
     return { sharpedImage, event, heroImageId };
   }
 
-  private updateHeroImage(params: any, eventId: number, heroImageId: string) {
+  private updateHeroImage(
+    params: any,
+    eventId: number,
+    heroImageId: string,
+  ): (Promise<ManagedUpload.SendData> | Promise<UpdateResult>)[] {
     return [
       this.uploadService.uploadObject(params),
       this.update(eventId, {
@@ -300,7 +309,7 @@ export class EventService {
     getCount: Promise<number>,
     getEvents: Promise<Partial<Event[]> | void>,
     skip: number,
-  ) {
+  ): Promise<any> {
     return Promise.all([getCount, getEvents]).then(([amount, events]) => {
       const eventList: EventListDto[] = plainToClass(
         EventListDto,
@@ -323,7 +332,7 @@ export class EventService {
     return event;
   }
 
-  private async eventIsOnIntermission(eventId: number) {
+  private async eventIsOnIntermission(eventId: number): Promise<boolean> {
     const isOnIntermission = await this.redisClient.get(
       `event-${eventId}:isOnIntermission`,
     );
