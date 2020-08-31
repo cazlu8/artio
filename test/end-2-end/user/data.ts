@@ -44,23 +44,34 @@ const updateUserDtoFactory = Factory.Sync.makeFactory<UpdateUserDto>({
   currentPosition: faker.name.jobTitle(),
 });
 
-export const saveAvatarUrl = faker.image.image();
+const saveAvatarUrl = faker.image.image();
 
-export const saveUser = createUserDtoFactory.build();
+const saveUser = createUserDtoFactory.build();
 
-export const saveUserError = createUserErrorDtoFactory.build();
+const saveUserError = createUserErrorDtoFactory.build();
 
-export const updateUser = updateUserDtoFactory.build();
+const updateUser = updateUserDtoFactory.build();
 
-export const createAvatar = CreateAvatarDtoFactory.build();
+const createAvatar = CreateAvatarDtoFactory.build();
 
-export const createAvatarError = CreateAvatarErrorDtoFactory.build();
+const createAvatarError = CreateAvatarErrorDtoFactory.build();
 
-export const linkUserToEventWithRole = LinkToEventWithRoleDTOFactory.build();
+const linkUserToEventWithRole = LinkToEventWithRoleDTOFactory.build();
 
-export const linkUserToEventWithCode = {
+const linkUserToEventWithCode = {
   userId: 1,
   eventId: 1,
   ticketCode: 'ARTIO',
   redeemed: false,
+};
+
+export {
+  saveAvatarUrl,
+  saveUser,
+  saveUserError,
+  updateUser,
+  createAvatar,
+  createAvatarError,
+  linkUserToEventWithRole,
+  linkUserToEventWithCode,
 };

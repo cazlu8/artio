@@ -84,7 +84,7 @@ export class SponsorController extends BaseWithoutAuthController {
   @UseGuards(AdminAuthGuard)
   @Get('/email/:email')
   async getSponsorByEmail(@Param('email') email): Promise<Sponsor | void> {
-    return this.repository.findOneOrFail({
+    return this.repository.findOne({
       where: { email },
     });
   }

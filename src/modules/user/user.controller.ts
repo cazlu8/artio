@@ -132,7 +132,7 @@ export class UserController extends BaseWithoutAuthController {
   @UseGuards(AdminOrganizerAuthGuard)
   @Get('/email/:email')
   async getUserByEmail(@Param('email') email): Promise<User | void> {
-    return this.repository.findOneOrFail({
+    return this.repository.findOne({
       where: { email },
     });
   }

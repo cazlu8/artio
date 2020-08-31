@@ -61,14 +61,23 @@ const updateSponsorDtoFactory = Factory.Sync.makeFactory<UpdateSponsorDto>({
   btnLabel: 'hello, click here',
 });
 
-export const saveLogorUrl = faker.image.image();
+const saveLogorUrl = faker.image.image();
 
-export const saveSponsor = createSponsorDtoFactory.build();
+const saveSponsor = createSponsorDtoFactory.build();
 
-export const saveSponsorError = createSponsorerrorDtoFactory.build();
+const saveSponsorError = createSponsorerrorDtoFactory.build();
 
-export const updateSponsor = updateSponsorDtoFactory.build();
+const updateSponsor = updateSponsorDtoFactory.build();
 
-export const createLogo = CreateLogoDtoFactory.build();
+const createLogo = CreateLogoDtoFactory.build();
 
-export const createLogoError = CreatelogoErrorDtoFactory.build();
+const createLogoError = CreatelogoErrorDtoFactory.build();
+
+export {
+  saveLogorUrl,
+  saveSponsor,
+  saveSponsorError,
+  updateSponsor,
+  createLogo,
+  createLogoError,
+};
