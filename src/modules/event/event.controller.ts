@@ -16,8 +16,6 @@ import { ObjectLiteral, UpdateResult } from 'typeorm';
 import { EventService } from './event.service';
 import EventListDto from './dto/event.list.dto';
 import EventDetailsDTO from './dto/event.details.dto';
-import EventUpcomingListDto from './dto/event.upcoming.dto';
-import EventPastListDto from './dto/event.past.dto';
 import CreateEventDTO from './dto/event.create.dto';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
 import { Event } from './event.entity';
@@ -100,18 +98,21 @@ export class EventController extends BaseWithoutAuthController {
 
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
-    type: Event,
+    type: EventListDto,
     description: 'Happening now events by user id were successfully retrieved',
+    isArray: true,
   })
   @UseGuards(AuthGuard)
   @Get('happeningNow/:userId')
-  async getHappeningNowByUser(@Param('userId', ParseIntPipe) userId: number) {
+  async getHappeningNowByUser(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<EventListDto[] | void> {
     return this.service.getHappeningNowByUser(userId);
   }
 
   @ApiParam({ name: 'skip', type: 'number' })
   @ApiCreatedResponse({
-    type: EventUpcomingListDto,
+    type: EventListDto,
     description: 'All upcoming events were successfully retrieved',
     isArray: true,
   })
@@ -119,27 +120,28 @@ export class EventController extends BaseWithoutAuthController {
   @Get('/upcoming/:skip')
   async getUpcomingEvents(
     @Param('skip', ParseIntPipe) skip: number,
-  ): Promise<EventUpcomingListDto> {
+  ): Promise<EventListDto[] | void> {
     return this.service.getUpcomingEvents(skip);
   }
 
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
-    type: Event,
+    type: EventListDto,
     description: 'Upcoming events by user id were successfully retrieved',
+    isArray: true,
   })
   @UseGuards(AuthGuard)
   @Get('upcoming/:userId/:skip')
   async getUpcomingByUser(
     @Param('userId', ParseIntPipe) userId: number,
     @Param('skip', ParseIntPipe) skip: number,
-  ) {
+  ): Promise<{ ended: boolean; skip: number; events: EventListDto[] }> {
     return this.service.getUpcomingByUser(userId, skip);
   }
 
   @ApiParam({ name: 'skip', type: 'number' })
   @ApiCreatedResponse({
-    type: EventUpcomingListDto,
+    type: EventListDto,
     description: 'Past events were successfully retrieved',
     isArray: true,
   })
@@ -147,7 +149,7 @@ export class EventController extends BaseWithoutAuthController {
   @Get('/past/:skip')
   async getPastEvents(
     @Param('skip', ParseIntPipe) skip: number,
-  ): Promise<EventPastListDto> {
+  ): Promise<{ ended: boolean; skip: number; events: EventListDto[] }> {
     return this.service.getPastEvents(skip);
   }
 
@@ -161,7 +163,7 @@ export class EventController extends BaseWithoutAuthController {
   async getPastByUser(
     @Param('userId', ParseIntPipe) userId: number,
     @Param('skip', ParseIntPipe) skip: number,
-  ) {
+  ): Promise<{ ended: boolean; skip: number; events: EventListDto[] }> {
     return this.service.getPastByUser(userId, skip);
   }
 

@@ -87,9 +87,15 @@ export class EventRepository extends Repository<Event> {
 
   // private functions
   private getListEvents(where: string, order: any): SelectQueryBuilder<Event> {
-    const attributes = ['*'];
+    const attributes = ['id'];
     return this.createQueryBuilder('event')
       .select(attributes)
+      .addSelect('hero_img_url', 'heroImgUrl')
+      .addSelect('start_date', 'startDate')
+      .addSelect('end_date', 'endDate')
+      .addSelect('"onLive"', 'onLive')
+      .addSelect('name', 'name')
+      .addSelect('location_name', 'locationName')
       .orderBy('start_date', order)
       .where(where);
   }
@@ -112,9 +118,15 @@ export class EventRepository extends Repository<Event> {
   }
 
   getHappeningNowByUser(userId: number) {
-    const attributes = ['*'];
+    const attributes = ['id'];
     return this.createQueryBuilder('event')
       .select(attributes)
+      .addSelect('hero_img_url', 'heroImgUrl')
+      .addSelect('start_date', 'startDate')
+      .addSelect('end_date', 'endDate')
+      .addSelect('"onLive"', 'onLive')
+      .addSelect('name', 'name')
+      .addSelect('location_name', 'locationName')
       .orderBy('start_date', 'DESC')
       .orderBy('"onLive"', 'DESC')
       .where(qb => {
@@ -133,9 +145,15 @@ export class EventRepository extends Repository<Event> {
   }
 
   getUpcomingByUser(userId: number, skip: number) {
-    const attributes = ['*'];
+    const attributes = ['id'];
     return this.createQueryBuilder('event')
       .select(attributes)
+      .addSelect('hero_img_url', 'heroImgUrl')
+      .addSelect('start_date', 'startDate')
+      .addSelect('end_date', 'endDate')
+      .addSelect('"onLive"', 'onLive')
+      .addSelect('name', 'name')
+      .addSelect('location_name', 'locationName')
       .orderBy('start_date', 'ASC')
       .where(qb => {
         const subQuery = qb
@@ -155,9 +173,16 @@ export class EventRepository extends Repository<Event> {
   }
 
   getPastByUser(userId: number, skip: number) {
-    const attributes = ['*'];
+    const attributes = ['id'];
     return this.createQueryBuilder('event')
       .select(attributes)
+      .select(attributes)
+      .addSelect('hero_img_url', 'heroImgUrl')
+      .addSelect('start_date', 'startDate')
+      .addSelect('end_date', 'endDate')
+      .addSelect('"onLive"', 'onLive')
+      .addSelect('name', 'name')
+      .addSelect('location_name', 'locationName')
       .orderBy('start_date', 'DESC')
       .where(qb => {
         const subQuery = qb
