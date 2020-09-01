@@ -125,7 +125,7 @@ describe('Users', () => {
     done();
   });
 
-  it(`/POST users/linkEventCode`, async done => {
+  it(`/POST users/linkEvent`, async done => {
     await repository.save(saveUser);
     await eventRepository.save(saveEvent());
     await app

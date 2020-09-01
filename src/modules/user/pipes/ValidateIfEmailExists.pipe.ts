@@ -2,7 +2,7 @@ import { PipeTransform, Injectable, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '../user.repository';
 
 @Injectable()
-export class ValidateUserEmail implements PipeTransform {
+export class ValidateIfEmailExists implements PipeTransform {
   constructor(private readonly repository: UserRepository) {}
 
   async transform(value: string): Promise<string> {

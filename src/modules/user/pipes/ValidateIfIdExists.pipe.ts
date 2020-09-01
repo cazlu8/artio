@@ -3,7 +3,7 @@ import { ObjectLiteral } from 'typeorm';
 import { UserRepository } from '../user.repository';
 
 @Injectable()
-export class ValidateUserId implements PipeTransform {
+export class ValidateIfIdExists implements PipeTransform {
   constructor(private readonly repository: UserRepository) {}
 
   async transform(value: {
@@ -22,13 +22,8 @@ export class ValidateUserId implements PipeTransform {
     id: number;
     userId: number;
   }): number | ObjectLiteral {
+    if (typeof value === 'string' || typeof value === 'number') return value;
     const { id, userId } = value;
-    if (id) {
-      return id;
-    }
-    if (userId) {
-      return userId;
-    }
-    return value;
+    return id || userId;
   }
 }

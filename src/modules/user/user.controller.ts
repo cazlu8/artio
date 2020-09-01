@@ -29,10 +29,11 @@ import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { Event } from '../event/event.entity';
 import { AdminOrganizerAuthGuard } from '../../shared/guards/adminOrganizerAuth.guard';
 import { UserRepository } from './user.repository';
-import { ValidateUserGUID } from './pipes/ValidateUserGUID.pipe';
-import { ValidateUserId } from './pipes/ValidateUserId.pipe';
-import { ValidateUserEmail } from './pipes/ValidateUserEmail.pipe';
-import { ValidateEventId } from '../event/pipes/ValidateEventId.pipe';
+import { ValidateIfIdExists } from './pipes/ValidateIfIdExists.pipe';
+import { ValidateIfEmailExists } from './pipes/ValidateIfEmailExists.pipe';
+import { ValidateIfGuidExists } from './pipes/ValidateIfGuidExists.pipe';
+import { ValidateIfEventExists } from '../event/pipes/ValidateIfEventExists.pipe';
+import { ValidateIfUserIsUnique } from './pipes/validateIfUserIsUnique.pipe';
 
 @ApiTags('Users')
 @Controller('users')
@@ -48,6 +49,7 @@ export class UserController extends BaseWithoutAuthController {
     type: CreateUserDto,
     description: 'User has been successfully created',
   })
+  @UsePipes(ValidateIfUserIsUnique)
   @Post()
   async create(
     @Body() createUserDto: CreateUserDto,
@@ -59,7 +61,7 @@ export class UserController extends BaseWithoutAuthController {
     type: CreateAvatarDto,
     description: 'Avatar has been successfully created',
   })
-  @UsePipes(ValidateUserId)
+  @UsePipes(ValidateIfIdExists)
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post('/create-avatar')
   createAvatar(
@@ -101,7 +103,7 @@ export class UserController extends BaseWithoutAuthController {
   @UseGuards(AdminOrganizerAuthGuard)
   @Post('linkEvent')
   @HttpCode(201)
-  @UsePipes(ValidateUserId, ValidateEventId)
+  @UsePipes(ValidateIfIdExists, ValidateIfEventExists)
   bindUserEvent(
     @Body() linkToEventWithRoleDTO: LinkToEventWithRoleDTO,
   ): Promise<boolean | void> {
@@ -113,7 +115,7 @@ export class UserController extends BaseWithoutAuthController {
     type: User,
     description: 'User avatar by id ',
   })
-  @UsePipes(ValidateUserId)
+  @UsePipes(ValidateIfIdExists)
   @UseGuards(AuthGuard)
   @Get('/avatar/:id')
   async getAvatarUrl(@Param('id') id): Promise<Partial<User> | void> {
@@ -128,7 +130,7 @@ export class UserController extends BaseWithoutAuthController {
     type: User,
     description: 'User by email was successfully retrieved',
   })
-  @UsePipes(ValidateUserEmail)
+  @UsePipes(ValidateIfEmailExists)
   @UseGuards(AdminOrganizerAuthGuard)
   @Get('/email/:email')
   async getUserByEmail(@Param('email') email): Promise<User | void> {
@@ -142,7 +144,7 @@ export class UserController extends BaseWithoutAuthController {
     type: User,
     description: 'User by guid was successfully retrieved',
   })
-  @UsePipes(ValidateUserGUID)
+  @UsePipes(ValidateIfGuidExists)
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Get('/:guid')
   async findOne(@Param('guid') guid): Promise<Partial<User> | void> {
@@ -154,7 +156,7 @@ export class UserController extends BaseWithoutAuthController {
     type: Event,
     description: 'Events by user id were successfully retrieved',
   })
-  @UsePipes(ValidateUserId)
+  @UsePipes(ValidateIfIdExists)
   @UseGuards(AuthGuard)
   @Get('events/:id')
   async getUserEvents(@Param('id', ParseIntPipe) id: number): Promise<Event[]> {
@@ -170,7 +172,7 @@ export class UserController extends BaseWithoutAuthController {
   @Put('/:id')
   @HttpCode(204)
   update(
-    @Param('id', ParseIntPipe, ValidateUserId)
+    @Param('id', ParseIntPipe, ValidateIfIdExists)
     id: number,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<void | UpdateResult> {
@@ -199,7 +201,7 @@ export class UserController extends BaseWithoutAuthController {
     type: Event,
     description: 'Avatar image by user id was successfully deleted',
   })
-  @UsePipes(ValidateUserId)
+  @UsePipes(ValidateIfIdExists)
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Delete('removeAvatar/:id')
   removeAvatar(@Param('id', ParseIntPipe) id: number): Promise<void> {

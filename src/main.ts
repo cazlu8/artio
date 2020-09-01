@@ -46,8 +46,6 @@ async function bootstrap() {
   // @ts-ignore
   app.register(fastifyHealthCheck);
 
-  // eslint-disable-next-line global-require
-  app.register(require('fastify-file-upload'));
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -68,13 +66,15 @@ async function bootstrap() {
 
   app.register(fastifyCompress, { encodings: ['gzip', 'deflate'] });
 
-  const swaggerOptions = new DocumentBuilder()
-    .setTitle('Engage API')
-    .setVersion('1.0')
-    .build();
+  if (process.env.environment !== 'production') {
+    const swaggerOptions = new DocumentBuilder()
+      .setTitle('Engage API')
+      .setVersion('1.0')
+      .build();
 
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerOptions);
-  SwaggerModule.setup('swagger', app, swaggerDocument);
+    const swaggerDocument = SwaggerModule.createDocument(app, swaggerOptions);
+    SwaggerModule.setup('swagger', app, swaggerDocument);
+  }
 
   await app.listen(+process.env.PORT || 8000, '0.0.0.0');
 }

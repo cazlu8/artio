@@ -23,7 +23,6 @@ import { UpdateUserDto } from './dto/user.update.dto';
 import { CreateAvatarDto } from './dto/user.create.avatar.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
 import { UserRepository } from './user.repository';
-import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import { CheckUserExistsDto } from './dto/user.checkUserExists.dto';
 import { UserEventsRoles } from '../userEventsRoles/userEventsRoles.entity';
 import { Role } from '../role/role.entity';
@@ -33,7 +32,8 @@ import { UserEventsRepository } from '../userEvents/userEvents.repository';
 import { EventRepository } from '../event/event.repository';
 import { UserEvents } from '../userEvents/userEvents.entity';
 import { Event } from '../event/event.entity';
-import { UploadService } from '../../shared/services/uploadService';
+import { UploadService } from '../../shared/services/upload.service';
+import { LinkToEventWithRoleDTO } from './dto/user.linkToEventWithRole.dto';
 @Injectable()
 export class UserService {
   private cognito: CognitoIdentityServiceProvider;
@@ -68,10 +68,6 @@ export class UserService {
     return user;
   }
 
-  getUserGuid(id: number): Promise<Partial<User>> {
-    return this.repository.findOne({ select: ['guid'], where: { id } });
-  }
-
   async exists(checkUserExistsDto: CheckUserExistsDto): Promise<boolean> {
     const params = {
       UserPoolId: process.env.COGNITO_USER_POOL_ID,
@@ -93,8 +89,7 @@ export class UserService {
     if (typeof user === 'undefined' || user.isNew) {
       return this.repository
         .save(newUser)
-        .then(usr => this.loggerService.info(`User ${usr.id} Created`))
-        .catch(err => validateEntityUserException.check(err));
+        .then(usr => this.loggerService.info(`User ${usr.id} Created`));
     }
     return Promise.resolve();
   }
@@ -177,17 +172,16 @@ export class UserService {
     );
   }
 
-  async bindUserEvent(linkToEventWithRoleDTO: {
-    roleId?: number;
-    userId: number;
-    eventId: number;
-  }): Promise<boolean | void> {
+  async bindUserEvent(
+    linkToEventWithRoleDTO: LinkToEventWithRoleDTO,
+  ): Promise<boolean | void> {
     const { roleId, userId, eventId } = linkToEventWithRoleDTO;
-    const bindUserToEvent = this.linkUserToEvent(userId, eventId).then(id => {
-      if (roleId) this.linkUserAndRoleToEvent(id, roleId, userId, eventId);
-    });
-    const isRoleValid = this.verifyUserRole(roleId).then(haveRole => haveRole);
-    return (await isRoleValid) && (await bindUserToEvent);
+    const id = await this.linkUserToEvent(userId, eventId);
+    if (roleId) {
+      const isRoleValid = await this.verifyUserRole(roleId);
+      isRoleValid &&
+        (await this.linkUserAndRoleToEvent(id, roleId, userId, eventId));
+    }
   }
 
   async redeemEventCode(redeemEventCodeDTO): Promise<UpdateResult> {

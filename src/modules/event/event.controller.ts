@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Res,
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
@@ -25,14 +26,18 @@ import { AdminAuthGuard } from '../../shared/guards/adminAuth.guard';
 import CreateHeroImage from './dto/event.create.heroImage.dto';
 import EventStartIntermissionDto from './dto/event.startIntermission.dto';
 import { EventRepository } from './event.repository';
-import { ValidateEventId } from './pipes/ValidateEventId.pipe';
+import { ValidateIfEventExists } from './pipes/ValidateIfEventExists.pipe';
+import { UserEventsRepository } from '../userEvents/userEvents.repository';
+import { LoggerService } from '../../shared/services/logger.service';
 
 @ApiTags('Events')
 @Controller('events')
 export class EventController extends BaseWithoutAuthController {
   constructor(
+    private readonly loggerService: LoggerService,
     private service: EventService,
     private readonly repository: EventRepository,
+    private readonly userEventsRepository: UserEventsRepository,
   ) {
     super();
   }
@@ -46,7 +51,9 @@ export class EventController extends BaseWithoutAuthController {
   async create(
     @Body() createEventDto: CreateEventDTO,
   ): Promise<void | ObjectLiteral> {
-    return this.service.create(createEventDto);
+    const event = await this.repository.save(createEventDto);
+    this.loggerService.info(`Event ${event.name} Created`);
+    return event;
   }
 
   @ApiParam({ name: 'id', type: 'number' })
@@ -104,10 +111,8 @@ export class EventController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @Get('happeningNow/:userId')
-  async getHappeningNowByUser(
-    @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<EventListDto[] | void> {
-    return this.service.getHappeningNowByUser(userId);
+  async getHappeningNowByUser(@Param('userId', ParseIntPipe) userId: number) {
+    return this.repository.getHappeningNowByUser(userId);
   }
 
   @ApiParam({ name: 'skip', type: 'number' })
@@ -185,7 +190,7 @@ export class EventController extends BaseWithoutAuthController {
     type: Event,
     description: 'The event was successfully retrieved',
   })
-  @UsePipes(ValidateEventId)
+  @UsePipes(ValidateIfEventExists)
   @UseGuards(AuthGuard)
   @Get('/:id')
   async findOne(@Param('id', ParseIntPipe) id): Promise<Partial<Event> | void> {
@@ -199,7 +204,7 @@ export class EventController extends BaseWithoutAuthController {
   @UseGuards(AdminAuthGuard)
   @Get()
   async find(): Promise<Partial<Event[]> | void> {
-    return this.service.getEvents();
+    return this.repository.find();
   }
 
   @ApiParam({ name: 'id', type: 'number' })
@@ -213,7 +218,7 @@ export class EventController extends BaseWithoutAuthController {
     @Param('userId', ParseIntPipe) userId: number,
     @Param('roleId', ParseIntPipe) roleId: number,
   ) {
-    return this.service.getUserEventsByRole(userId, roleId);
+    return this.repository.getUserEventsByRole(userId, roleId);
   }
 
   @ApiParam({ name: 'getIntermissionStatus' })
@@ -238,7 +243,9 @@ export class EventController extends BaseWithoutAuthController {
   async getSubscribed(
     @Param('eventId', ParseIntPipe) eventId: number,
   ): Promise<any> {
-    return this.service.getSubscribed(eventId);
+    return this.userEventsRepository.count({
+      where: { eventId },
+    });
   }
 
   @ApiParam({ name: 'startIntermission' })
@@ -274,11 +281,14 @@ export class EventController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @Put('/startLive/:eventId')
-  @HttpCode(204)
   async startLive(
+    @Res() res,
     @Param('eventId', ParseIntPipe) eventId: number,
   ): Promise<void> {
-    return this.service.startLive(eventId);
+    await this.repository.update(eventId, {
+      onLive: true,
+    });
+    return res.status(204).send();
   }
 
   @ApiParam({ name: 'finishLive' })
@@ -288,10 +298,13 @@ export class EventController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @Put('/finishLive/:eventId')
-  @HttpCode(204)
   async finishLive(
+    @Res() res,
     @Param('eventId', ParseIntPipe) eventId: number,
-  ): Promise<void | UpdateResult> {
-    return this.service.finishLive(eventId);
+  ): Promise<void> {
+    await this.repository.update(eventId, {
+      onLive: false,
+    });
+    return res.status(204).send();
   }
 }

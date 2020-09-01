@@ -10,7 +10,7 @@ import EventQueue from './event.queue';
 import { EventProcessor } from './event.processor';
 import { EventGateway } from './event.gateway';
 import { JwtService } from '../../shared/services/jwt.service';
-import { UploadService } from '../../shared/services/uploadService';
+import { UploadService } from '../../shared/services/upload.service';
 
 @Module({
   imports: [
