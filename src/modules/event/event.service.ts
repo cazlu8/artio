@@ -15,8 +15,6 @@ import { Event } from './event.entity';
 import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
 import EventDetailsDTO from './dto/event.details.dto';
-import EventUpcomingListDto from './dto/event.upcoming.dto';
-import EventPastListDto from './dto/event.past.dto';
 import UpdateEventDTO from './dto/event.update.dto';
 import CreateHeroImage from './dto/event.create.heroImage.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
@@ -51,7 +49,7 @@ export class EventService {
       .then((events: Partial<Event[]>) => plainToClass(EventListDto, events));
   }
 
-  getUpcomingEvents(skip: number): Promise<EventUpcomingListDto> {
+  getUpcomingEvents(skip: number): Promise<EventListDto[] | void> {
     const getCount: Promise<number> = this.repository.getUpcomingCount();
     const getEvents: Promise<Partial<
       Event[]
@@ -59,7 +57,9 @@ export class EventService {
     return this.paginateEvents(getCount, getEvents, skip);
   }
 
-  getPastEvents(skip: number): Promise<EventPastListDto> {
+  getPastEvents(
+    skip: number,
+  ): Promise<{ ended: boolean; skip: number; events: EventListDto[] }> {
     const getCount: Promise<number> = this.repository.getPastCount();
     const getEvents: Promise<Partial<
       Event[]
