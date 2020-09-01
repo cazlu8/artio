@@ -17,11 +17,13 @@ import { AuthGuard } from '../../shared/guards/auth.guard';
 import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
 import { RoleRepository } from './role.repository';
 import { ValidateRoleId } from './pipes/ValidateRoleId.pipe';
+import { LoggerService } from '../../shared/services/logger.service';
 
 @ApiTags('Role')
 @Controller('role')
 export class RoleController extends BaseWithoutAuthController {
   constructor(
+    private readonly loggerService: LoggerService,
     private service: RoleService,
     private readonly repository: RoleRepository,
   ) {
@@ -34,8 +36,11 @@ export class RoleController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
   @Post()
-  create(@Body() createRoleDTO: CreateRoleDTO): Promise<void | ObjectLiteral> {
-    return this.service.create(createRoleDTO);
+  async create(
+    @Body() createRoleDTO: CreateRoleDTO,
+  ): Promise<void | ObjectLiteral> {
+    await this.repository.save(createRoleDTO);
+    this.loggerService.info(`Role ${createRoleDTO.name} Created`);
   }
 
   @ApiParam({ name: 'id', type: 'number' })

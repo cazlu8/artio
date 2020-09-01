@@ -11,20 +11,34 @@ services:
     environment:
       POSTGRES_PASSWORD: root
 
-  postgresTest:
-    container_name: postgresTest
-    image: postgres
-    restart: unless-stopped
-    ports:
-      - '5433:5432'
-    environment:
-      POSTGRES_PASSWORD: root
+    postgresTest:
+      container_name: postgresTest
+      image: postgres
+      restart: unless-stopped
+      ports:
+        - '5433:5432'
+      environment:
+        POSTGRES_PASSWORD: root
 
-  # REDIS DB
-  redis:
-    container_name: redis
-    image: redis
-    restart: unless-stopped
-    # Command: redis-server --requirepass RedisArtio2020!
-    ports:
-      - '6379:6379'
+    # REDIS DB
+    redis:
+      container_name: redis
+      image: redis
+      restart: unless-stopped
+      # Command: redis-server --requirepass RedisArtio2020!
+      ports:
+        - '6379:6379'
+
+    localstack:
+      image: localstack/localstack
+      restart: unless-stopped
+      ports:
+        - "4566-4584:4566-4584"
+        - "8081-8081:8081-8081"
+      environment:
+        - SERVICES=s3,ses
+        - DATA_DIR=/tmp/localstack/data
+        - PORT_WEB_UI=8081
+        - DOCKER_HOST=unix:///var/run/docker.sock
+      volumes:
+        - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"

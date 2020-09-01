@@ -1,4 +1,5 @@
 import { Process, Processor } from '@nestjs/bull';
+import * as bluebird from 'bluebird';
 import { RedisService } from 'nestjs-redis';
 import { EventGateway } from './event.gateway';
 import { LoggerService } from '../../shared/services/logger.service';
@@ -14,7 +15,7 @@ export class EventProcessor {
     private readonly eventGateway: EventGateway,
     private readonly loggerService: LoggerService,
   ) {
-    this.redisClient = this.redisService.getClient();
+    this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
   @Process({ name: 'endIntermission', concurrency: numCPUs })

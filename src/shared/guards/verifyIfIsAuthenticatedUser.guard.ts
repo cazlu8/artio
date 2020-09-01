@@ -1,9 +1,9 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { UserService } from '../../modules/user/user.service';
+import { UserRepository } from '../../modules/user/user.repository';
 
 @Injectable()
 export class VerifyIfIsAuthenticatedUserGuard implements CanActivate {
-  constructor(private userService: UserService) {}
+  constructor(private userRepository: UserRepository) {}
 
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
@@ -14,26 +14,30 @@ export class VerifyIfIsAuthenticatedUserGuard implements CanActivate {
     if (process.env.NODE_ENV !== 'production') {
       return true;
     }
-    const { sub: authenticatedUserGuid } = request.raw?.user;
-    const { guid: userGuid, id: userId } = request.params;
-    const { guid: userGuidBody, id: userIdBody } = request.body || {};
-    if (userGuid || userGuidBody) {
-      const guid = userGuid || userGuidBody;
-      return this.validateGuid(guid, authenticatedUserGuid);
+    const { sub: authenticatedUserGuid, id: userId, guid: userGuid } = {
+      ...request.raw?.user,
+      ...request.params,
+      ...request.body,
+    } as { id: number; guid: string; sub: string };
+
+    if (userGuid) {
+      return this.validateGuid(userGuid, authenticatedUserGuid);
     }
-    if (userId || userIdBody) {
-      const id = userId || userIdBody;
-      return await this.validateId(id, authenticatedUserGuid);
+    if (userId) {
+      return await this.validateId(userId, authenticatedUserGuid);
     }
     return false;
   }
 
-  validateGuid(userGuid, authenticatedUserGuid) {
+  validateGuid(userGuid: string, authenticatedUserGuid: string) {
     return authenticatedUserGuid && authenticatedUserGuid === userGuid;
   }
 
-  async validateId(userId, authenticatedUserGuid) {
-    const { guid } = await this.userService.getUserGuid(userId);
+  async validateId(userId: number, authenticatedUserGuid: string) {
+    const { guid } = await this.userRepository.findOne({
+      select: ['guid'],
+      where: { id: userId },
+    });
     return guid === authenticatedUserGuid;
   }
 }

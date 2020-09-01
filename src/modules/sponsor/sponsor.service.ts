@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
 import * as sharp from 'sharp';
-import * as AWS from 'aws-sdk';
 import { uuid } from 'uuidv4';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PromiseResult } from 'aws-sdk/lib/request';
@@ -10,13 +9,12 @@ import { ManagedUpload } from 'aws-sdk/clients/s3';
 import { Sponsor } from './sponsor.entity';
 import { CreateSponsorDto } from './dto/sponsor.create.dto';
 import { UpdateSponsorDto } from './dto/sponsor.update.dto';
-import { s3Config } from '../../shared/config/AWS';
 import { CreateLogoDto } from './dto/sponsor.create.logo.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
 import { SponsorRepository } from './sponsor.repository';
-import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import { EventSponsors } from '../eventSponsors/eventSponsors.entity';
 import { LoggerService } from '../../shared/services/logger.service';
+import { UploadService } from '../../shared/services/upload.service';
 
 @Injectable()
 export class SponsorService {
@@ -25,6 +23,7 @@ export class SponsorService {
     @InjectRepository(EventSponsors)
     private readonly eventSponsorRepository: Repository<EventSponsors>,
     private readonly loggerService: LoggerService,
+    private readonly uploadService: UploadService,
   ) {}
 
   updateSponsorInfo(
@@ -34,21 +33,18 @@ export class SponsorService {
     return this.update(id, updateSponsorDto);
   }
 
-  create(createSponsorDto: CreateSponsorDto): Promise<void | ObjectLiteral> {
-    return this.repository
-      .save(createSponsorDto)
-      .then(id =>
-        this.eventSponsorRepository.save({
-          sponsorId: id.id,
-          eventId: createSponsorDto.eventId,
-        }),
-      )
-      .then(sponsor =>
-        this.loggerService.info(
-          `Sponsor ${sponsor.id} Created and binded with event ${sponsor.eventId}`,
-        ),
-      )
-      .catch(err => validateEntityUserException.check(err));
+  async create(
+    createSponsorDto: CreateSponsorDto,
+  ): Promise<void | ObjectLiteral> {
+    const { id: sponsorId } = await this.repository.save(createSponsorDto);
+    await this.eventSponsorRepository.save({
+      sponsorId,
+      eventId: createSponsorDto.eventId,
+    });
+
+    this.loggerService.info(
+      `Sponsor ${sponsorId} Created and binded with event ${createSponsorDto.eventId}`,
+    );
   }
 
   async uploadLogo(
@@ -70,10 +66,9 @@ export class SponsorService {
       ContentType: `image/png`,
     };
     const { Bucket } = params;
-    const s3 = new AWS.S3(s3Config());
     const functions: any = [
-      ...this.updateLogoImage(s3, params, sponsorId, logoId),
-      this.deleteLogo(entity, s3, Bucket),
+      ...this.updateLogoImage(params, sponsorId, logoId),
+      this.deleteLogo(entity, Bucket),
     ];
     await Promise.all(functions);
     this.loggerService.info(`Sponsor logo id(${sponsorId}) was created`);
@@ -100,7 +95,6 @@ export class SponsorService {
 
   private deleteLogo(
     entity: any,
-    s3: AWS.S3,
     Bucket: string,
   ): Promise<PromiseResult<S3.DeleteObjectOutput, AWSError> | void> {
     if (entity?.logo) {
@@ -108,19 +102,18 @@ export class SponsorService {
       const lastIndex = formerUrl.lastIndexOf('/');
       const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
       this.loggerService.info(`Sponsor logo ${formerUrl} was deleted`);
-      return s3.deleteObject({ Bucket, Key: `${currentKey}` }).promise();
+      return this.uploadService.deleteObject({ Bucket, Key: `${currentKey}` });
     }
     return Promise.resolve();
   }
 
   private updateLogoImage(
-    s3: AWS.S3,
     params: any,
     sponsorId: number,
     logoId: string,
   ): (Promise<ManagedUpload.SendData> | Promise<UpdateResult>)[] {
     return [
-      s3.upload(params).promise(),
+      this.uploadService.uploadObject(params),
       this.update(sponsorId, {
         logo: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${logoId}.png`,
       }),
@@ -133,9 +126,8 @@ export class SponsorService {
       where: { id },
     });
     await this.repository.removeLogoUrl(id);
-    const s3 = new AWS.S3(s3Config());
     const Bucket = process.env.S3_BUCKET_SPONSOR;
-    await this.deleteLogo(entity, s3, Bucket);
+    await this.deleteLogo(entity, Bucket);
   }
 
   private async update(

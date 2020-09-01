@@ -12,7 +12,7 @@ export class UploadService {
     this.s3 = new AWS.S3(this.configService.get('s3'));
   }
 
-  uploadObject(
+  async uploadObject(
     params: S3.Types.PutObjectRequest,
     options?: ManagedUpload.ManagedUploadOptions,
   ) {

@@ -17,8 +17,6 @@ import EventListDto from './dto/event.list.dto';
 import EventDetailsDTO from './dto/event.details.dto';
 import EventUpcomingListDto from './dto/event.upcoming.dto';
 import EventPastListDto from './dto/event.past.dto';
-import CreateEventDTO from './dto/event.create.dto';
-import validateEntityUserException from '../../shared/exceptions/user/createValidation.user.exception';
 import UpdateEventDTO from './dto/event.update.dto';
 import CreateHeroImage from './dto/event.create.heroImage.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
@@ -27,7 +25,7 @@ import { UserEvents } from '../userEvents/userEvents.entity';
 import EventStartIntermissionDto from './dto/event.startIntermission.dto';
 import { EventGateway } from './event.gateway';
 import { LoggerService } from '../../shared/services/logger.service';
-import { UploadService } from '../../shared/services/uploadService';
+import { UploadService } from '../../shared/services/upload.service';
 
 @Injectable()
 export class EventService {
@@ -45,14 +43,6 @@ export class EventService {
     private readonly loggerService: LoggerService,
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
-  }
-
-  async create(createEventDTO: CreateEventDTO): Promise<void | ObjectLiteral> {
-    const event = await this.repository
-      .save(createEventDTO)
-      .catch(err => validateEntityUserException.check(err));
-    this.loggerService.info(`Event ${createEventDTO.name} Created`);
-    return event;
   }
 
   getHappeningNowEvents(): Promise<EventListDto[] | void> {
@@ -83,27 +73,11 @@ export class EventService {
       .then((event: Partial<Event>) => plainToClass(EventDetailsDTO, event));
   }
 
-  get(properties: { where; select }): Promise<ObjectLiteral> {
-    return this.repository.get(properties);
-  }
-
-  getEvents(): Promise<Partial<Event[]> | void> {
-    return this.repository.find();
-  }
-
   updateEventInfo(
     id: number,
     updateEventDTO: UpdateEventDTO,
   ): Promise<UpdateResult> {
     return this.update(id, updateEventDTO);
-  }
-
-  getUserEventsByRole(userId: number, roleId: number): Promise<Event[]> {
-    return this.repository.getUserEventsByRole(userId, roleId);
-  }
-
-  getHappeningNowByUser(userId: number): Promise<Event[]> {
-    return this.repository.getHappeningNowByUser(userId);
   }
 
   getUpcomingByUser(
@@ -133,27 +107,18 @@ export class EventService {
   ): Promise<void> {
     const { eventId, intermissionTime } = eventStartIntermissionDto;
     if (!(await this.eventIsOnIntermission(eventId))) {
-      const addCreateRoomOnQueuefn = this.networkRoomService.addCreateRoomOnQueue(
-        eventId,
-      );
-      const setIntermissionOnFn = this.redisClient.set(
-        `event-${eventId}:isOnIntermission`,
-        true,
-      );
-      const finishIntermissionFn = this.finishIntermission(
-        eventId,
-        intermissionTime,
-      );
-      const setIntermissionStartedAtFn = this.redisClient.set(
-        `event-${eventId}:intermissionStartedAt`,
-        new Date().toISOString(),
-      );
-      const setIntermissionTimeFn = this.redisClient.set(
-        `event-${eventId}:intermissionTime`,
-        intermissionTime,
-      );
+      const [
+        addCreateRoomOnQueueFn,
+        finishIntermissionFn,
+      ] = this.addRoomsToQueue(eventId, intermissionTime);
+      const [
+        setIntermissionStartedAtFn,
+        setIntermissionTimeFn,
+        setIntermissionOnFn,
+      ] = this.setIntermissionData(eventId, intermissionTime);
+
       await Promise.all([
-        addCreateRoomOnQueuefn,
+        addCreateRoomOnQueueFn,
         setIntermissionOnFn,
         finishIntermissionFn,
         setIntermissionStartedAtFn,
@@ -202,32 +167,15 @@ export class EventService {
     return false;
   }
 
-  async getSubscribed(eventId): Promise<number> {
-    return await this.userEventsRepository.count({
-      where: { eventId },
-    });
-  }
-
-  async finishLive(eventId): Promise<void> {
-    await this.repository.update(eventId, {
-      onLive: false,
-    });
-  }
-
-  async startLive(eventId): Promise<void> {
-    await this.repository.update(eventId, {
-      onLive: true,
-    });
-  }
-
   async removeHeroImage(id: number): Promise<void> {
     const user: any = await this.repository.get({
       select: ['heroImgUrl'],
       where: { id },
     });
     const bucket = process.env.S3_BUCKET_HERO_IMAGE;
-    await this.repository.removeHeroImage(id);
-    await this.deleteHeroImage(user, bucket);
+    const removeHeroImgFn = this.repository.removeHeroImage(id);
+    const removeAssetImgFn = this.deleteHeroImage(user, bucket);
+    await Promise.all([removeHeroImgFn, removeAssetImgFn]);
   }
 
   async createHeroImage(
@@ -260,6 +208,27 @@ export class EventService {
     return {
       url: `${process.env.S3_BUCKET_HERO_IMAGE_PREFIX_URL}${heroImageId}.png`,
     };
+  }
+
+  private setIntermissionData(eventId: number, intermissionTime: number) {
+    return [
+      this.redisClient.set(
+        `event-${eventId}:intermissionStartedAt`,
+        new Date().toISOString(),
+      ),
+      this.redisClient.set(
+        `event-${eventId}:intermissionTime`,
+        intermissionTime,
+      ),
+      this.redisClient.set(`event-${eventId}:isOnIntermission`, true),
+    ];
+  }
+
+  private addRoomsToQueue(eventId: number, intermissionTime: number) {
+    return [
+      this.networkRoomService.addCreateRoomOnQueue(eventId),
+      this.finishIntermission(eventId, intermissionTime),
+    ];
   }
 
   private deleteHeroImage(
