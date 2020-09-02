@@ -34,6 +34,7 @@ import { UserEvents } from '../userEvents/userEvents.entity';
 import { Event } from '../event/event.entity';
 import { UploadService } from '../../shared/services/upload.service';
 import { LinkToEventWithRoleDTO } from './dto/user.linkToEventWithRole.dto';
+import { UserEventsRolesRepository } from '../userEventsRoles/userEventsRoles.repository';
 @Injectable()
 export class UserService {
   private cognito: CognitoIdentityServiceProvider;
@@ -172,15 +173,30 @@ export class UserService {
     );
   }
 
+  @Transaction()
   async bindUserEvent(
     linkToEventWithRoleDTO: LinkToEventWithRoleDTO,
+    @TransactionRepository()
+    userEventsTransactionRepository?: UserEventsRepository,
+    @TransactionRepository()
+    userEventsRolesTransactionRepository?: UserEventsRolesRepository,
   ): Promise<boolean | void> {
     const { roleId, userId, eventId } = linkToEventWithRoleDTO;
-    const id = await this.linkUserToEvent(userId, eventId);
+    const id = await this.linkUserToEvent(
+      userId,
+      eventId,
+      userEventsTransactionRepository,
+    );
     if (roleId) {
       const isRoleValid = await this.verifyUserRole(roleId);
       isRoleValid &&
-        (await this.linkUserAndRoleToEvent(id, roleId, userId, eventId));
+        (await this.linkUserAndRoleToEvent(
+          id,
+          roleId,
+          userId,
+          eventId,
+          userEventsRolesTransactionRepository,
+        ));
     }
   }
 
@@ -309,8 +325,12 @@ export class UserService {
     return !!(await this.roleRepository.count({ where: { id } }));
   }
 
-  private async linkUserToEvent(userId: number, eventId: number): Promise<any> {
-    return await this.userEventsRepository
+  private async linkUserToEvent(
+    userId: number,
+    eventId: number,
+    userEventsTransactionRepository: UserEventsRepository,
+  ): Promise<any> {
+    return await userEventsTransactionRepository
       .save({ userId, eventId, redeemed: true })
       .then(({ id }) => id);
   }
@@ -320,13 +340,16 @@ export class UserService {
     roleId: number,
     userId: number,
     eventId: number,
+    userEventsRolesTransactionRepository: UserEventsRolesRepository,
   ): Promise<any> {
-    const linkUserAndRoleToEvent = await this.userEventsRolesRepository.save({
-      userEventsId,
-      roleId,
-      userEventsUserId: userId,
-      userEventsEventId: eventId,
-    });
+    const linkUserAndRoleToEvent = await userEventsRolesTransactionRepository.save(
+      {
+        userEventsId,
+        roleId,
+        userEventsUserId: userId,
+        userEventsEventId: eventId,
+      },
+    );
     this.loggerService.info(
       `User ${userId} has been linked to event ${eventId} with role ${roleId}, with redeem status = true;`,
     );
