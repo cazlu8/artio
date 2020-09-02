@@ -50,7 +50,6 @@ describe('Users', () => {
       expect.objectContaining({
         email,
         id: 1,
-        isNew: true,
       }),
     );
     done();
