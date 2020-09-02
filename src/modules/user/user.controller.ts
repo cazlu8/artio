@@ -75,6 +75,7 @@ export class UserController extends BaseWithoutAuthController {
     description: 'CSV file has been successfully uploaded',
   })
   @UseGuards(AuthGuard)
+  @UsePipes(ValidateIfEventExists)
   @HttpCode(201)
   @Post('uploadUsers/:eventId')
   async processCSVUsers(

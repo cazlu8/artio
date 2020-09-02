@@ -41,4 +41,5 @@ services:
         - PORT_WEB_UI=8081
         - DOCKER_HOST=unix:///var/run/docker.sock
       volumes:
-        - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
+        - '/private/tmp/localstack:/tmp/localstack'
+        - '/var/run/docker.sock:/var/run/docker.sock'
