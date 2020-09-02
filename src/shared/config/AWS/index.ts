@@ -2,7 +2,7 @@ import { registerAs } from '@nestjs/config';
 import * as AWS from 'aws-sdk';
 
 const s3Config = registerAs('s3', () =>
-  process.env.environment === 'production'
+  process.env.NODE_ENV === 'production'
     ? {
         accessKeyId: process.env.S3_ACCESS_KEY_ID,
         secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
@@ -22,7 +22,7 @@ const cognitoConfig = registerAs('cognito', () => ({
 }));
 
 const sesConfig = registerAs('ses', () =>
-  process.env.environment === 'production'
+  process.env.NODE_ENV === 'production'
     ? {
         accessKeyId: process.env.SES_ACCESS_KEY,
         secretAccessKey: process.env.SES_SECRET_ACCESS_KEY,
