@@ -173,15 +173,30 @@ export class UserService {
     );
   }
 
+  @Transaction()
   async bindUserEvent(
     linkToEventWithRoleDTO: LinkToEventWithRoleDTO,
+    @TransactionRepository()
+    userEventsTransactionRepository?: UserEventsRepository,
+    @TransactionRepository()
+    userEventsRolesTransactionRepository?: UserEventsRolesRepository,
   ): Promise<boolean | void> {
     const { roleId, userId, eventId } = linkToEventWithRoleDTO;
-    const id = await this.linkUserToEvent(userId, eventId);
+    const id = await this.linkUserToEvent(
+      userId,
+      eventId,
+      userEventsTransactionRepository,
+    );
     if (roleId) {
       const isRoleValid = await this.verifyUserRole(roleId);
       isRoleValid &&
-        (await this.linkUserAndRoleToEvent(id, roleId, userId, eventId));
+        (await this.linkUserAndRoleToEvent(
+          id,
+          roleId,
+          userId,
+          eventId,
+          userEventsRolesTransactionRepository,
+        ));
     }
   }
 
@@ -310,26 +325,22 @@ export class UserService {
     return !!(await this.roleRepository.count({ where: { id } }));
   }
 
-  @Transaction()
   private async linkUserToEvent(
     userId: number,
     eventId: number,
-    @TransactionRepository()
-    userEventsTransactionRepository?: UserEventsRepository,
+    userEventsTransactionRepository: UserEventsRepository,
   ): Promise<any> {
     return await userEventsTransactionRepository
       .save({ userId, eventId, redeemed: true })
       .then(({ id }) => id);
   }
 
-  @Transaction()
   private async linkUserAndRoleToEvent(
     userEventsId: number,
     roleId: number,
     userId: number,
     eventId: number,
-    @TransactionRepository()
-    userEventsRolesTransactionRepository?: UserEventsRolesRepository,
+    userEventsRolesTransactionRepository: UserEventsRolesRepository,
   ): Promise<any> {
     const linkUserAndRoleToEvent = await userEventsRolesTransactionRepository.save(
       {
