@@ -82,7 +82,8 @@
     "typeorm-seeding": "^1.6.1",
     "uuidv4": "^6.1.0",
     "winston": "^3.2.1",
-    "winston-cloudwatch": "^2.3.2"
+    "winston-cloudwatch": "^2.3.2",
+    "faker": "^4.1.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^6.13.2",
@@ -102,7 +103,6 @@
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.20.2",
     "factory.ts": "^0.5.1",
-    "faker": "^4.1.0",
     "jest": "^25.5.4",
     "pre-commit": "^1.2.2",
     "prettier": "^1.18.2",
