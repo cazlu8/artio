@@ -3,6 +3,6 @@ import { Event } from '../../src/modules/event/event.entity';
 
 export class CreateEvent implements Seeder {
   public async run(factory: Factory): Promise<void> {
-    await factory(Event)().create();
+    await factory(Event)().createMany(100000);
   }
 }
