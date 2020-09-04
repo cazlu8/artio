@@ -107,23 +107,19 @@ export class EventService {
   ): Promise<void> {
     const { eventId, intermissionTime } = eventStartIntermissionDto;
     if (!(await this.eventIsOnIntermission(eventId))) {
-      const [
-        addCreateRoomOnQueueFn,
-        finishIntermissionFn,
-      ] = this.addRoomsToQueue(eventId, intermissionTime);
+      const [addCreateRoomOnQueueFn] = this.addRoomsToQueue(eventId);
       const [
         setIntermissionStartedAtFn,
         setIntermissionTimeFn,
         setIntermissionOnFn,
       ] = this.setIntermissionData(eventId, intermissionTime);
-
       await Promise.all([
         addCreateRoomOnQueueFn,
         setIntermissionOnFn,
-        finishIntermissionFn,
         setIntermissionStartedAtFn,
         setIntermissionTimeFn,
       ]);
+      await this.finishIntermission(eventId, intermissionTime);
       this.eventGateway.server.emit('startIntermission', { eventId });
     } else
       throw new BadRequestException(
@@ -224,11 +220,8 @@ export class EventService {
     ];
   }
 
-  private addRoomsToQueue(eventId: number, intermissionTime: number) {
-    return [
-      this.networkRoomService.addCreateRoomOnQueue(eventId),
-      this.finishIntermission(eventId, intermissionTime),
-    ];
+  private addRoomsToQueue(eventId: number) {
+    return [this.networkRoomService.addCreateRoomOnQueue(eventId)];
   }
 
   private deleteHeroImage(
