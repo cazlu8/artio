@@ -155,13 +155,14 @@ export class EventRepository extends Repository<Event> {
       .addSelect('name', 'name')
       .addSelect('location_name', 'locationName')
       .orderBy('start_date', 'ASC')
+      .orderBy('"onLive"', 'ASC')
       .where(qb => {
         const subQuery = qb
           .subQuery()
           .select('"eventId"')
           .from('user_events', 'userEvents')
           .where(
-            '"userId" = :userId and event.start_date > now() and event.end_date > now() and redeemed = true',
+            '"userId" = :userId and event.end_date >= now() and redeemed = true',
           )
           .skip(skip)
           .take(10)
