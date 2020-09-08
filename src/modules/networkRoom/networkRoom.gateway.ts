@@ -73,7 +73,9 @@ export class NetworkRoomGateway
     this.redisClientSubscriber.on('message', async (channel, key) => {
       if (key.includes('bull')) return;
       if (channel === 'sendAvailableRoom') {
-        const { socketId, room } = JSON.parse(key);
+        const { socketId, room, isSwitch } = JSON.parse(key);
+        if (isSwitch === true)
+          this.server.to(socketId).emit('switchRoom', room);
         this.server.to(socketId).emit('requestRoom', room);
       }
       if (key.includes('queue') || key.includes('rooms')) {

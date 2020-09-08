@@ -131,7 +131,7 @@ export class NetworkRoomService {
     const socketId = await this.redisClient.lpop(`event-${eventId}:queue`);
     this.redisClientPublisher.publish(
       'sendAvailableRoom',
-      JSON.stringify({ socketId, room }),
+      JSON.stringify({ socketId, room: { uniqueName: room } }),
     );
     this.loggerService.info(`findAvailableRooms: room ${room} sent to socket.`);
     increasePosition();
@@ -154,7 +154,11 @@ export class NetworkRoomService {
       if (currentRoom !== room) {
         this.redisClientPublisher.publish(
           'sendAvailableRoom',
-          JSON.stringify({ socketId, room }),
+          JSON.stringify({
+            socketId,
+            room: { uniqueName: room },
+            isSwitch: true,
+          }),
         );
         return true;
       }
