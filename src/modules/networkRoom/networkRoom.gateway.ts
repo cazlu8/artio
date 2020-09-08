@@ -78,7 +78,10 @@ export class NetworkRoomGateway
           this.server.to(socketId).emit('switchRoom', room);
         this.server.to(socketId).emit('requestRoom', room);
       }
-      if (key.includes('queue') || key.includes('rooms')) {
+      if (
+        (typeof key === 'string' && key.includes('queue')) ||
+        key.includes('rooms')
+      ) {
         const lock = await this.redlock.lock(`locks:${key}`, 4000);
         const eventId = +String.prototype.split.call(key.split(`:`)[0], `-`)[1];
         const length = await this.redisClient.llen(`event-${eventId}:queue`);
