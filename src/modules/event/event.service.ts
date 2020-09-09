@@ -40,7 +40,9 @@ export class EventService {
     private readonly uploadService: UploadService,
     private readonly loggerService: LoggerService,
   ) {
-    this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
+    this.redisClient = bluebird.promisifyAll(
+      this.redisService.getClient('default'),
+    );
   }
 
   getUpcomingEvents(skip: number): Promise<EventListDto[] | void> {

@@ -35,5 +35,6 @@ module.exports = {
     'no-param-reassign': 'off',
     'no-plusplus': 'off',
     'no-unused-expressions': 'off',
+    'no-await-in-loop': 'off',
   },
 };
