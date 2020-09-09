@@ -97,14 +97,14 @@ export class NetworkRoomService {
   async getRoomsWithScores(eventId: number) {
     let roomsWithScores;
     try {
-      roomsWithScores = await this.redisClient.zrange(
+      roomsWithScores = await this.redisClient.zrangebyscore(
         `event-${eventId}:rooms`,
-        0,
-        -1,
+        1,
+        3,
         'WITHSCORES',
       );
     } catch (error) {
-      this.loggerService.error('error', error);
+      this.loggerService.error(`error:${error}`, error);
     }
 
     return (
@@ -204,10 +204,7 @@ export class NetworkRoomService {
   async createRooms(eventId: number) {
     return this.createRoom(eventId)
       .then(async ({ uniqueName }) => {
-        await this.redisClient.rpush(
-          `event-${eventId}:rooms`,
-          `${eventId}-${uniqueName}`,
-        );
+        await this.redisClient.rpush(`event-${eventId}:rooms`, uniqueName);
       })
       .catch(() => Promise.resolve(this.createRooms(eventId)));
   }
