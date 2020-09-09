@@ -121,8 +121,8 @@ export class EventRepository extends Repository<Event> {
       .addSelect('"onLive"', 'onLive')
       .addSelect('name', 'name')
       .addSelect('location_name', 'locationName')
-      .orderBy('start_date', 'ASC')
-      .orderBy('"onLive"', 'DESC')
+      .addOrderBy('"onLive"', 'DESC')
+      .addOrderBy('start_date', 'ASC')
       .where(qb => {
         const subQuery = qb
           .subQuery()
