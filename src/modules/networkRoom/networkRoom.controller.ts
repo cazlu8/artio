@@ -7,7 +7,7 @@ import { NetworkRoomRoomStatusDto } from './dto/networkRoomRoomStatus.dto';
 import { NetworkRoomService } from './networkRoom.service';
 
 @ApiTags('NetworkRoom')
-@Controller('NetworkRoom')
+@Controller('networkroom')
 export class NetworkRoomController extends BaseWithoutAuthController {
   constructor(
     private readonly loggerService: LoggerService,
@@ -16,7 +16,7 @@ export class NetworkRoomController extends BaseWithoutAuthController {
     super();
   }
 
-  @Post('room-status')
+  @Post('roomStatus')
   async statusCallback(
     @Body() networkRoomRoomStatusDto: NetworkRoomRoomStatusDto,
   ): Promise<void | ObjectLiteral> {
