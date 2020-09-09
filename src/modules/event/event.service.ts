@@ -43,12 +43,6 @@ export class EventService {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
-  getHappeningNowEvents(): Promise<EventListDto[] | void> {
-    return this.repository
-      .getHappeningNowEvents()
-      .then((events: Partial<Event[]>) => plainToClass(EventListDto, events));
-  }
-
   getUpcomingEvents(skip: number): Promise<EventListDto[] | void> {
     const getCount: Promise<number> = this.repository.getUpcomingCount();
     const getEvents: Promise<Partial<
