@@ -110,12 +110,12 @@ export class NetworkRoomGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
     const { currentRoom, eventId } = data;
-    try {
-      if (
-        await this.redisClient.lindex(`event-${eventId}:queueSwitch`, socket.id)
-      )
-        return;
-    } catch (err) {
+    if (
+      (await this.redisClient.lindex(
+        `event-${eventId}:queueSwitch`,
+        socket.id,
+      )) === null
+    ) {
       await this.redisClient.rpush(
         `event-${eventId}:queueSwitch`,
         JSON.stringify({ socketId: socket.id, currentRoom }),
@@ -134,10 +134,10 @@ export class NetworkRoomGateway
   ): Promise<void> {
     const { eventId } = data;
     socket.eventId = eventId;
-    try {
-      if (await this.redisClient.lindex(`event-${eventId}:queue`, socket.id))
-        return;
-    } catch (err) {
+    if (
+      (await this.redisClient.lindex(`event-${eventId}:queue`, socket.id)) ===
+      null
+    ) {
       await this.redisClient.rpush(`event-${eventId}:queue`, socket.id);
       networkEventEmitter.emit(
         'changedQueuesOrRooms',
