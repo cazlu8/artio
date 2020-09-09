@@ -81,13 +81,13 @@ export class NetworkRoomService {
 
   async getNewTwillioRoom(eventId: number): Promise<{ uniqueName: string }> {
     await this.requestToCreateNewRooms(eventId);
-    const newRoom = await this.redisClient.lpop(`event-${eventId}:rooms`);
+    const newRoom = await this.redisClient.lpop(`event-${eventId}:roomsTwilio`);
     return newRoom ? { uniqueName: newRoom } : await this.createRoom(eventId);
   }
 
   private async requestToCreateNewRooms(eventId: number): Promise<void> {
     const roomsLength = +(await this.redisClient.llen(
-      `event-${eventId}:rooms`,
+      `event-${eventId}:roomsTwilio`,
     ));
     if (roomsLength < 8) {
       await this.addCreateRoomOnQueue(eventId, true);
@@ -204,7 +204,10 @@ export class NetworkRoomService {
   async createRooms(eventId: number) {
     return this.createRoom(eventId)
       .then(async ({ uniqueName }) => {
-        await this.redisClient.rpush(`event-${eventId}:rooms`, uniqueName);
+        await this.redisClient.rpush(
+          `event-${eventId}:roomsTwilio`,
+          uniqueName,
+        );
       })
       .catch(() => Promise.resolve(this.createRooms(eventId)));
   }
