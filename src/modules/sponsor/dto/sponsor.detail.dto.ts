@@ -1,5 +1,6 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsEnum, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { SponsorTier } from '../enums/sponsor.tier.enum';
 
 export class SponsorDetail {
   @IsNotEmpty()
@@ -10,9 +11,10 @@ export class SponsorDetail {
   @IsNotEmpty()
   banner: string;
 
-  @ApiProperty()
   @IsNotEmpty()
-  tier: string;
+  @IsEnum(SponsorTier)
+  @ApiProperty()
+  tier?: SponsorTier;
 
   @ApiProperty()
   @IsNotEmpty()
