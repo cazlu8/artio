@@ -29,7 +29,7 @@ export class EventRepository extends Repository<Event> {
   }
 
   getUpcomingEvents(skip: number): Promise<Partial<Event[]> | void> {
-    const where = 'event.start_date > now() and event.end_date > now()';
+    const where = 'event.end_date >= now()';
     const order = 'DESC';
     return this.getListEvents(where, order)
       .skip(skip)
@@ -122,7 +122,7 @@ export class EventRepository extends Repository<Event> {
       .addSelect('name', 'name')
       .addSelect('location_name', 'locationName')
       .orderBy('start_date', 'ASC')
-      .orderBy('"onLive"', 'ASC')
+      .orderBy('"onLive"', 'DESC')
       .where(qb => {
         const subQuery = qb
           .subQuery()
