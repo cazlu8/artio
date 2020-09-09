@@ -145,7 +145,7 @@ export class NetworkRoomProcessor {
       jobDone();
     } catch (error) {
       this.loggerService.error(
-        `sendRoomToPairs: ${JSON.stringify(job?.data || {})}`,
+        `sendRoomToPairs: ${JSON.stringify(error)}`,
         error,
       );
     }

@@ -99,11 +99,11 @@ export class NetworkRoomService {
   async getRoomsWithScores(eventId: number) {
     let roomsWithScores;
     try {
-      roomsWithScores = await this.redisClient.zrangebyscore(
+      roomsWithScores = await this.redisClient.zrange(
         `event-${eventId}:rooms`,
-        3,
-        1,
-        true,
+        0,
+        -1,
+        'WITHSCORES',
       );
     } catch (error) {
       this.loggerService.error('error', error);
