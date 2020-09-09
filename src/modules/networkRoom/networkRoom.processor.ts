@@ -24,9 +24,7 @@ export class NetworkRoomProcessor {
     private readonly redisService: RedisService,
     private readonly loggerService: LoggerService,
   ) {
-    this.redisClient = bluebird.promisifyAll(
-      this.redisService.getClient('default'),
-    );
+    this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
   @Process({ name: 'createRooms', concurrency: numCPUs })

@@ -30,9 +30,7 @@ export class NetworkRoomService {
     const { clientConfig, twilioConfig } = config();
     this.clientConfig = clientConfig();
     this.twilioConfig = twilioConfig();
-    this.redisClient = bluebird.promisifyAll(
-      this.redisService.getClient('default'),
-    );
+    this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
   async roomStatus(status, roomName) {

@@ -50,9 +50,7 @@ export class NetworkRoomGateway
     private readonly service: NetworkRoomService,
     private readonly jwtService: JwtService,
   ) {
-    this.redisClient = bluebird.promisifyAll(
-      this.redisService.getClient('default'),
-    );
+    this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
     this.redlock = new Redlock([this.redisClient], {
       retryDelay: 100,
       retryCount: Infinity,
