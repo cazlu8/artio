@@ -10,6 +10,7 @@ import { config } from '../../shared/config/twilio';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 import { NetworkRoomRoomStatusDto } from './dto/networkRoomRoomStatus.dto';
 import { LoggerService } from '../../shared/services/logger.service';
+import networkEventEmitter from './networkRoom.event';
 
 const { AccessToken } = twilio.jwt;
 const { VideoGrant } = AccessToken;
@@ -17,8 +18,6 @@ const { VideoGrant } = AccessToken;
 @Injectable()
 export class NetworkRoomService {
   private readonly redisClient: any;
-
-  private readonly redisClientPublisher: any;
 
   private readonly clientConfig: any;
 
@@ -35,16 +34,18 @@ export class NetworkRoomService {
     this.redisClient = bluebird.promisifyAll(
       this.redisService.getClient('default'),
     );
-    this.redisClientPublisher = this.redisService.getClient('publisher');
   }
 
   async roomStatus(networkRoomRoomStatus: NetworkRoomRoomStatusDto) {
     const { StatusCallbackEvent, RoomName } = networkRoomRoomStatus;
     const eventId = +RoomName.split('-')[0];
-    if (StatusCallbackEvent === 'participant-connected')
-      await this.redisClient.zincrby(`event-${eventId}:rooms`, 1, RoomName);
-    if (StatusCallbackEvent === 'participant-disconnected')
+    if (StatusCallbackEvent === 'participant-disconnected') {
       await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, RoomName);
+      networkEventEmitter.emit(
+        'changedQueuesOrRooms',
+        `event-${eventId}:rooms`,
+      );
+    }
   }
 
   async createRoom(eventId: number): Promise<any> {
@@ -129,15 +130,16 @@ export class NetworkRoomService {
 
     const { room } = roomsWithScores[position];
     const socketId = await this.redisClient.lpop(`event-${eventId}:queue`);
-    this.redisClientPublisher.publish(
-      'sendAvailableRoom',
-      JSON.stringify({ socketId, room: { uniqueName: room } }),
-    );
+    networkEventEmitter.emit('sendAvailableRoom', {
+      socketId,
+      room: { uniqueName: room },
+    });
+    await this.redisClient.zincrby(`event-${eventId}:rooms`, 1, room);
     this.loggerService.info(`findAvailableRooms: room ${room} sent to socket.`);
     increasePosition();
     if (
       roomsWithScores[position].score === 4 &&
-      position === roomsWithScores.length
+      position === roomsWithScores.length - 1
     )
       await this.networkRoomQueue.add('sendRoomToPairs', eventId);
   }
@@ -152,14 +154,10 @@ export class NetworkRoomService {
       );
       const { currentRoom, socketId } = client;
       if (currentRoom !== room) {
-        this.redisClientPublisher.publish(
-          'sendAvailableRoom',
-          JSON.stringify({
-            socketId,
-            room: { uniqueName: room },
-            isSwitch: true,
-          }),
-        );
+        networkEventEmitter.emit('sendSwitchRoom', {
+          socketId,
+          room: { uniqueName: room },
+        });
         return true;
       }
     }
@@ -192,10 +190,10 @@ export class NetworkRoomService {
   ): Promise<{ uniqueName: string }> {
     const newTwilioRoom = await this.getNewTwillioRoom(eventId);
     socketIds.forEach(id =>
-      this.redisClientPublisher.publish(
-        'sendAvailableRoom',
-        JSON.stringify({ socketId: id, room: newTwilioRoom }),
-      ),
+      networkEventEmitter.emit('sendAvailableRoom', {
+        socketId: id,
+        room: newTwilioRoom,
+      }),
     );
     return newTwilioRoom;
   }

@@ -24,6 +24,7 @@ import { JwtService } from '../../shared/services/jwt.service';
 import { ValidationSchemaWsPipe } from '../../shared/pipes/validationSchemaWs.pipe';
 import { NetworkRoomEventDefaultDto } from './dto/networkRoomEventDefault.dto';
 import { NetworkRoomSwitchRoomDto } from './dto/networkRoomSwitchRoom.dto';
+import networkEventEmitter from './networkRoom.event';
 
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
@@ -39,27 +40,19 @@ export class NetworkRoomGateway
 
   private readonly redisClient: any;
 
-  private readonly redisClientSubscriber: any;
-
   private readonly redlock: any;
 
   constructor(
-    @InjectQueue('networkRoom') private readonly networkRoomQueue: Queue,
+    @InjectQueue('networkRoom')
+    private readonly networkRoomQueue: Queue,
     private readonly loggerService: LoggerService,
     private readonly redisService: RedisService,
     private readonly service: NetworkRoomService,
     private readonly jwtService: JwtService,
   ) {
-    this.redisClientSubscriber = this.redisService.getClient('subscriber');
     this.redisClient = bluebird.promisifyAll(
       this.redisService.getClient('default'),
     );
-    this.redisClientSubscriber.config('set', 'notify-keyspace-events', 'KEA');
-    this.redisClientSubscriber.subscribe('__keyevent@0__:zadd');
-    this.redisClientSubscriber.subscribe('__keyevent@0__:rpush');
-    this.redisClientSubscriber.subscribe('__keyevent@0__:zincr');
-    this.redisClientSubscriber.subscribe('__keyevent@0__:lpop');
-    this.redisClientSubscriber.subscribe('__keyevent@0__:del');
     this.redlock = new Redlock([this.redisClient], {
       retryDelay: 100,
       retryCount: Infinity,
@@ -70,28 +63,25 @@ export class NetworkRoomGateway
   }
 
   afterInit() {
-    this.redisClientSubscriber.on('message', async (channel, key) => {
-      if (key.includes('bull')) return;
-      if (channel === 'sendAvailableRoom') {
-        const { socketId, room, isSwitch } = JSON.parse(key);
-        if (isSwitch === true)
-          this.server.to(socketId).emit('switchRoom', room);
-        this.server.to(socketId).emit('requestRoom', room);
-      }
-      if (
-        (typeof key === 'string' && key.includes('queue')) ||
-        key.includes('rooms')
-      ) {
-        const lock = await this.redlock.lock(`locks:${key}`, 4000);
-        const eventId = +String.prototype.split.call(key.split(`:`)[0], `-`)[1];
-        const length = await this.redisClient.llen(`event-${eventId}:queue`);
-        if (length)
-          await this.networkRoomQueue.add('findAvailableRooms', { eventId });
-        const updatedLock = await lock.extend(1000);
-        await updatedLock.unlock();
-      }
+    networkEventEmitter.on('sendAvailableRoom', async data => {
+      const { socketId, room } = data;
+      this.server.to(socketId).emit('requestRoom', room);
     });
-    this.redisClientSubscriber.subscribe('sendAvailableRoom');
+
+    networkEventEmitter.on('sendSwitchRoom', async data => {
+      const { socketId, room } = data;
+      this.server.to(socketId).emit('switchRoom', room);
+    });
+
+    networkEventEmitter.on('changedQueuesOrRooms', async key => {
+      const lock = await this.redlock.lock(`locks:${key}`, 2000);
+      const eventId = +String.prototype.split.call(key.split(`:`)[0], `-`)[1];
+      const length = await this.redisClient.llen(`event-${eventId}:queue`);
+      if (length)
+        await this.networkRoomQueue.add('findAvailableRooms', { eventId });
+      const updatedLock = await lock.extend(1000);
+      await updatedLock.unlock();
+    });
   }
 
   async handleDisconnect(socket: any) {
@@ -125,11 +115,16 @@ export class NetworkRoomGateway
         `event-${eventId}:queueSwitch`,
         socket.id,
       )) === null
-    )
+    ) {
       await this.redisClient.rpush(
         `event-${eventId}:queueSwitch`,
         JSON.stringify({ socketId: socket.id, currentRoom }),
       );
+      networkEventEmitter.emit(
+        'changedQueuesOrRooms',
+        `event-${eventId}:queueSwitch`,
+      );
+    }
   }
 
   @SubscribeMessage('requestRoom')
@@ -139,11 +134,16 @@ export class NetworkRoomGateway
   ): Promise<void> {
     const { eventId } = data;
     socket.eventId = eventId;
-    if (
-      (await this.redisClient.lpos(`event-${eventId}:queue`, socket.id)) ===
-      null
-    )
+    try {
+      if (await this.redisClient.lindex(`event-${eventId}:queue`, socket.id))
+        return;
+    } catch (err) {
       await this.redisClient.rpush(`event-${eventId}:queue`, socket.id);
+      networkEventEmitter.emit(
+        'changedQueuesOrRooms',
+        `event-${eventId}:queue`,
+      );
+    }
   }
 
   @SubscribeMessage('requestRoomToken')
