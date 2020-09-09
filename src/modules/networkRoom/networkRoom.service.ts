@@ -101,7 +101,7 @@ export class NetworkRoomService {
       3,
       'WITHSCORES',
     );
-
+    this.loggerService.info(`qewfrkljqewfkjfewqkejfwqk ${roomsWithScores}`);
     return (
       (roomsWithScores || []).reduce((acc, cur, i, rooms) => {
         if (i !== 0) i += i;
@@ -116,6 +116,7 @@ export class NetworkRoomService {
     roomsWithScores: [{ room: string; score: number }],
     eventId: number,
   ) {
+    this.loggerService.info(`kqwjkwqjkwefk ${roomsWithScores}`);
     const increasePosition = () => {
       if (++roomsWithScores[position].score === 4) {
         roomsWithScores.shift();
