@@ -109,7 +109,7 @@ export class NetworkRoomProcessor {
       jobDone();
     } catch (error) {
       this.loggerService.error(
-        `findAvailableRooms: ${JSON.stringify(job?.data || {})}`,
+        `findAvailableRooms: ${JSON.stringify(error)}`,
         error,
       );
     }
