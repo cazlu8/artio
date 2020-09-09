@@ -97,15 +97,15 @@ export class NetworkRoomService {
   }
 
   async getRoomsWithScores(eventId: number) {
-    const roomsWithScores = await this.redisClient.zrangebyscore(
+    const roomsWithScores = await this.redisClient.zrevrangebyscore(
       `event-${eventId}:rooms`,
-      1,
       3,
+      1,
       'WITHSCORES',
     );
 
     return (
-      roomsWithScores?.reduce((acc, cur, i, rooms) => {
+      (roomsWithScores || []).reduce((acc, cur, i, rooms) => {
         if (i !== 0) i += i;
         if (i >= rooms.length) return acc;
         return acc.push({ room: rooms[i], score: +rooms[i + 1] });

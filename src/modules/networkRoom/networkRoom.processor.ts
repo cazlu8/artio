@@ -91,19 +91,22 @@ export class NetworkRoomProcessor {
       const roomsWithScores = await this.service.getRoomsWithScores(eventId);
       if (!roomsWithScores.length)
         await this.networkRoomQueue.add('sendRoomToPairs', { eventId });
-
-      const queueLength = await this.redisClient.llen(`event-${eventId}:queue`);
-      if (queueLength && roomsWithScores.length) {
-        const position = 0;
-        while (
-          roomsWithScores.length &&
-          !!(await this.redisClient.llen(`event-${eventId}:queue`))
-        ) {
-          await this.service.findAvailableRoom(
-            position,
-            eventId,
-            roomsWithScores,
-          );
+      else {
+        const queueLength = await this.redisClient.llen(
+          `event-${eventId}:queue`,
+        );
+        if (queueLength && roomsWithScores.length) {
+          const position = 0;
+          while (
+            roomsWithScores.length &&
+            !!(await this.redisClient.llen(`event-${eventId}:queue`))
+          ) {
+            await this.service.findAvailableRoom(
+              position,
+              eventId,
+              roomsWithScores,
+            );
+          }
         }
       }
       jobDone();
