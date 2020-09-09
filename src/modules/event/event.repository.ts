@@ -122,7 +122,8 @@ export class EventRepository extends Repository<Event> {
       .addSelect('banner', 'banner')
       .addSelect('tier', 'tier')
       .addSelect('name', 'name')
-      .addSelect('description', 'description')
+      .addSelect('email', 'email')
+      .addSelect('external_link', 'externalLink')
       .where(qb => {
         const subQuery = qb
           .subQuery()
