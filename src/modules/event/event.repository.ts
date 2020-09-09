@@ -4,6 +4,7 @@ import {
   LessThan,
   Repository,
   SelectQueryBuilder,
+  getRepository,
 } from 'typeorm';
 import { Event } from './event.entity';
 import {
@@ -11,6 +12,8 @@ import {
   getFormattedAddressQuery,
   getFormattedDateQuery,
 } from './queries';
+import { Sponsor } from '../sponsor/sponsor.entity';
+import { SponsorDetail } from '../sponsor/dto/sponsor.detail.dto';
 
 @EntityRepository(Event)
 export class EventRepository extends Repository<Event> {
@@ -108,6 +111,28 @@ export class EventRepository extends Repository<Event> {
         return `id IN ${subQuery}`;
       })
       .setParameters({ userId, roleId })
+      .getRawMany();
+  }
+
+  getEventSponsor(eventId: number): Promise<SponsorDetail[]> {
+    const attributes = ['id'];
+    return getRepository(Sponsor)
+      .createQueryBuilder('sponsor')
+      .select(attributes)
+      .addSelect('banner', 'banner')
+      .addSelect('tier', 'tier')
+      .addSelect('name', 'name')
+      .addSelect('description', 'description')
+      .where(qb => {
+        const subQuery = qb
+          .subQuery()
+          .select('"sponsorId"')
+          .from('event_sponsors', 'eventSponsors')
+          .where(`"eventId" = :eventId`)
+          .getQuery();
+        return `id IN ${subQuery}`;
+      })
+      .setParameters({ eventId })
       .getRawMany();
   }
 
