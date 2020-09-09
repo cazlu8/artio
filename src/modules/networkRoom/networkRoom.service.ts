@@ -40,6 +40,7 @@ export class NetworkRoomService {
     const { StatusCallbackEvent, RoomName } = networkRoomRoomStatus;
     const eventId = +RoomName.split('-')[0];
     if (StatusCallbackEvent === 'participant-disconnected') {
+      this.loggerService.info(`status-callback-${eventId}`);
       await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, RoomName);
       networkEventEmitter.emit(
         'changedQueuesOrRooms',
