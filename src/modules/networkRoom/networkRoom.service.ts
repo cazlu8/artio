@@ -8,7 +8,6 @@ import * as bluebird from 'bluebird';
 import { RedisService } from 'nestjs-redis';
 import { config } from '../../shared/config/twilio';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
-import { NetworkRoomRoomStatusDto } from './dto/networkRoomRoomStatus.dto';
 import { LoggerService } from '../../shared/services/logger.service';
 import networkEventEmitter from './networkRoom.event';
 
@@ -36,12 +35,11 @@ export class NetworkRoomService {
     );
   }
 
-  async roomStatus(networkRoomRoomStatus: NetworkRoomRoomStatusDto) {
-    const { StatusCallbackEvent, RoomName } = networkRoomRoomStatus;
-    const eventId = +RoomName.split('-')[0];
-    if (StatusCallbackEvent === 'participant-disconnected') {
+  async roomStatus(status, roomName) {
+    const eventId = +roomName.split('-')[0];
+    if (status === 'participant-disconnected') {
       this.loggerService.info(`status-callback-${eventId}`);
-      await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, RoomName);
+      await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, roomName);
       networkEventEmitter.emit(
         'changedQueuesOrRooms',
         `event-${eventId}:rooms`,
