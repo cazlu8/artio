@@ -92,29 +92,6 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.removeHeroImage(id);
   }
 
-  @ApiCreatedResponse({
-    type: EventListDto,
-    description: 'All happening now events were successfully retrieved',
-    isArray: true,
-  })
-  @UseGuards(AdminAuthGuard)
-  @Get('/happeningNow')
-  async getHappeningNowEvents(): Promise<EventListDto[] | void> {
-    return this.service.getHappeningNowEvents();
-  }
-
-  @ApiParam({ name: 'id', type: 'number' })
-  @ApiCreatedResponse({
-    type: EventListDto,
-    description: 'Happening now events by user id were successfully retrieved',
-    isArray: true,
-  })
-  @UseGuards(AuthGuard)
-  @Get('happeningNow/:userId')
-  async getHappeningNowByUser(@Param('userId', ParseIntPipe) userId: number) {
-    return this.repository.getHappeningNowByUser(userId);
-  }
-
   @ApiParam({ name: 'skip', type: 'number' })
   @ApiCreatedResponse({
     type: EventListDto,
