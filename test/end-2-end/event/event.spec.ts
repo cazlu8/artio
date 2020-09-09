@@ -21,11 +21,14 @@ import { UserEvents } from '../../../src/modules/userEvents/userEvents.entity';
 import { UserModule } from '../../../src/modules/user/user.module';
 import { saveUser } from '../user/data';
 import { User } from '../../../src/modules/user/user.entity';
+import { saveRoles } from '../role/data';
+import { Role } from '../../../src/modules/role/role.entity';
 
 describe('Events', () => {
   let app: any;
   let repository: Repository<Event>;
-  let roleRepository: Repository<UserEventsRoles>;
+  let eventRolesRepository: Repository<UserEventsRoles>;
+  let roleRepository: Repository<Role>;
   let userEventsRepository: Repository<UserEvents>;
   let userRepository: Repository<User>;
 
@@ -39,7 +42,8 @@ describe('Events', () => {
     ]);
     app = server;
     repository = moduleRef.get('EventRepository');
-    roleRepository = moduleRef.get('UserEventsRolesRepository');
+    eventRolesRepository = moduleRef.get('UserEventsRolesRepository');
+    roleRepository = moduleRef.get('RoleRepository');
     userRepository = moduleRef.get('UserRepository');
     userEventsRepository = moduleRef.get('UserEventsRepository');
   });
@@ -406,7 +410,8 @@ describe('Events', () => {
     await userRepository.save(saveUser);
     await repository.save(eventsToSave);
     await userEventsRepository.save(saveUserEvents());
-    await roleRepository.save(saveUserEventsRoles());
+    await roleRepository.save(saveRoles());
+    await eventRolesRepository.save(saveUserEventsRoles());
 
     const { body: events } = await app
       .get(`/events/user/1/role/2`)
@@ -428,6 +433,7 @@ describe('Events', () => {
   afterEach(async () => {
     await repository.query(`truncate table event restart identity cascade;`);
     await repository.query(`truncate "user" restart identity cascade;`);
+    await repository.query(`truncate role restart identity cascade;`);
   });
 
   afterAll(async () => {

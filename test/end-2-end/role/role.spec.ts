@@ -32,7 +32,7 @@ describe('Role', () => {
   });
 
   it(`/GET role/:id`, async done => {
-    await repository.save(saveRole);
+    await repository.save(saveRole());
     const { body } = await app
       .get(`/role/1`)
       .set('Accept', 'application/json')
@@ -44,7 +44,7 @@ describe('Role', () => {
   });
 
   it(`/GET role`, async done => {
-    await repository.save(saveRole);
+    await repository.save(saveRole());
     const { body } = await app
       .get(`/role`)
       .set('Accept', 'application/json')

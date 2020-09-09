@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 export default BullModule.registerQueueAsync({
   name: 'networkRoom',
   useFactory: async (configService: ConfigService) => ({
-    redis: configService.get('redis'),
+    redis: configService.get('redis')[0],
     defaultJobOptions: {
       priority: 1,
       removeOnComplete: true,
