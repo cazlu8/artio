@@ -54,7 +54,7 @@ export class NetworkRoomProcessor {
   async clearExpiredRooms(job, jobDone) {
     try {
       const { eventId } = job.data;
-      await this.redisClient.del(`event-${eventId}:rooms`).catch(catchError);
+      await this.redisClient.zremrangebyrank(`event-${eventId}:rooms`, 0 - 1);
       await this.redisClient.zremrangebyscore(`event-${eventId}:rooms`, 0, 0);
       const isOnIntermission = await this.redisClient.get(
         `event-${eventId}:isOnIntermission`,
