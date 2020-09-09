@@ -7,7 +7,6 @@ import { Queue } from 'bull';
 import { NetworkRoomService } from './networkRoom.service';
 import { parallel } from '../../shared/utils/controlFlow.utils';
 import { UserEvents } from '../userEvents/userEvents.entity';
-import { catchError } from '../../shared/utils/errorHandler.utils';
 import { LoggerService } from '../../shared/services/logger.service';
 
 const numCPUs = require('os').cpus().length;
