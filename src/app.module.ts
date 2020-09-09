@@ -52,6 +52,7 @@ export class AppModule {
       consumer
         .apply(AuthMiddleware)
         .exclude(
+          { path: '/networkroom/roomStatus', method: RequestMethod.POST },
           { path: '/users', method: RequestMethod.POST },
           { path: '/users/checkUserExists', method: RequestMethod.POST },
           '/health',
