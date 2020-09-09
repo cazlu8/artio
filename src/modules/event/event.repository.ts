@@ -28,12 +28,6 @@ export class EventRepository extends Repository<Event> {
       .getRawOne();
   }
 
-  getHappeningNowEvents(): Promise<Partial<Event[]> | void> {
-    const where = 'event.start_date <= now() and event.end_date >= now()';
-    const order = 'DESC';
-    return this.getListEvents(where, order).getRawMany();
-  }
-
   getUpcomingEvents(skip: number): Promise<Partial<Event[]> | void> {
     const where = 'event.start_date > now() and event.end_date > now()';
     const order = 'DESC';
@@ -114,33 +108,6 @@ export class EventRepository extends Repository<Event> {
         return `id IN ${subQuery}`;
       })
       .setParameters({ userId, roleId })
-      .getRawMany();
-  }
-
-  getHappeningNowByUser(userId: number) {
-    const attributes = ['id'];
-    return this.createQueryBuilder('event')
-      .select(attributes)
-      .addSelect('hero_img_url', 'heroImgUrl')
-      .addSelect('start_date', 'startDate')
-      .addSelect('end_date', 'endDate')
-      .addSelect('"onLive"', 'onLive')
-      .addSelect('name', 'name')
-      .addSelect('location_name', 'locationName')
-      .orderBy('start_date', 'DESC')
-      .orderBy('"onLive"', 'DESC')
-      .where(qb => {
-        const subQuery = qb
-          .subQuery()
-          .select('"eventId"')
-          .from('user_events', 'userEvents')
-          .where(
-            '"userId" = :userId and event.start_date <= now() and event.end_date >= now() and redeemed = true',
-          )
-          .getQuery();
-        return `id IN ${subQuery}`;
-      })
-      .setParameters({ userId })
       .getRawMany();
   }
 
