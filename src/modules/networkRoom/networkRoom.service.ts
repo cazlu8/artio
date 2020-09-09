@@ -8,7 +8,6 @@ import * as bluebird from 'bluebird';
 import { RedisService } from 'nestjs-redis';
 import { config } from '../../shared/config/twilio';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
-import { NetworkRoomRoomStatusDto } from './dto/networkRoomRoomStatus.dto';
 import { LoggerService } from '../../shared/services/logger.service';
 import networkEventEmitter from './networkRoom.event';
 
