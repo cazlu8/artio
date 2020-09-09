@@ -15,9 +15,7 @@ export class EventProcessor {
     private readonly eventGateway: EventGateway,
     private readonly loggerService: LoggerService,
   ) {
-    this.redisClient = bluebird.promisifyAll(
-      this.redisService.getClient('default'),
-    );
+    this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
   @Process({ name: 'endIntermission', concurrency: numCPUs })
