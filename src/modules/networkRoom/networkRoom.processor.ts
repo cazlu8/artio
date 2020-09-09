@@ -120,7 +120,10 @@ export class NetworkRoomProcessor {
     try {
       const { eventId } = job.data;
       const queueLength = await this.redisClient.llen(`event-${eventId}:queue`);
-      if (queueLength) {
+      const queueSwitchLength = await this.redisClient.llen(
+        `event-${eventId}:queueSwitch`,
+      );
+      if (queueLength && queueSwitchLength) {
         const room = await this.service.getQueueSocketIdsAndSendRoom(
           eventId,
           0,
