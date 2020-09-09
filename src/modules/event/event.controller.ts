@@ -29,6 +29,7 @@ import { EventRepository } from './event.repository';
 import { ValidateIfEventExists } from './pipes/ValidateIfEventExists.pipe';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
 import { LoggerService } from '../../shared/services/logger.service';
+import { SponsorDetail } from '../sponsor/dto/sponsor.detail.dto';
 
 @ApiTags('Events')
 @Controller('events')
@@ -196,6 +197,19 @@ export class EventController extends BaseWithoutAuthController {
     @Param('roleId', ParseIntPipe) roleId: number,
   ) {
     return this.repository.getUserEventsByRole(userId, roleId);
+  }
+
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiCreatedResponse({
+    type: SponsorDetail,
+    description: 'Events by user id and role was successfully retrieved',
+  })
+  @UseGuards(AuthGuard)
+  @Get('sponsors/:eventId')
+  async getEventSponsor(
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ): Promise<SponsorDetail[]> {
+    return this.repository.getEventSponsor(eventId);
   }
 
   @ApiParam({ name: 'getIntermissionStatus' })
