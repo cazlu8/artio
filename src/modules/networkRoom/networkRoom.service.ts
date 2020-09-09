@@ -141,7 +141,7 @@ export class NetworkRoomService {
       roomsWithScores[position].score === 4 &&
       position === roomsWithScores.length - 1
     )
-      await this.networkRoomQueue.add('sendRoomToPairs', eventId);
+      await this.networkRoomQueue.add('sendRoomToPairs', { eventId });
   }
 
   async switchRoom(eventId: number, room: string) {
@@ -152,7 +152,7 @@ export class NetworkRoomService {
       const client = await this.redisClient.lpop(
         `event-${eventId}:queueSwitch`,
       );
-      const { currentRoom, socketId } = client;
+      const { currentRoom, socketId } = JSON.parse(client);
       if (currentRoom !== room) {
         networkEventEmitter.emit('sendSwitchRoom', {
           socketId,

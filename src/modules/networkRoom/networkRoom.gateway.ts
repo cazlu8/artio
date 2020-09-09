@@ -88,7 +88,7 @@ export class NetworkRoomGateway
     if (socket.eventId)
       await this.redisClient.lrem(
         `event-${socket.eventId}:queue`,
-        1,
+        0,
         socket.id,
       );
   }
@@ -110,12 +110,12 @@ export class NetworkRoomGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
     const { currentRoom, eventId } = data;
-    if (
-      (await this.redisClient.lpos(
-        `event-${eventId}:queueSwitch`,
-        socket.id,
-      )) === null
-    ) {
+    try {
+      if (
+        await this.redisClient.lindex(`event-${eventId}:queueSwitch`, socket.id)
+      )
+        return;
+    } catch (err) {
       await this.redisClient.rpush(
         `event-${eventId}:queueSwitch`,
         JSON.stringify({ socketId: socket.id, currentRoom }),
@@ -153,14 +153,5 @@ export class NetworkRoomGateway
   ): void {
     const token = this.service.videoToken(data);
     this.server.to(socket.id).emit('requestRoomToken', token);
-  }
-
-  @SubscribeMessage('leaveRoom')
-  async leaveRoomTwillio(
-    @ConnectedSocket() socket: any,
-    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
-  ): Promise<void> {
-    const { eventId } = data;
-    await this.redisClient.lrem(`event-${eventId}:queue`, 1, socket.id);
   }
 }

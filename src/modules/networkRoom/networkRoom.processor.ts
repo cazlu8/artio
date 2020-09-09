@@ -120,18 +120,15 @@ export class NetworkRoomProcessor {
     try {
       const { eventId } = job.data;
       const queueLength = await this.redisClient.llen(`event-${eventId}:queue`);
-      const queueSwitchLength = await this.redisClient.llen(
-        `event-${eventId}:queueSwitch`,
-      );
-      if (queueLength && queueSwitchLength) {
+      if (queueLength) {
         const room = await this.service.getQueueSocketIdsAndSendRoom(
           eventId,
           0,
         );
+        await this.service.switchRoom(eventId, room);
         this.loggerService.info(
           `sendRoomToPairs:switchRoom: room ${room} sent to sockets for the event ${eventId}`,
         );
-        await this.service.switchRoom(eventId, room);
       }
       const queueLengthUpdated = await this.redisClient.llen(
         `event-${eventId}:queue`,
