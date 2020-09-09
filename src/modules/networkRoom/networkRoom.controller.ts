@@ -1,4 +1,4 @@
-import { Body, Controller, Put } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ObjectLiteral } from 'typeorm';
 import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
@@ -16,7 +16,7 @@ export class NetworkRoomController extends BaseWithoutAuthController {
     super();
   }
 
-  @Put('room-status')
+  @Post('room-status')
   async statusCallback(
     @Body() networkRoomRoomStatusDto: NetworkRoomRoomStatusDto,
   ): Promise<void | ObjectLiteral> {
