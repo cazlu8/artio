@@ -9,7 +9,7 @@
     "prebuild": "rimraf dist",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "node dist/main",
+    "start": "node dist/src/main",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "prestart:prod": "npm run build",
@@ -26,7 +26,9 @@
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --config src/ormconfig.ts",
     "typeorm:migrate": "npm run typeorm migration:generate -- -n",
     "typeorm:run": "npm run typeorm migration:run",
-    "typeorm:revert": "npm run typeorm migration:revert"
+    "typeorm:revert": "npm run typeorm migration:revert",
+    "seed:config": "ts-node ./node_modules/typeorm-seeding/dist/cli.js -n seedsconfig.ts -c postgres config",
+    "seed:run": "ts-node ./node_modules/typeorm-seeding/dist/cli.js -n seedsconfig.ts -c postgres seed"
   },
   "pre-commit": "lint, prettier, test:e2e",
   "dependencies": {
@@ -77,9 +79,11 @@
     "socket.io-redis": "^5.3.0",
     "twilio": "^3.46.0",
     "typeorm": "^0.2.25",
+    "typeorm-seeding": "^1.6.1",
     "uuidv4": "^6.1.0",
     "winston": "^3.2.1",
-    "winston-cloudwatch": "^2.3.2"
+    "winston-cloudwatch": "^2.3.2",
+    "faker": "^4.1.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^6.13.2",
@@ -99,7 +103,6 @@
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.20.2",
     "factory.ts": "^0.5.1",
-    "faker": "^4.1.0",
     "jest": "^25.5.4",
     "pre-commit": "^1.2.2",
     "prettier": "^1.18.2",
