@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class NetworkRoomDto {
+export class NetworkRoomRoomStatusDto {
   @ApiProperty({ type: 'string' })
-  sid: string;
+  StatusCallbackEvent: string;
 
   @ApiProperty({ type: 'string' })
-  uniqueName: string;
+  RoomName: string;
 }

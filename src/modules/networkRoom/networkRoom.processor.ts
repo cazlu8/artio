@@ -2,6 +2,7 @@ import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { RedisService } from 'nestjs-redis';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bluebird from 'bluebird';
 import { Queue } from 'bull';
 import { NetworkRoomService } from './networkRoom.service';
 import { parallel } from '../../shared/utils/controlFlow.utils';
@@ -23,7 +24,9 @@ export class NetworkRoomProcessor {
     private readonly redisService: RedisService,
     private readonly loggerService: LoggerService,
   ) {
-    this.redisClient = this.redisService.getClient();
+    this.redisClient = bluebird.promisifyAll(
+      this.redisService.getClient('default'),
+    );
   }
 
   @Process({ name: 'createRooms', concurrency: numCPUs })
@@ -35,9 +38,9 @@ export class NetworkRoomProcessor {
         (isRepeat ? 0.2 : 0.5);
       const rooms = Math.ceil(clientsAmount / 3);
       const createRoomFns = Array.from(new Array(rooms)).map(() =>
-        this.createRoom(eventId),
+        this.service.createRooms(eventId),
       );
-      parallel(createRoomFns, () => jobDone(), 32);
+      parallel(createRoomFns, () => jobDone(), 16);
       this.loggerService.info(
         `createRooms: twilio rooms created for event: ${eventId}`,
       );
@@ -54,6 +57,7 @@ export class NetworkRoomProcessor {
     try {
       const { eventId } = job.data;
       await this.redisClient.del(`event-${eventId}:rooms`).catch(catchError);
+      await this.redisClient.zremrangebyscore(`event-${eventId}:rooms`, 0, 0);
       const isOnIntermission = await this.redisClient.get(
         `event-${eventId}:isOnIntermission`,
       );
@@ -80,13 +84,67 @@ export class NetworkRoomProcessor {
     }
   }
 
-  // force brute to handle too many requests error and get concurrency performance
-  async createRoom(eventId: number) {
-    return this.service
-      .createRoom()
-      .then(async ({ uniqueName }) => {
-        await this.redisClient.rpush(`event-${eventId}:rooms`, uniqueName);
-      })
-      .catch(() => Promise.resolve(this.createRoom(eventId)));
+  @Process({ name: 'findAvailableRooms', concurrency: numCPUs })
+  async findAvailableRooms(job, jobDone) {
+    try {
+      const { eventId } = job.data;
+      const roomsWithScores = await this.service.getRoomsWithScores(eventId);
+      if (!roomsWithScores.length)
+        await this.networkRoomQueue.add('sendRoomToPairs', { eventId });
+
+      const queueLength = await this.redisClient.llen(`event-${eventId}:queue`);
+      if (queueLength && roomsWithScores.length) {
+        const position = 0;
+        while (
+          roomsWithScores.length &&
+          !!(await this.redisClient.llen(`event-${eventId}:queue`))
+        ) {
+          await this.service.findAvailableRoom(
+            position,
+            eventId,
+            roomsWithScores,
+          );
+        }
+      }
+      jobDone();
+    } catch (error) {
+      this.loggerService.error(
+        `findAvailableRooms: ${JSON.stringify(job?.data || {})}`,
+        error,
+      );
+    }
+  }
+
+  @Process({ name: 'sendRoomToPairs', concurrency: numCPUs })
+  async sendRoomToPairs(job, jobDone) {
+    try {
+      const { eventId } = job.data;
+      const queueLength = await this.redisClient.llen(`event-${eventId}:queue`);
+      if (queueLength) {
+        const room = await this.service.getQueueSocketIdsAndSendRoom(
+          eventId,
+          0,
+        );
+        await this.service.switchRoom(eventId, room);
+        this.loggerService.info(
+          `sendRoomToPairs:switchRoom: room ${room} sent to sockets for the event ${eventId}`,
+        );
+      }
+      const queueLengthUpdated = await this.redisClient.llen(
+        `event-${eventId}:queue`,
+      );
+      if (queueLengthUpdated >= 2) {
+        const room = await this.service.getQueueSocketIdsAndSendRoom(eventId);
+        this.loggerService.info(
+          `sendRoomToPairs: room ${room} sent to sockets for the event ${eventId}`,
+        );
+      }
+      jobDone();
+    } catch (error) {
+      this.loggerService.error(
+        `sendRoomToPairs: ${JSON.stringify(job?.data || {})}`,
+        error,
+      );
+    }
   }
 }
