@@ -36,12 +36,11 @@ export class NetworkRoomService {
     );
   }
 
-  async roomStatus(networkRoomRoomStatus: NetworkRoomRoomStatusDto) {
-    const { StatusCallbackEvent, RoomName } = networkRoomRoomStatus;
-    const eventId = +RoomName.split('-')[0];
-    if (StatusCallbackEvent === 'participant-disconnected') {
+  async roomStatus(status, roomName) {
+    const eventId = +roomName.split('-')[0];
+    if (status === 'participant-disconnected') {
       this.loggerService.info(`status-callback-${eventId}`);
-      await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, RoomName);
+      await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, roomName);
       networkEventEmitter.emit(
         'changedQueuesOrRooms',
         `event-${eventId}:rooms`,
