@@ -110,21 +110,15 @@ export class NetworkRoomGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
     const { currentRoom, eventId } = data;
-    if (
-      (await this.redisClient.lindex(
-        `event-${eventId}:queueSwitch`,
-        socket.id,
-      )) === null
-    ) {
-      await this.redisClient.rpush(
-        `event-${eventId}:queueSwitch`,
-        JSON.stringify({ socketId: socket.id, currentRoom }),
-      );
-      networkEventEmitter.emit(
-        'changedQueuesOrRooms',
-        `event-${eventId}:queueSwitch`,
-      );
-    }
+    await this.redisClient.lrem(`event-${eventId}:queueSwitch`, 0, socket.id);
+    await this.redisClient.rpush(
+      `event-${eventId}:queueSwitch`,
+      JSON.stringify({ socketId: socket.id, currentRoom }),
+    );
+    networkEventEmitter.emit(
+      'changedQueuesOrRooms',
+      `event-${eventId}:queueSwitch`,
+    );
   }
 
   @SubscribeMessage('requestRoom')
@@ -134,16 +128,9 @@ export class NetworkRoomGateway
   ): Promise<void> {
     const { eventId } = data;
     socket.eventId = eventId;
-    if (
-      (await this.redisClient.lindex(`event-${eventId}:queue`, socket.id)) ===
-      null
-    ) {
-      await this.redisClient.rpush(`event-${eventId}:queue`, socket.id);
-      networkEventEmitter.emit(
-        'changedQueuesOrRooms',
-        `event-${eventId}:queue`,
-      );
-    }
+    await this.redisClient.lrem(`event-${eventId}:queue`, 0, socket.id);
+    await this.redisClient.rpush(`event-${eventId}:queue`, socket.id);
+    networkEventEmitter.emit('changedQueuesOrRooms', `event-${eventId}:queue`);
   }
 
   @SubscribeMessage('requestRoomToken')
@@ -153,5 +140,14 @@ export class NetworkRoomGateway
   ): void {
     const token = this.service.videoToken(data);
     this.server.to(socket.id).emit('requestRoomToken', token);
+  }
+
+  @SubscribeMessage('cancelRequest')
+  async cancelRequest(
+    @ConnectedSocket() socket: any,
+    @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
+  ): Promise<void> {
+    const { eventId } = data;
+    await this.redisClient.lrem(`event-${eventId}:queue`, 0, socket.id);
   }
 }
