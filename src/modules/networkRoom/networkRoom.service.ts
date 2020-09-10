@@ -10,6 +10,7 @@ import { config } from '../../shared/config/twilio';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 import { LoggerService } from '../../shared/services/logger.service';
 import networkEventEmitter from './networkRoom.event';
+import { NetworkRoomRoomStatusDto } from './dto/networkRoomRoomStatus.dto';
 
 const { AccessToken } = twilio.jwt;
 const { VideoGrant } = AccessToken;
@@ -33,13 +34,14 @@ export class NetworkRoomService {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
-  async roomStatus(status, roomName) {
-    const eventId = +roomName.split('-')[0];
+  async roomStatus(data: NetworkRoomRoomStatusDto) {
+    const { StatusCallbackEvent, RoomName } = data;
+    const eventId = +RoomName.split('-')[0];
     this.loggerService.info(
-      `status-callback-${eventId}, ${status}, ${roomName}`,
+      `status-callback-${eventId}, ${StatusCallbackEvent}, ${RoomName}`,
     );
-    if (status === 'participant-disconnected') {
-      await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, roomName);
+    if (StatusCallbackEvent === 'participant-disconnected') {
+      await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, RoomName);
       networkEventEmitter.emit(
         'changedQueuesOrRooms',
         `event-${eventId}:rooms`,
