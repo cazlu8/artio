@@ -74,8 +74,15 @@ export class NetworkRoomGateway
     networkEventEmitter.on('changedQueuesOrRooms', async key => {
       const eventId = +String.prototype.split.call(key.split(`:`)[0], `-`)[1];
       const length = await this.redisClient.llen(`event-${eventId}:queue`);
-      if (length)
-        await this.networkRoomQueue.add('findAvailableRooms', { eventId });
+      const lengthSwitch = await this.redisClient.llen(
+        `event-${eventId}:queueSwitch`,
+      );
+      if (length || lengthSwitch)
+        await this.networkRoomQueue.add(
+          'findAvailableRooms',
+          { eventId },
+          { delay: 1000 },
+        );
     });
   }
 
