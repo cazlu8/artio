@@ -51,6 +51,8 @@ export class NetworkRoomService {
     const uid = short.generate();
     return await this.clientConfig.video.rooms
       .create({
+        statusCallback: process.env.TWILIO_STATUS_CALLBACK_URL,
+        statusCallbackMethod: 'POST',
         recordParticipantsOnConnect: true,
         type: 'group-small',
         uniqueName: `${eventId}-${uid}`,
