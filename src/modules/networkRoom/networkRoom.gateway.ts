@@ -71,8 +71,7 @@ export class NetworkRoomGateway
       this.server.to(socketId).emit('switchRoom', room);
     });
 
-    networkEventEmitter.on('changedQueuesOrRooms', async key => {
-      const eventId = +String.prototype.split.call(key.split(`:`)[0], `-`)[1];
+    networkEventEmitter.on('changedQueuesOrRooms', async eventId => {
       const length = await this.redisClient.llen(`event-${eventId}:queue`);
       const lengthSwitch = await this.redisClient.llen(
         `event-${eventId}:queueSwitch`,
@@ -117,10 +116,7 @@ export class NetworkRoomGateway
       `event-${eventId}:queueSwitch`,
       JSON.stringify({ socketId: socket.id, currentRoom }),
     );
-    networkEventEmitter.emit(
-      'changedQueuesOrRooms',
-      `event-${eventId}:queueSwitch`,
-    );
+    networkEventEmitter.emit('changedQueuesOrRooms', eventId);
   }
 
   @SubscribeMessage('requestRoom')
@@ -132,7 +128,7 @@ export class NetworkRoomGateway
     socket.eventId = eventId;
     await this.redisClient.lrem(`event-${eventId}:queue`, 0, socket.id);
     await this.redisClient.rpush(`event-${eventId}:queue`, socket.id);
-    networkEventEmitter.emit('changedQueuesOrRooms', `event-${eventId}:queue`);
+    networkEventEmitter.emit('changedQueuesOrRooms', eventId);
   }
 
   @SubscribeMessage('requestRoomToken')

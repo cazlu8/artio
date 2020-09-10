@@ -36,7 +36,7 @@ export class NetworkRoomService {
 
   async roomStatus(data: NetworkRoomRoomStatusDto) {
     const { StatusCallbackEvent, RoomName } = data;
-    const eventId = +RoomName.split('-')[0];
+    const eventId = RoomName.split('-')[0];
     if (StatusCallbackEvent === 'participant-disconnected') {
       this.loggerService.info(
         `status-callback-${eventId}, ${StatusCallbackEvent}, ${RoomName}`,
@@ -119,25 +119,18 @@ export class NetworkRoomService {
   }
 
   async findAvailableRoom(
-    position: number,
     eventId: number,
     roomsWithScores: [{ room: string; score: number }],
   ) {
-    const increasePosition = () => {
-      if (++roomsWithScores[position].score === 4) {
-        roomsWithScores.shift();
-        position++;
-      }
-    };
-    if (await this.switchRoom(eventId, roomsWithScores[position].room))
-      increasePosition();
-
-    const { room } = roomsWithScores[position];
+    const { room } = roomsWithScores[0];
     const currentRoomScore = await this.redisClient.zscore(
       `event-${eventId}:rooms`,
       room,
     );
     if (currentRoomScore < 4) {
+      if (await this.switchRoom(eventId, room)) return;
+
+      await this.redisClient.zincrby(`event-${eventId}:rooms`, 1, room);
       const socketId = await this.redisClient.lpop(`event-${eventId}:queue`);
       networkEventEmitter.emit('sendAvailableRoom', {
         socketId,
@@ -146,15 +139,7 @@ export class NetworkRoomService {
       this.loggerService.info(
         `findAvailableRooms: room ${room} sent to socket.`,
       );
-      await this.redisClient.zincrby(`event-${eventId}:rooms`, 1, room);
-      increasePosition();
     }
-    const queueLength = +(await this.redisClient.llen(
-      `event-${eventId}:queue`,
-    ));
-
-    if (queueLength && !roomsWithScores.length)
-      await this.networkRoomQueue.add('sendRoomToPairs', { eventId });
   }
 
   async switchRoom(eventId: number, room: string) {
@@ -177,17 +162,13 @@ export class NetworkRoomService {
     return false;
   }
 
-  async getQueueSocketIdsAndSendRoom(eventId: number, endIndex?: number) {
+  async getQueueSocketIdsAndSendRoom(eventId: number) {
     const socketIds = await this.redisClient.lrange(
       `event-${eventId}:queue`,
       0,
-      endIndex || 1,
+      1,
     );
-    await this.redisClient.ltrim(
-      `event-${eventId}:queue`,
-      endIndex !== undefined ? ++endIndex : 2,
-      -1,
-    );
+    await this.redisClient.ltrim(`event-${eventId}:queue`, 2, -1);
     const twilioRoom = await this.sendTwillioRoomToSockets(socketIds, eventId);
     await this.redisClient.zadd(
       `event-${eventId}:rooms`,
