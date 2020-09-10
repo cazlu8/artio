@@ -105,7 +105,6 @@ export class NetworkRoomGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
     const { currentRoom, eventId } = data;
-    const lock = await this.redlock.lock(`event-${eventId}:queueSwitch`, 2000);
     await this.redisClient.lrem(`event-${eventId}:queueSwitch`, 0, socket.id);
     await this.redisClient.rpush(
       `event-${eventId}:queueSwitch`,
@@ -115,8 +114,6 @@ export class NetworkRoomGateway
       'changedQueuesOrRooms',
       `event-${eventId}:queueSwitch`,
     );
-    const updatedLock = await lock.extend(1000);
-    await updatedLock.unlock();
   }
 
   @SubscribeMessage('requestRoom')
@@ -125,13 +122,10 @@ export class NetworkRoomGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
     const { eventId } = data;
-    const lock = await this.redlock.lock(`event-${eventId}:queue`, 2000);
     socket.eventId = eventId;
     await this.redisClient.lrem(`event-${eventId}:queue`, 0, socket.id);
     await this.redisClient.rpush(`event-${eventId}:queue`, socket.id);
     networkEventEmitter.emit('changedQueuesOrRooms', `event-${eventId}:queue`);
-    const updatedLock = await lock.extend(1000);
-    await updatedLock.unlock();
   }
 
   @SubscribeMessage('requestRoomToken')
