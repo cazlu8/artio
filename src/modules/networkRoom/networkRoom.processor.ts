@@ -92,17 +92,7 @@ export class NetworkRoomProcessor {
           `event-${eventId}:queue`,
         );
         if (queueLength && roomsWithScores.length) {
-          const position = 0;
-          while (
-            roomsWithScores.length &&
-            !!(await this.redisClient.llen(`event-${eventId}:queue`))
-          ) {
-            await this.service.findAvailableRoom(
-              position,
-              eventId,
-              roomsWithScores,
-            );
-          }
+          await this.service.findAvailableRoom(eventId, roomsWithScores);
         }
       }
       jobDone();
@@ -119,23 +109,8 @@ export class NetworkRoomProcessor {
     try {
       const { eventId } = job.data;
       const queueLength = await this.redisClient.llen(`event-${eventId}:queue`);
-      const queueSwitchLength = await this.redisClient.llen(
-        `event-${eventId}:queueSwitch`,
-      );
-      if (queueLength && queueSwitchLength) {
-        const room = await this.service.getQueueSocketIdsAndSendRoom(
-          eventId,
-          0,
-        );
-        await this.service.switchRoom(eventId, room);
-        this.loggerService.info(
-          `sendRoomToPairs:switchRoom: room ${room} sent to sockets for the event ${eventId}`,
-        );
-      }
-      const queueLengthUpdated = await this.redisClient.llen(
-        `event-${eventId}:queue`,
-      );
-      if (queueLengthUpdated >= 2) {
+
+      if (queueLength >= 2) {
         const room = await this.service.getQueueSocketIdsAndSendRoom(eventId);
         this.loggerService.info(
           `sendRoomToPairs: room ${room} sent to sockets for the event ${eventId}`,
