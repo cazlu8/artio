@@ -10,6 +10,7 @@ import { config } from '../../shared/config/twilio';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
 import { LoggerService } from '../../shared/services/logger.service';
 import networkEventEmitter from './networkRoom.event';
+import { NetworkRoomRoomStatusDto } from './dto/networkRoomRoomStatus.dto';
 
 const { AccessToken } = twilio.jwt;
 const { VideoGrant } = AccessToken;
@@ -33,11 +34,14 @@ export class NetworkRoomService {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
-  async roomStatus(status, roomName) {
-    const eventId = +roomName.split('-')[0];
-    if (status === 'participant-disconnected') {
-      this.loggerService.info(`status-callback-${eventId}`);
-      await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, roomName);
+  async roomStatus(data: NetworkRoomRoomStatusDto) {
+    const { StatusCallbackEvent, RoomName } = data;
+    const eventId = +RoomName.split('-')[0];
+    this.loggerService.info(
+      `status-callback-${eventId}, ${StatusCallbackEvent}, ${RoomName}`,
+    );
+    if (StatusCallbackEvent === 'participant-disconnected') {
+      await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, RoomName);
       networkEventEmitter.emit(
         'changedQueuesOrRooms',
         `event-${eventId}:rooms`,
@@ -49,6 +53,8 @@ export class NetworkRoomService {
     const uid = short.generate();
     return await this.clientConfig.video.rooms
       .create({
+        statusCallback: process.env.TWILIO_STATUS_CALLBACK_URL,
+        statusCallbackMethod: 'POST',
         recordParticipantsOnConnect: true,
         type: 'group-small',
         uniqueName: `${eventId}-${uid}`,
@@ -95,31 +101,24 @@ export class NetworkRoomService {
   }
 
   async getRoomsWithScores(eventId: number) {
-    let roomsWithScores;
-    try {
-      roomsWithScores = await this.redisClient.zrangebyscore(
-        `event-${eventId}:rooms`,
-        1,
-        3,
-        'WITHSCORES',
-      );
-    } catch (error) {
-      this.loggerService.error(`error:${error}`, error);
-    }
-
-    return (
-      (roomsWithScores || []).reduce((acc, cur, i, rooms) => {
-        if (i !== 0) i += i;
-        if (i >= rooms.length) return acc;
-        return acc.push({ room: rooms[i], score: +rooms[i + 1] });
-      }, []) || []
+    const roomsWithScores = await this.redisClient.zrangebyscore(
+      `event-${eventId}:rooms`,
+      1,
+      3,
+      'WITHSCORES',
     );
+    return (roomsWithScores || []).reduce((acc, cur, i, rooms) => {
+      if (i !== 0) i += i;
+      if (i >= rooms.length) return acc;
+      acc.push({ room: rooms[i], score: +rooms[i + 1] });
+      return acc;
+    }, []);
   }
 
   async findAvailableRoom(
     position: number,
-    roomsWithScores: [{ room: string; score: number }],
     eventId: number,
+    roomsWithScores: [{ room: string; score: number }],
   ) {
     const increasePosition = () => {
       if (++roomsWithScores[position].score === 4) {
@@ -139,10 +138,8 @@ export class NetworkRoomService {
     await this.redisClient.zincrby(`event-${eventId}:rooms`, 1, room);
     this.loggerService.info(`findAvailableRooms: room ${room} sent to socket.`);
     increasePosition();
-    if (
-      roomsWithScores[position].score === 4 &&
-      position === roomsWithScores.length - 1
-    )
+    const queueLength = await this.redisClient.llen(`event-${eventId}:queue`);
+    if (+queueLength && !roomsWithScores.length)
       await this.networkRoomQueue.add('sendRoomToPairs', { eventId });
   }
 
