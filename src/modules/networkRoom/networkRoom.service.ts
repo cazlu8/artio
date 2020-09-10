@@ -133,17 +133,26 @@ export class NetworkRoomService {
       increasePosition();
 
     const { room } = roomsWithScores[position];
-    const socketId = await this.redisClient.lpop(`event-${eventId}:queue`);
-    networkEventEmitter.emit('sendAvailableRoom', {
-      socketId,
-      room: { uniqueName: room },
-    });
-    this.loggerService.info(`findAvailableRooms: room ${room} sent to socket.`);
-    await this.redisClient.zincrby(`event-${eventId}:rooms`, 1, room);
-    increasePosition();
+    const currentRoomScore = await this.redisClient.zscore(
+      `event-${eventId}:rooms`,
+      room,
+    );
+    if (currentRoomScore < 4) {
+      const socketId = await this.redisClient.lpop(`event-${eventId}:queue`);
+      networkEventEmitter.emit('sendAvailableRoom', {
+        socketId,
+        room: { uniqueName: room },
+      });
+      this.loggerService.info(
+        `findAvailableRooms: room ${room} sent to socket.`,
+      );
+      await this.redisClient.zincrby(`event-${eventId}:rooms`, 1, room);
+      increasePosition();
+    }
     const queueLength = +(await this.redisClient.llen(
       `event-${eventId}:queue`,
     ));
+
     if (queueLength && !roomsWithScores.length)
       await this.networkRoomQueue.add('sendRoomToPairs', { eventId });
   }
