@@ -40,6 +40,7 @@ export class SponsorController extends BaseWithoutAuthController {
     type: CreateSponsorDto,
     description: 'The sponsor has been successfully created',
   })
+  @UseGuards(AuthGuard)
   @Post()
   async create(
     @Body() createSponsorDto: CreateSponsorDto,
