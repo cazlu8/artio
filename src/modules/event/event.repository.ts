@@ -124,6 +124,7 @@ export class EventRepository extends Repository<Event> {
       .addSelect('name', 'name')
       .addSelect('email', 'email')
       .addSelect('external_link', 'externalLink')
+      .addOrderBy('tier', 'ASC')
       .where(qb => {
         const subQuery = qb
           .subQuery()
