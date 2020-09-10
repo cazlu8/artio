@@ -42,10 +42,7 @@ export class NetworkRoomService {
         `status-callback-${eventId}, ${StatusCallbackEvent}, ${RoomName}`,
       );
       await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, RoomName);
-      networkEventEmitter.emit(
-        'changedQueuesOrRooms',
-        `event-${eventId}:rooms`,
-      );
+      networkEventEmitter.emit('changedQueuesOrRooms', eventId);
     }
   }
 
