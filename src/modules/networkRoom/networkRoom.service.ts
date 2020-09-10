@@ -102,19 +102,18 @@ export class NetworkRoomService {
       'WITHSCORES',
     );
     this.loggerService.info(`qewfrkljqewfkjfewqkejfwqk ${roomsWithScores}`);
-    return (
-      (roomsWithScores || []).reduce((acc, cur, i, rooms) => {
-        if (i !== 0) i += i;
-        if (i >= rooms.length) return acc;
-        return acc.push({ room: rooms[i], score: +rooms[i + 1] });
-      }, []) || []
-    );
+    return (roomsWithScores || []).reduce((acc, cur, i, rooms) => {
+      if (i !== 0) i += i;
+      if (i >= rooms.length) return acc;
+      acc.push({ room: rooms[i], score: +rooms[i + 1] });
+      return acc;
+    }, []);
   }
 
   async findAvailableRoom(
     position: number,
-    roomsWithScores: [{ room: string; score: number }],
     eventId: number,
+    roomsWithScores: [{ room: string; score: number }],
   ) {
     this.loggerService.info(`kqwjkwqjkwefk ${roomsWithScores}`);
     const increasePosition = () => {
@@ -135,10 +134,8 @@ export class NetworkRoomService {
     await this.redisClient.zincrby(`event-${eventId}:rooms`, 1, room);
     this.loggerService.info(`findAvailableRooms: room ${room} sent to socket.`);
     increasePosition();
-    if (
-      roomsWithScores[position].score === 4 &&
-      position === roomsWithScores.length - 1
-    )
+    const queueLength = await this.redisClient.llen(`event-${eventId}:queue`);
+    if (+queueLength && position === roomsWithScores.length - 1)
       await this.networkRoomQueue.add('sendRoomToPairs', { eventId });
   }
 
