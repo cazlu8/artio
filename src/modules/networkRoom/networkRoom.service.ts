@@ -35,8 +35,10 @@ export class NetworkRoomService {
 
   async roomStatus(status, roomName) {
     const eventId = +roomName.split('-')[0];
+    this.loggerService.info(
+      `status-callback-${eventId}, ${status}, ${roomName}`,
+    );
     if (status === 'participant-disconnected') {
-      this.loggerService.info(`status-callback-${eventId}`);
       await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, roomName);
       networkEventEmitter.emit(
         'changedQueuesOrRooms',
@@ -101,7 +103,6 @@ export class NetworkRoomService {
       3,
       'WITHSCORES',
     );
-    this.loggerService.info(`qewfrkljqewfkjfewqkejfwqk ${roomsWithScores}`);
     return (roomsWithScores || []).reduce((acc, cur, i, rooms) => {
       if (i !== 0) i += i;
       if (i >= rooms.length) return acc;
@@ -115,7 +116,6 @@ export class NetworkRoomService {
     eventId: number,
     roomsWithScores: [{ room: string; score: number }],
   ) {
-    this.loggerService.info(`kqwjkwqjkwefk ${roomsWithScores}`);
     const increasePosition = () => {
       if (++roomsWithScores[position].score === 4) {
         roomsWithScores.shift();
@@ -135,7 +135,7 @@ export class NetworkRoomService {
     this.loggerService.info(`findAvailableRooms: room ${room} sent to socket.`);
     increasePosition();
     const queueLength = await this.redisClient.llen(`event-${eventId}:queue`);
-    if (+queueLength && position === roomsWithScores.length - 1)
+    if (+queueLength && !roomsWithScores.length)
       await this.networkRoomQueue.add('sendRoomToPairs', { eventId });
   }
 
