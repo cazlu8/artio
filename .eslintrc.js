@@ -36,5 +36,6 @@ module.exports = {
     'no-plusplus': 'off',
     'no-unused-expressions': 'off',
     'no-await-in-loop': 'off',
+    'no-restricted-syntax': 'off',
   },
 };

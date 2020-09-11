@@ -15,6 +15,6 @@ scenarios:
   - engine: "socketio"
     flow:
       - emit:
-          channel: "requestAvailableRoom"
+          channel: "requestRoom"
 
 

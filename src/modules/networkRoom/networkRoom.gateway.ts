@@ -13,8 +13,9 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import * as bluebird from 'bluebird';
 import { RedisService } from 'nestjs-redis';
-import * as Redlock from 'redlock';
+import { promisify } from 'util';
 import { UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import * as Lock from 'redis-lock';
 import { LoggerService } from '../../shared/services/logger.service';
 import { NetworkRoomService } from './networkRoom.service';
 import { NetworkRoomTokenDto } from './dto/networkRoomToken.dto';
@@ -40,7 +41,7 @@ export class NetworkRoomGateway
 
   private readonly redisClient: any;
 
-  private readonly redlock: any;
+  private readonly lock: any;
 
   constructor(
     @InjectQueue('networkRoom')
@@ -51,13 +52,7 @@ export class NetworkRoomGateway
     private readonly jwtService: JwtService,
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
-    this.redlock = new Redlock([this.redisClient], {
-      retryDelay: 100,
-      retryCount: Infinity,
-    });
-    this.redlock.on('clientError', err =>
-      this.loggerService.error('redlockError: clientError', err),
-    );
+    this.lock = promisify(Lock(this.redisClient));
   }
 
   afterInit() {
@@ -71,12 +66,21 @@ export class NetworkRoomGateway
       this.server.to(socketId).emit('switchRoom', room);
     });
 
-    networkEventEmitter.on('changedQueuesOrRooms', async eventId => {
-      const length = await this.redisClient.llen(`event-${eventId}:queue`);
+    networkEventEmitter.on('SwitchRoom', async eventId => {
       const lengthSwitch = await this.redisClient.llen(
         `event-${eventId}:queueSwitch`,
       );
-      if (length || lengthSwitch)
+      if (lengthSwitch)
+        await this.networkRoomQueue.add(
+          'switchRoom',
+          { eventId },
+          { delay: 1000 },
+        );
+    });
+
+    networkEventEmitter.on('changedQueuesOrRooms', async eventId => {
+      const length = await this.redisClient.llen(`event-${eventId}:queue`);
+      if (length)
         await this.networkRoomQueue.add(
           'findAvailableRooms',
           { eventId },
@@ -110,13 +114,20 @@ export class NetworkRoomGateway
     @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
-    const { currentRoom, eventId } = data;
-    await this.redisClient.lrem(`event-${eventId}:queueSwitch`, 0, socket.id);
-    await this.redisClient.rpush(
-      `event-${eventId}:queueSwitch`,
-      JSON.stringify({ socketId: socket.id, currentRoom }),
-    );
-    networkEventEmitter.emit('changedQueuesOrRooms', eventId);
+    const unlock = await this.lock('requestRoom');
+    try {
+      const { currentRoom, eventId } = data;
+      await this.redisClient.lrem(`event-${eventId}:queueSwitch`, 0, socket.id);
+      await this.redisClient.rpush(
+        `event-${eventId}:queueSwitch`,
+        JSON.stringify({ socketId: socket.id, currentRoom }),
+      );
+      networkEventEmitter.emit('SwitchRoom', eventId);
+    } catch (error) {
+      this.loggerService.error(`switchRoom: ${JSON.stringify(error)}`, error);
+    } finally {
+      unlock();
+    }
   }
 
   @SubscribeMessage('requestRoom')
@@ -124,11 +135,18 @@ export class NetworkRoomGateway
     @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomEventDefaultDto,
   ): Promise<void> {
-    const { eventId } = data;
-    socket.eventId = eventId;
-    await this.redisClient.lrem(`event-${eventId}:queue`, 0, socket.id);
-    await this.redisClient.rpush(`event-${eventId}:queue`, socket.id);
-    networkEventEmitter.emit('changedQueuesOrRooms', eventId);
+    const unlock = await this.lock('requestRoom');
+    try {
+      const { eventId } = data;
+      socket.eventId = eventId;
+      await this.redisClient.lrem(`event-${eventId}:queue`, 0, socket.id);
+      await this.redisClient.rpush(`event-${eventId}:queue`, socket.id);
+      networkEventEmitter.emit('changedQueuesOrRooms', eventId);
+    } catch (error) {
+      this.loggerService.error(`requestRoom: ${JSON.stringify(error)}`, error);
+    } finally {
+      unlock();
+    }
   }
 
   @SubscribeMessage('requestRoomToken')
