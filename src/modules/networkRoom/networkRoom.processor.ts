@@ -2,8 +2,10 @@ import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { RedisService } from 'nestjs-redis';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as Lock from 'redis-lock';
 import * as bluebird from 'bluebird';
 import { Queue } from 'bull';
+import { promisify } from 'util';
 import { NetworkRoomService } from './networkRoom.service';
 import { parallel } from '../../shared/utils/controlFlow.utils';
 import { UserEvents } from '../userEvents/userEvents.entity';
@@ -15,6 +17,8 @@ const numCPUs = require('os').cpus().length;
 export class NetworkRoomProcessor {
   private readonly redisClient: any;
 
+  private readonly lock: any;
+
   constructor(
     @InjectQueue('networkRoom') private readonly networkRoomQueue: Queue,
     @InjectRepository(UserEvents)
@@ -24,6 +28,7 @@ export class NetworkRoomProcessor {
     private readonly loggerService: LoggerService,
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
+    this.lock = promisify(Lock(this.redisClient));
   }
 
   @Process({ name: 'createRooms', concurrency: numCPUs })
@@ -35,7 +40,7 @@ export class NetworkRoomProcessor {
         (isRepeat ? 0.2 : 0.5);
       const rooms = Math.ceil(clientsAmount / 3);
       const createRoomFns = Array.from(new Array(rooms)).map(() =>
-        this.service.createRooms(eventId),
+        this.service.createRoomAndSave(eventId),
       );
       parallel(createRoomFns, () => jobDone(), 16);
       this.loggerService.info(
@@ -53,6 +58,7 @@ export class NetworkRoomProcessor {
   async clearExpiredRooms(job, jobDone) {
     try {
       const { eventId } = job.data;
+      await this.redisClient.del(`event-${eventId}:roomsTwilio`);
       await this.redisClient.zremrangebyscore(`event-${eventId}:rooms`, 0, 0);
       const isOnIntermission = await this.redisClient.get(
         `event-${eventId}:isOnIntermission`,
@@ -82,9 +88,13 @@ export class NetworkRoomProcessor {
 
   @Process({ name: 'findAvailableRooms', concurrency: numCPUs })
   async findAvailableRooms(job, jobDone) {
+    const unlock = await this.lock('findAvailableRooms');
     try {
       const { eventId } = job.data;
-      const roomsWithScores = await this.service.getRoomsWithScores(eventId);
+      const roomsWithScores = await this.service.getRoomsWithScores(
+        eventId,
+        true,
+      );
       if (!roomsWithScores.length)
         await this.networkRoomQueue.add('sendRoomToPairs', { eventId });
       else {
@@ -101,11 +111,14 @@ export class NetworkRoomProcessor {
         `findAvailableRooms: ${JSON.stringify(error)}`,
         error,
       );
+    } finally {
+      unlock();
     }
   }
 
   @Process({ name: 'sendRoomToPairs', concurrency: numCPUs })
   async sendRoomToPairs(job, jobDone) {
+    const unlock = await this.lock('sendRoomToPairs');
     try {
       const { eventId } = job.data;
       const queueLength = await this.redisClient.llen(`event-${eventId}:queue`);
@@ -122,6 +135,46 @@ export class NetworkRoomProcessor {
         `sendRoomToPairs: ${JSON.stringify(error)}`,
         error,
       );
+    } finally {
+      unlock();
+    }
+  }
+
+  @Process({ name: 'switchRoom', concurrency: numCPUs })
+  async switchRoom(job, jobDone) {
+    const unlock = await this.lock('switchRoom');
+    try {
+      const { eventId } = job.data;
+      const lengthSwitch = await this.redisClient.llen(
+        `event-${eventId}:queueSwitch`,
+      );
+      if (lengthSwitch >= 2) {
+        const room = await this.service.createRoomAndSave(eventId);
+        const clients = await this.redisClient.lrange(
+          `event-${eventId}:queueSwitch`,
+          0,
+          1,
+        );
+        const sendToSwitch = clients.map(client => {
+          const { socketId } = JSON.parse(client);
+          return this.service.switchRoom(eventId, socketId, room);
+        });
+        await Promise.all(sendToSwitch);
+        this.loggerService.info(
+          `switchRoom: created a new room for the event ${eventId}`,
+        );
+        return;
+      }
+      const roomsWithScores = await this.service.getRoomsWithScores(eventId);
+      await this.service.findRoomToSwitch(eventId, roomsWithScores);
+      this.loggerService.info(
+        `switchRoom: switched room for the event ${eventId}`,
+      );
+      jobDone();
+    } catch (error) {
+      this.loggerService.error(`switchRoom: ${JSON.stringify(error)}`, error);
+    } finally {
+      unlock();
     }
   }
 }
