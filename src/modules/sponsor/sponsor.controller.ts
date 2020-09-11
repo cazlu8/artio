@@ -25,6 +25,7 @@ import { SponsorRepository } from './sponsor.repository';
 import { ValidateSponsorGUID } from './pipes/ValidateSponsorGUID.pipe';
 import { ValidateSponsorId } from './pipes/ValidateSponsorId.pipe';
 import { ValidateSponsorEmail } from './pipes/ValidateSponsorEmail.pipe';
+import { CreateBannerDto } from './dto/sponsor.create.banner.dto';
 
 @ApiTags('Sponsor')
 @Controller('sponsors')
@@ -61,6 +62,19 @@ export class SponsorController extends BaseWithoutAuthController {
     return this.sponsorService.uploadLogo(createLogoDto);
   }
 
+  @ApiCreatedResponse({
+    type: CreateLogoDto,
+    description: 'Banner has been successfully created',
+  })
+  @UsePipes(ValidateSponsorId)
+  @UseGuards(AuthGuard)
+  @Post('/uploadBanner')
+  uploadBanner(
+    @Body() createBannerDto: CreateBannerDto,
+  ): Promise<void | ObjectLiteral> {
+    return this.sponsorService.uploadBanner(createBannerDto);
+  }
+
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Sponsor,
@@ -90,6 +104,20 @@ export class SponsorController extends BaseWithoutAuthController {
     });
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiCreatedResponse({
+    type: Sponsor,
+    description: 'Sponsor by id was successfully retrieved',
+  })
+  @UsePipes(ValidateSponsorId)
+  @UseGuards(AdminAuthGuard)
+  @Get('/:id')
+  async getSponsorById(@Param('id', ParseIntPipe) id): Promise<Sponsor | void> {
+    return this.repository.findOne({
+      where: { id },
+    });
+  }
+
   @ApiParam({ name: 'guid', type: 'string' })
   @ApiCreatedResponse({
     type: Sponsor,
@@ -97,7 +125,7 @@ export class SponsorController extends BaseWithoutAuthController {
   })
   @UsePipes(ValidateSponsorGUID)
   @UseGuards(AuthGuard)
-  @Get('/:guid')
+  @Get('/guid/:guid')
   async findOne(@Param('guid') guid): Promise<Partial<Sponsor> | void> {
     return this.repository.findOne({ guid });
   }
