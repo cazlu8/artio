@@ -53,7 +53,6 @@ export class NetworkRoomProcessor {
   async clearExpiredRooms(job, jobDone) {
     try {
       const { eventId } = job.data;
-      await this.redisClient.zremrangebyrank(`event-${eventId}:rooms`, 0 - 1);
       await this.redisClient.zremrangebyscore(`event-${eventId}:rooms`, 0, 0);
       const isOnIntermission = await this.redisClient.get(
         `event-${eventId}:isOnIntermission`,
@@ -120,7 +119,10 @@ export class NetworkRoomProcessor {
     try {
       const { eventId } = job.data;
       const queueLength = await this.redisClient.llen(`event-${eventId}:queue`);
-      if (queueLength) {
+      const queueSwitchLength = await this.redisClient.llen(
+        `event-${eventId}:queueSwitch`,
+      );
+      if (queueLength && queueSwitchLength) {
         const room = await this.service.getQueueSocketIdsAndSendRoom(
           eventId,
           0,
