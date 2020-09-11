@@ -6,7 +6,9 @@ import {
   createLogo,
   saveLogorUrl,
   updateSponsor,
+  createBanner,
   saveSponsorError,
+  createBannerError,
   createLogoError,
 } from './data';
 import Application from '../main.test';
@@ -68,6 +70,24 @@ describe('Sponsor', () => {
     done();
   });
 
+  it(`/POST sponsors/uploadBanner`, async done => {
+    await repository.save(saveSponsor);
+    await app
+      .post('/sponsors/uploadBanner')
+      .send(createBanner)
+      .set('Accept', 'application/json')
+      .expect(201);
+
+    const sponsor = await repository.findOne(1);
+    expect(sponsor).toEqual(
+      expect.objectContaining({
+        id: 1,
+      }),
+    );
+    expect(sponsor.banner).toBeTruthy();
+    done();
+  });
+
   it(`/GET sponsors/logo/:id`, async done => {
     await repository.save(saveSponsor);
     await repository.update(
@@ -112,7 +132,7 @@ describe('Sponsor', () => {
     });
 
     const { body } = await app
-      .get(`/sponsors/${guid}`)
+      .get(`/sponsors/guid/${guid}`)
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
       .expect(200);
@@ -121,6 +141,29 @@ describe('Sponsor', () => {
       expect.objectContaining({
         email,
         guid,
+      }),
+    );
+    done();
+  });
+
+  it('/GET sponsors by id', async done => {
+    const { email } = saveSponsor;
+    await repository.save(saveSponsor);
+    const { id } = await repository.findOne({
+      select: ['id'],
+      where: { id: 1 },
+    });
+
+    const { body } = await app
+      .get(`/sponsors/${id}`)
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(200);
+
+    expect(body).toEqual(
+      expect.objectContaining({
+        email,
+        id,
       }),
     );
     done();
@@ -190,6 +233,19 @@ describe('Sponsor', () => {
     done();
   });
 
+  it(`/POST create sponsor banner without logo url error`, async done => {
+    await repository.save(saveSponsor);
+    const { body } = await app
+      .post('/sponsors/uploadLogo')
+      .send(createBannerError)
+      .set('Accept', 'application/json')
+      .expect(400);
+
+    expect(body.message).toHaveLength(1);
+
+    done();
+  });
+
   it(`/DELETE sponsor logo with invalid sponsorId error`, async done => {
     const { body } = await app
       .delete('/sponsors/removeLogo/1')
@@ -239,7 +295,19 @@ describe('Sponsor', () => {
 
   it('/GET sponsors by guid with invalid guid error', async done => {
     const { body } = await app
-      .get(`/sponsors/2d09879a-0ae9-4cc9-acd0-70b3a563387b`)
+      .get(`/sponsors/guid/2d09879a-0ae9-4cc9-acd0-70b3a563387b`)
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(404);
+
+    expect(body.message).toEqual('Not Found');
+
+    done();
+  });
+
+  it('/GET sponsors by id with invalid id error', async done => {
+    const { body } = await app
+      .get(`/sponsors/2`)
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
       .expect(404);
