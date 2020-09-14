@@ -71,21 +71,13 @@ export class NetworkRoomGateway
         `event-${eventId}:queueSwitch`,
       );
       if (lengthSwitch)
-        await this.networkRoomQueue.add(
-          'switchRoom',
-          { eventId },
-          { delay: 1000 },
-        );
+        await this.networkRoomQueue.add('switchRoom', { eventId });
     });
 
     networkEventEmitter.on('changedQueuesOrRooms', async eventId => {
       const length = await this.redisClient.llen(`event-${eventId}:queue`);
       if (length)
-        await this.networkRoomQueue.add(
-          'findAvailableRooms',
-          { eventId },
-          { delay: 1000 },
-        );
+        await this.networkRoomQueue.add('findAvailableRooms', { eventId });
     });
   }
 
