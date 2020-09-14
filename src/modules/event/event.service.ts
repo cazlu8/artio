@@ -11,6 +11,7 @@ import * as bluebird from 'bluebird';
 import { PromiseResult } from 'aws-sdk/lib/request';
 import { AWSError, S3 } from 'aws-sdk';
 import { ManagedUpload } from 'aws-sdk/clients/s3';
+import * as dateFns from 'date-fns';
 import { Event } from './event.entity';
 import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
@@ -24,7 +25,6 @@ import EventStartIntermissionDto from './dto/event.startIntermission.dto';
 import { EventGateway } from './event.gateway';
 import { LoggerService } from '../../shared/services/logger.service';
 import { UploadService } from '../../shared/services/upload.service';
-
 @Injectable()
 export class EventService {
   private redisClient: any;
@@ -135,9 +135,7 @@ export class EventService {
       throw new BadRequestException(`event ${eventId} is not on intermission`);
   }
 
-  async getIntermissionStatus(
-    eventId: number,
-  ): Promise<ObjectLiteral | boolean> {
+  async getIntermissionStatus(eventId: number): Promise<number | boolean> {
     const ongoing = !!(await this.redisClient.get(
       `event-${eventId}:isOnIntermission`,
     ));
@@ -152,7 +150,9 @@ export class EventService {
         getStartedAtFn,
         getDurationFn,
       ]);
-      return { ongoing, startedAt, duration };
+      const startedAtDate = +dateFns.addMinutes(new Date(startedAt), +duration);
+      const nowDate = Date.now();
+      return dateFns.differenceInSeconds(startedAtDate, nowDate);
     }
     return false;
   }
