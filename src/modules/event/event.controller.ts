@@ -220,7 +220,7 @@ export class EventController extends BaseWithoutAuthController {
   @Get('/getIntermissionStatus/:eventId')
   async getIntermissionStatus(
     @Param('eventId', ParseIntPipe) eventId: number,
-  ): Promise<ObjectLiteral | boolean> {
+  ): Promise<number | boolean> {
     return this.service.getIntermissionStatus(eventId);
   }
 
