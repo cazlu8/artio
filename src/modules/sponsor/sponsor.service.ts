@@ -83,7 +83,7 @@ export class SponsorService {
   ): Promise<void | ObjectLiteral> {
     const { banner, id: sponsorId } = createBannerDto;
     const bannerId: string = uuid();
-    const { entity, sharpedImage } = await this.processLogoImage(
+    const { entity, sharpedImage } = await this.processBannerImage(
       banner,
       sponsorId,
       bannerId,
@@ -122,6 +122,22 @@ export class SponsorService {
       where: { id: sponsorId },
     });
     return { sharpedImage, entity, logoId };
+  }
+
+  private async processBannerImage(
+    banner: string,
+    sponsorId: number,
+    bannerId: string,
+  ): Promise<any> {
+    const base64Data = Buffer.from(handleBase64(banner), 'base64');
+    const sharpedImage = await sharp(base64Data)
+      .resize(440, 240)
+      .png();
+    const entity: any = await this.repository.get({
+      select: ['banner'],
+      where: { id: sponsorId },
+    });
+    return { sharpedImage, entity, bannerId };
   }
 
   private deleteLogo(
