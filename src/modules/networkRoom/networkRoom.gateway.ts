@@ -88,6 +88,11 @@ export class NetworkRoomGateway
         0,
         socket.id,
       );
+    await this.redisClient.lrem(
+      `event-${socket.eventId}:queueSwitch`,
+      0,
+      socket.id,
+    );
   }
 
   async handleConnection(@ConnectedSocket() socket: any): Promise<void> {
