@@ -53,7 +53,6 @@ export class SponsorController extends BaseWithoutAuthController {
     type: CreateLogoDto,
     description: 'Logo has been successfully created',
   })
-  @UsePipes(ValidateSponsorId)
   @UseGuards(AuthGuard)
   @Post('/uploadLogo')
   uploadLogo(
@@ -66,7 +65,6 @@ export class SponsorController extends BaseWithoutAuthController {
     type: CreateLogoDto,
     description: 'Banner has been successfully created',
   })
-  @UsePipes(ValidateSponsorId)
   @UseGuards(AuthGuard)
   @Post('/uploadBanner')
   uploadBanner(

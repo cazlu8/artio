@@ -1,10 +1,10 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateBannerDto {
-  @IsNotEmpty()
+  @IsOptional()
   @ApiProperty({ type: 'number' })
-  id: number;
+  id?: number;
 
   @ApiProperty()
   @IsNotEmpty()
