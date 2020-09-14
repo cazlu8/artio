@@ -108,7 +108,7 @@ export class SponsorController extends BaseWithoutAuthController {
     description: 'Sponsor by id was successfully retrieved',
   })
   @UsePipes(ValidateSponsorId)
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(AuthGuard)
   @Get('/:id')
   async getSponsorById(@Param('id', ParseIntPipe) id): Promise<Sponsor | void> {
     return this.repository.findOne({
