@@ -157,5 +157,6 @@ export class NetworkRoomGateway
   ): Promise<void> {
     const { eventId } = data;
     await this.redisClient.lrem(`event-${eventId}:queue`, 0, socket.id);
+    await this.redisClient.lrem(`event-${eventId}:queueSwitch`, 0, socket.id);
   }
 }
