@@ -42,8 +42,16 @@ export class Sponsor {
   email: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: false, name: 'external_link' })
+  @Column('varchar', { length: 255, nullable: true, name: 'external_link' })
   externalLink?: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'phone_number' })
+  phoneNumber?: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'address' })
+  address?: string;
 
   @ApiProperty()
   @Column('enum', { enum: SponsorTier, nullable: false, default: undefined })
