@@ -15,6 +15,7 @@ import { SponsorRepository } from './sponsor.repository';
 import { EventSponsors } from '../eventSponsors/eventSponsors.entity';
 import { LoggerService } from '../../shared/services/logger.service';
 import { UploadService } from '../../shared/services/upload.service';
+import { CreateBannerDto } from './dto/sponsor.create.banner.dto';
 
 @Injectable()
 export class SponsorService {
@@ -77,6 +78,36 @@ export class SponsorService {
     };
   }
 
+  async uploadBanner(
+    createBannerDto: CreateBannerDto,
+  ): Promise<void | ObjectLiteral> {
+    const { banner, id: sponsorId } = createBannerDto;
+    const bannerId: string = uuid();
+    const { entity, sharpedImage } = await this.processLogoImage(
+      banner,
+      sponsorId,
+      bannerId,
+    );
+    const params = {
+      Bucket: process.env.S3_BUCKET_SPONSOR,
+      Key: `${bannerId}.png`,
+      Body: sharpedImage,
+      ACL: 'private',
+      ContentEncoding: 'base64',
+      ContentType: `image/png`,
+    };
+    const { Bucket } = params;
+    const functions: any = [
+      ...this.updateBannerImage(params, sponsorId, bannerId),
+      this.deleteBanner(entity, Bucket),
+    ];
+    await Promise.all(functions);
+    this.loggerService.info(`Sponsor banner id(${sponsorId}) was created`);
+    return {
+      url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${bannerId}.png`,
+    };
+  }
+
   private async processLogoImage(
     logo: string,
     sponsorId: number,
@@ -107,15 +138,42 @@ export class SponsorService {
     return Promise.resolve();
   }
 
+  private deleteBanner(
+    entity: any,
+    Bucket: string,
+  ): Promise<PromiseResult<S3.DeleteObjectOutput, AWSError> | void> {
+    if (entity?.banner) {
+      const { banner: formerUrl } = entity;
+      const lastIndex = formerUrl.lastIndexOf('/');
+      const currentKey = formerUrl.substr(lastIndex + 1, formerUrl.length);
+      this.loggerService.info(`Sponsor banner ${formerUrl} was deleted`);
+      return this.uploadService.deleteObject({ Bucket, Key: `${currentKey}` });
+    }
+    return Promise.resolve();
+  }
+
   private updateLogoImage(
     params: any,
     sponsorId: number,
-    logoId: string,
+    bannerId: string,
   ): (Promise<ManagedUpload.SendData> | Promise<UpdateResult>)[] {
     return [
       this.uploadService.uploadObject(params),
       this.update(sponsorId, {
-        logo: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${logoId}.png`,
+        logo: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${bannerId}.png`,
+      }),
+    ];
+  }
+
+  private updateBannerImage(
+    params: any,
+    sponsorId: number,
+    bannerId: string,
+  ): (Promise<ManagedUpload.SendData> | Promise<UpdateResult>)[] {
+    return [
+      this.uploadService.uploadObject(params),
+      this.update(sponsorId, {
+        banner: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${bannerId}.png`,
       }),
     ];
   }
