@@ -24,7 +24,7 @@ export class CreateSponsorDto {
 
   @IsUrl()
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   logo?: string;
 
   @IsEmail()
@@ -33,7 +33,7 @@ export class CreateSponsorDto {
   email: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   externalLink?: string;
 
   @IsNotEmpty()
@@ -50,7 +50,7 @@ export class CreateSponsorDto {
   inShowRoom?: boolean;
 
   @IsUrl()
-  @IsNotEmpty()
+  @IsOptional()
   @ApiProperty()
   mediaUrl?: string;
 

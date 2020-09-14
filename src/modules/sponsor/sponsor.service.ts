@@ -55,8 +55,8 @@ export class SponsorService {
     const logoId: string = uuid();
     const { entity, sharpedImage } = await this.processLogoImage(
       logo,
-      sponsorId,
       logoId,
+      sponsorId,
     );
     const params = {
       Bucket: process.env.S3_BUCKET_SPONSOR,
@@ -67,12 +67,18 @@ export class SponsorService {
       ContentType: `image/png`,
     };
     const { Bucket } = params;
-    const functions: any = [
-      ...this.updateLogoImage(params, sponsorId, logoId),
-      this.deleteLogo(entity, Bucket),
-    ];
-    await Promise.all(functions);
-    this.loggerService.info(`Sponsor logo id(${sponsorId}) was created`);
+    if (entity) {
+      const functions: any = [
+        ...this.updateLogoImage(params, sponsorId, logoId),
+        this.deleteLogo(entity, Bucket),
+      ];
+      await Promise.all(functions);
+      this.loggerService.info(`Sponsor logo id(${sponsorId}) was created`);
+      return {
+        url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${logoId}.png`,
+      };
+    }
+    await this.uploadService.uploadObject(params);
     return {
       url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${logoId}.png`,
     };
@@ -83,10 +89,10 @@ export class SponsorService {
   ): Promise<void | ObjectLiteral> {
     const { banner, id: sponsorId } = createBannerDto;
     const bannerId: string = uuid();
-    const { entity, sharpedImage } = await this.processLogoImage(
+    const { entity, sharpedImage } = await this.processBannerImage(
       banner,
-      sponsorId,
       bannerId,
+      sponsorId,
     );
     const params = {
       Bucket: process.env.S3_BUCKET_SPONSOR,
@@ -97,12 +103,18 @@ export class SponsorService {
       ContentType: `image/png`,
     };
     const { Bucket } = params;
-    const functions: any = [
-      ...this.updateBannerImage(params, sponsorId, bannerId),
-      this.deleteBanner(entity, Bucket),
-    ];
-    await Promise.all(functions);
-    this.loggerService.info(`Sponsor banner id(${sponsorId}) was created`);
+    if (entity) {
+      const functions: any = [
+        ...this.updateBannerImage(params, sponsorId, bannerId),
+        this.deleteBanner(entity, Bucket),
+      ];
+      await Promise.all(functions);
+      this.loggerService.info(`Sponsor banner id(${sponsorId}) was created`);
+      return {
+        url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${bannerId}.png`,
+      };
+    }
+    await this.uploadService.uploadObject(params);
     return {
       url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${bannerId}.png`,
     };
@@ -110,18 +122,40 @@ export class SponsorService {
 
   private async processLogoImage(
     logo: string,
-    sponsorId: number,
     logoId: string,
+    sponsorId?: number,
   ): Promise<any> {
     const base64Data = Buffer.from(handleBase64(logo), 'base64');
     const sharpedImage = await sharp(base64Data)
       .resize(440, 240)
       .png();
-    const entity: any = await this.repository.get({
-      select: ['logo'],
-      where: { id: sponsorId },
-    });
-    return { sharpedImage, entity, logoId };
+    if (sponsorId) {
+      const entity: any = await this.repository.get({
+        select: ['logo'],
+        where: { id: sponsorId },
+      });
+      return { sharpedImage, entity, logoId };
+    }
+    return { sharpedImage, logoId };
+  }
+
+  private async processBannerImage(
+    banner: string,
+    bannerId: string,
+    sponsorId?: number,
+  ): Promise<any> {
+    const base64Data = Buffer.from(handleBase64(banner), 'base64');
+    const sharpedImage = await sharp(base64Data)
+      .resize(440, 240)
+      .png();
+    if (sponsorId) {
+      const entity: any = await this.repository.get({
+        select: ['banner'],
+        where: { id: sponsorId },
+      });
+      return { sharpedImage, entity, bannerId };
+    }
+    return { sharpedImage, bannerId };
   }
 
   private deleteLogo(
