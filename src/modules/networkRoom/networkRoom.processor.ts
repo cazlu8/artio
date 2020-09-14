@@ -148,17 +148,26 @@ export class NetworkRoomProcessor {
       const lengthSwitch = await this.redisClient.llen(
         `event-${eventId}:queueSwitch`,
       );
-      if (lengthSwitch >= 2) {
+      const clients = await this.redisClient.lrange(
+        `event-${eventId}:queueSwitch`,
+        0,
+        1,
+      );
+      const parsedClients = clients.map(JSON.parse);
+      if (
+        lengthSwitch >= 2 &&
+        parsedClients.some(
+          ({ currentRoom }) => currentRoom !== parsedClients[0].currentRoom,
+        )
+      ) {
         const room = await this.service.createRoomAndSave(eventId);
-        const clients = await this.redisClient.lrange(
-          `event-${eventId}:queueSwitch`,
-          0,
-          1,
-        );
-        const sendToSwitch = clients.map(client => {
-          const { socketId } = JSON.parse(client);
-          return this.service.switchRoom(eventId, socketId, room);
-        });
+        const sendToSwitch = parsedClients
+          .filter(
+            ({ currentRoom }) => currentRoom !== parsedClients[0].currentRoom,
+          )
+          .map(({ socketId }) => {
+            return this.service.switchRoom(eventId, socketId, room);
+          });
         await Promise.all(sendToSwitch);
         this.loggerService.info(
           `switchRoom: created a new room for the event ${eventId}`,
