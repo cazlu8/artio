@@ -166,7 +166,7 @@ export class NetworkRoomProcessor {
             ({ currentRoom }) => currentRoom !== parsedClients[0].currentRoom,
           )
           .concat(parsedClients[0])
-          .slice(-1, -3)
+          .slice(-2)
           .map(({ socketId }) => {
             return this.service.switchRoom(eventId, socketId, room);
           });
