@@ -151,7 +151,7 @@ export class NetworkRoomProcessor {
       const clients = await this.redisClient.lrange(
         `event-${eventId}:queueSwitch`,
         0,
-        1,
+        -1,
       );
       const parsedClients = clients.map(JSON.parse);
       if (
