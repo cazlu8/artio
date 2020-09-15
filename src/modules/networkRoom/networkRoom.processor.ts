@@ -161,6 +161,7 @@ export class NetworkRoomProcessor {
         )
       ) {
         const room = await this.service.createRoomAndSave(eventId);
+        await this.redisClient.zadd(`event-${eventId}:rooms`, 0, room);
         const sendToSwitch = parsedClients
           .filter(
             ({ currentRoom }) => currentRoom !== parsedClients[0].currentRoom,
@@ -170,7 +171,8 @@ export class NetworkRoomProcessor {
           .map(({ socketId }) => {
             return this.service.switchRoom(eventId, socketId, room);
           });
-        await Promise.all(sendToSwitch);
+        for (const current of sendToSwitch) await current;
+
         this.loggerService.info(
           `switchRoom: created a new room for the event ${eventId}`,
         );
