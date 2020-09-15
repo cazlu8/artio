@@ -181,7 +181,7 @@ export class NetworkRoomService {
       );
       const { currentRoom, socketId } = JSON.parse(clientToSwitch[0]);
       if (current.room !== currentRoom) {
-        await this.switchRoom(eventId, socketId, currentRoom);
+        await this.switchRoom(eventId, socketId, current.room);
         break;
       }
     }

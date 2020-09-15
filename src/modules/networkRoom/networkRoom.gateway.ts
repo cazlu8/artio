@@ -82,17 +82,18 @@ export class NetworkRoomGateway
   }
 
   async handleDisconnect(socket: any) {
-    if (socket.eventId)
+    if (socket.eventId) {
       await this.redisClient.lrem(
         `event-${socket.eventId}:queue`,
         0,
         socket.id,
       );
-    await this.redisClient.lrem(
-      `event-${socket.eventId}:queueSwitch`,
-      0,
-      socket.id,
-    );
+      await this.redisClient.lrem(
+        `event-${socket.eventId}:queueSwitch`,
+        0,
+        socket.id,
+      );
+    }
   }
 
   async handleConnection(@ConnectedSocket() socket: any): Promise<void> {
