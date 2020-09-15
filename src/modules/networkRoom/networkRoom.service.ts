@@ -43,6 +43,7 @@ export class NetworkRoomService {
       );
       await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, RoomName);
       networkEventEmitter.emit('changedQueuesOrRooms', eventId);
+      networkEventEmitter.emit('SwitchRoom', eventId);
     }
   }
 
