@@ -163,9 +163,7 @@ export class NetworkRoomService {
         room: { uniqueName: room },
       });
       await this.redisClient.lpop(`event-${eventId}:queueSwitch`);
-      if (currentRoomScore === null)
-        await this.redisClient.zadd(`event-${eventId}:rooms`, 1, room);
-      else await this.redisClient.zincrby(`event-${eventId}:rooms`, 1, room);
+      await this.redisClient.zincrby(`event-${eventId}:rooms`, 1, room);
     }
   }
 
