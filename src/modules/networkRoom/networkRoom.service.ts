@@ -103,10 +103,14 @@ export class NetworkRoomService {
     ));
     let roomsWithScores;
     if (limit) {
+      const threeLength = await this.redisClient.get(
+        `twilioRoomThreeLength-${eventId}`,
+      );
+      const max = threeLength === 'true' ? 2 : 3;
       roomsWithScores = await this.redisClient.zrangebyscore(
         `event-${eventId}:rooms`,
         queueLength >= 2 ? 0 : 1,
-        3,
+        max,
         'WITHSCORES',
         'LIMIT',
         0,
