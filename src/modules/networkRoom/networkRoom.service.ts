@@ -177,10 +177,12 @@ export class NetworkRoomService {
         0,
         0,
       );
-      const { currentRoom, socketId } = JSON.parse(clientToSwitch[0]);
-      if (current.room !== currentRoom) {
-        await this.switchRoom(eventId, socketId, current.room);
-        break;
+      if (clientToSwitch.length) {
+        const { currentRoom, socketId } = JSON.parse(clientToSwitch[0]);
+        if (current.room !== currentRoom) {
+          await this.switchRoom(eventId, socketId, current.room);
+          break;
+        }
       }
     }
   }

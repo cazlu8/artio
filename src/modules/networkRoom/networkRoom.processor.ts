@@ -178,11 +178,13 @@ export class NetworkRoomProcessor {
         );
         return;
       }
-      const roomsWithScores = await this.service.getRoomsWithScores(eventId);
-      await this.service.findRoomToSwitch(eventId, roomsWithScores);
-      this.loggerService.info(
-        `switchRoom: switched room for the event ${eventId}`,
-      );
+      if (parsedClients.length) {
+        const roomsWithScores = await this.service.getRoomsWithScores(eventId);
+        await this.service.findRoomToSwitch(eventId, roomsWithScores);
+        this.loggerService.info(
+          `switchRoom: switched room for the event ${eventId}`,
+        );
+      }
       jobDone();
     } catch (error) {
       this.loggerService.error(`switchRoom: ${JSON.stringify(error)}`, error);
