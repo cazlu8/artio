@@ -35,6 +35,14 @@ export class NetworkRoomProcessor {
   async createRooms(job, jobDone) {
     try {
       const { eventId, isRepeat } = job.data;
+      if (!isRepeat) {
+        await this.redisClient.set(
+          `twilioRoomThreeLength-${eventId}`,
+          'true',
+          'EX',
+          120,
+        );
+      }
       const clientsAmount =
         (await this.userEventsRepository.count({ eventId })) *
         (isRepeat ? 0.2 : 0.5);
@@ -178,11 +186,13 @@ export class NetworkRoomProcessor {
         );
         return;
       }
-      const roomsWithScores = await this.service.getRoomsWithScores(eventId);
-      await this.service.findRoomToSwitch(eventId, roomsWithScores);
-      this.loggerService.info(
-        `switchRoom: switched room for the event ${eventId}`,
-      );
+      if (lengthSwitch) {
+        const roomsWithScores = await this.service.getRoomsWithScores(eventId);
+        await this.service.findRoomToSwitch(eventId, roomsWithScores);
+        this.loggerService.info(
+          `switchRoom: switched room for the event ${eventId}`,
+        );
+      }
       jobDone();
     } catch (error) {
       this.loggerService.error(`switchRoom: ${JSON.stringify(error)}`, error);

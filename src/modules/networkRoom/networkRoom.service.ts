@@ -43,6 +43,7 @@ export class NetworkRoomService {
       );
       await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, RoomName);
       networkEventEmitter.emit('changedQueuesOrRooms', eventId);
+      networkEventEmitter.emit('SwitchRoom', eventId);
     }
   }
 
@@ -103,10 +104,14 @@ export class NetworkRoomService {
     ));
     let roomsWithScores;
     if (limit) {
+      const threeLength = await this.redisClient.get(
+        `twilioRoomThreeLength-${eventId}`,
+      );
+      const max = threeLength === 'true' ? 2 : 3;
       roomsWithScores = await this.redisClient.zrangebyscore(
         `event-${eventId}:rooms`,
         queueLength >= 2 ? 0 : 1,
-        3,
+        max,
         'WITHSCORES',
         'LIMIT',
         0,
@@ -177,10 +182,12 @@ export class NetworkRoomService {
         0,
         0,
       );
-      const { currentRoom, socketId } = JSON.parse(clientToSwitch[0]);
-      if (current.room !== currentRoom) {
-        await this.switchRoom(eventId, socketId, current.room);
-        break;
+      if (clientToSwitch.length) {
+        const { currentRoom, socketId } = JSON.parse(clientToSwitch[0]);
+        if (current.room !== currentRoom) {
+          await this.switchRoom(eventId, socketId, current.room);
+          break;
+        }
       }
     }
   }
