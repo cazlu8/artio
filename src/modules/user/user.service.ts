@@ -82,7 +82,7 @@ export class UserService {
     const newUser: any = { ...createUserDto };
     const user = await this.repository.get({
       where: { email: createUserDto.email },
-      select: ['id'],
+      select: ['id', 'isNew'],
     });
     if (user?.id) {
       newUser.id = user.id;
