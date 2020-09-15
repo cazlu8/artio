@@ -88,11 +88,15 @@ export class NetworkRoomGateway
         0,
         socket.id,
       );
-      await this.redisClient.lrem(
-        `event-${socket.eventId}:queueSwitch`,
-        0,
-        socket.id,
-      );
+      if (socket.currentRoom)
+        await this.redisClient.lrem(
+          `event-${socket.eventId}:queueSwitch`,
+          0,
+          JSON.stringify({
+            socketId: socket.id,
+            currentRoom: socket.currentRoom,
+          }),
+        );
     }
   }
 
@@ -115,7 +119,12 @@ export class NetworkRoomGateway
     const unlock = await this.lock('requestRoom');
     try {
       const { currentRoom, eventId } = data;
-      await this.redisClient.lrem(`event-${eventId}:queueSwitch`, 0, socket.id);
+      socket.currentRoom = currentRoom;
+      await this.redisClient.lrem(
+        `event-${eventId}:queueSwitch`,
+        0,
+        JSON.stringify({ socketId: socket.id, currentRoom }),
+      );
       await this.redisClient.rpush(
         `event-${eventId}:queueSwitch`,
         JSON.stringify({ socketId: socket.id, currentRoom }),
@@ -163,6 +172,14 @@ export class NetworkRoomGateway
   ): Promise<void> {
     const { eventId } = data;
     await this.redisClient.lrem(`event-${eventId}:queue`, 0, socket.id);
-    await this.redisClient.lrem(`event-${eventId}:queueSwitch`, 0, socket.id);
+    if (socket.currentRoom)
+      await this.redisClient.lrem(
+        `event-${eventId}:queueSwitch`,
+        0,
+        JSON.stringify({
+          socketId: socket.id,
+          currentRoom: socket.currentRoom,
+        }),
+      );
   }
 }

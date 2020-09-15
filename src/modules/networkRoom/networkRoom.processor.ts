@@ -186,7 +186,7 @@ export class NetworkRoomProcessor {
         );
         return;
       }
-      if (parsedClients.length) {
+      if (lengthSwitch) {
         const roomsWithScores = await this.service.getRoomsWithScores(eventId);
         await this.service.findRoomToSwitch(eventId, roomsWithScores);
         this.loggerService.info(
