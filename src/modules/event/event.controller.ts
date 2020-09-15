@@ -30,6 +30,7 @@ import { ValidateIfEventExists } from './pipes/ValidateIfEventExists.pipe';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
 import { LoggerService } from '../../shared/services/logger.service';
 import { SponsorDetail } from '../sponsor/dto/sponsor.detail.dto';
+import { EventGateway } from './event.gateway';
 
 @ApiTags('Events')
 @Controller('events')
@@ -37,6 +38,7 @@ export class EventController extends BaseWithoutAuthController {
   constructor(
     private readonly loggerService: LoggerService,
     private service: EventService,
+    private readonly eventGateway: EventGateway,
     private readonly repository: EventRepository,
     private readonly userEventsRepository: UserEventsRepository,
   ) {
@@ -279,6 +281,7 @@ export class EventController extends BaseWithoutAuthController {
     await this.repository.update(eventId, {
       onLive: true,
     });
+    this.eventGateway.server.emit('eventLive', { eventId });
     return res.status(204).send();
   }
 
@@ -296,6 +299,7 @@ export class EventController extends BaseWithoutAuthController {
     await this.repository.update(eventId, {
       onLive: false,
     });
+    this.eventGateway.server.emit('eventLive', { eventId });
     return res.status(204).send();
   }
 }
