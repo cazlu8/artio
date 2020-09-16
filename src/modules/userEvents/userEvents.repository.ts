@@ -42,6 +42,19 @@ export class UserEventsRepository extends Repository<UserEvents> {
       .getRawMany();
   }
 
+  getUserGuidsByUserIds(
+    userIds: number[],
+    eventId: number,
+  ): Promise<ObjectLiteral[]> {
+    return this.createQueryBuilder('userEvents')
+      .select('user.guid')
+      .innerJoin('userEvents.user', 'user')
+      .where('userEvents.eventId = :eventId', { eventId })
+      .andWhere('userEvents.redeemed = true')
+      .andWhere('user.id in (:...userIds)', { userIds })
+      .getRawMany();
+  }
+
   async exists(properties: {}): Promise<boolean> {
     return (await this.count(properties)) > 0;
   }

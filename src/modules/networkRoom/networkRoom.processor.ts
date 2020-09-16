@@ -194,9 +194,6 @@ export class NetworkRoomProcessor {
       if (lengthSwitch) {
         const roomsWithScores = await this.service.getRoomsWithScores(eventId);
         await this.service.findRoomToSwitch(eventId, roomsWithScores);
-        this.loggerService.info(
-          `switchRoom: switched room for the event ${eventId}`,
-        );
       }
       jobDone();
     } catch (error) {

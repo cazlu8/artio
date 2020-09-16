@@ -5,6 +5,7 @@ import {
   Repository,
   SelectQueryBuilder,
   getRepository,
+  In,
 } from 'typeorm';
 import { Event } from './event.entity';
 import {
@@ -219,5 +220,12 @@ export class EventRepository extends Repository<Event> {
       .set({ heroImgUrl: null })
       .where(`id = ${id}`)
       .execute();
+  }
+
+  getUserIdByGuid(guids: string[]) {
+    return this.find({
+      select: ['id'],
+      where: { guid: In(guids) },
+    });
   }
 }

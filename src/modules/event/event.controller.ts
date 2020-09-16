@@ -31,6 +31,8 @@ import { UserEventsRepository } from '../userEvents/userEvents.repository';
 import { LoggerService } from '../../shared/services/logger.service';
 import { SponsorDetail } from '../sponsor/dto/sponsor.detail.dto';
 import { EventGateway } from './event.gateway';
+import { OrganizerAuthGuard } from '../../shared/guards/organizerAuth.guard';
+import { UserEventsGuard } from './guards/userEvents.guard';
 
 @ApiTags('Events')
 @Controller('events')
@@ -171,7 +173,7 @@ export class EventController extends BaseWithoutAuthController {
     description: 'The event was successfully retrieved',
   })
   @UsePipes(ValidateIfEventExists)
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, OrganizerAuthGuard, UserEventsGuard)
   @Get('/:id')
   async findOne(@Param('id', ParseIntPipe) id): Promise<Partial<Event> | void> {
     return this.repository.findOne({ id });
@@ -273,16 +275,13 @@ export class EventController extends BaseWithoutAuthController {
     description: 'Live started',
   })
   @UseGuards(AuthGuard)
+  @HttpCode(204)
   @Put('/startLive/:eventId')
   async startLive(
     @Res() res,
     @Param('eventId', ParseIntPipe) eventId: number,
   ): Promise<void> {
-    await this.repository.update(eventId, {
-      onLive: true,
-    });
-    this.eventGateway.server.emit('eventLive', { eventId });
-    return res.status(204).send();
+    await this.service.updateLive(eventId, true);
   }
 
   @ApiParam({ name: 'finishLive' })
@@ -291,15 +290,12 @@ export class EventController extends BaseWithoutAuthController {
     description: 'Live finished',
   })
   @UseGuards(AuthGuard)
+  @HttpCode(204)
   @Put('/finishLive/:eventId')
   async finishLive(
     @Res() res,
     @Param('eventId', ParseIntPipe) eventId: number,
   ): Promise<void> {
-    await this.repository.update(eventId, {
-      onLive: false,
-    });
-    this.eventGateway.server.emit('eventLive', { eventId });
-    return res.status(204).send();
+    await this.service.updateLive(eventId, false);
   }
 }
