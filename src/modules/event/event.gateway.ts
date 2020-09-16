@@ -42,7 +42,10 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const { token } = socket.handshake.query;
       const { sub } = await this.jwtService.validateToken(token);
       socket.userId = sub;
-      await this.redisClient.sadd('connectedUsers', `${socket.id}-${sub}`);
+      await this.redisClient.sadd(
+        'connectedUsers',
+        `${socket.id}--${socket.userId}`,
+      );
     } catch (err) {
       socket.disconnect();
     }

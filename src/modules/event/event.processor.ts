@@ -96,17 +96,19 @@ export class EventProcessor {
       const { eventId, eventName } = job.data;
       const connectedUsers = await this.redisClient.smembers('connectedUsers');
       if (connectedUsers.length) {
-        const userGuids = connectedUsers.map(x => x.split('-')[1]);
+        const userGuids = connectedUsers.map(x => x.split('--')[1]);
         const userIds = (
           await this.userRepository.getUserIdByGuid(userGuids)
         )?.map(({ id }) => id);
-        const existingUserGuids = await this.userEventsRepository.getUserGuidsByUserIds(
-          userIds,
-          eventId,
-        );
+        const existingUserGuids = (
+          await this.userEventsRepository.getUserGuidsByUserIds(
+            userIds,
+            eventId,
+          )
+        )?.map(({ user_guid }) => user_guid);
         connectedUsers
-          .filter(x => existingUserGuids.some(y => y === x.split('-')[1]))
-          .map(x => x.split('-')[0])
+          .filter(x => existingUserGuids.some(y => y === x.split('--')[1]))
+          .map(x => x.split('--')[0])
           .forEach(socketId =>
             this.eventGateway.server.to(socketId).emit(eventName, { eventId }),
           );
@@ -114,7 +116,7 @@ export class EventProcessor {
       jobDone();
     } catch (error) {
       this.loggerService.error(
-        `sendUpdateLiveMessage: ${JSON.stringify(job?.data || {})}`,
+        `sendUpdateLiveMessage: ${JSON.stringify(error)}`,
         error,
       );
     }
