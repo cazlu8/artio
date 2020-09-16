@@ -43,7 +43,7 @@ export class EventRepository extends Repository<Event> {
   getPastEvents(skip: number): Promise<Partial<Event[]> | void> {
     const where = 'event.start_date < now() and event.end_date < now()';
     const order = 'ASC';
-    return this.getListEvents(where, order)
+    return this.getListPastEvents(where, order)
       .skip(skip)
       .take(10)
       .getRawMany();
@@ -93,6 +93,21 @@ export class EventRepository extends Repository<Event> {
       .addSelect('"onLive"', 'onLive')
       .addSelect('name', 'name')
       .addSelect('location_name', 'locationName')
+      .orderBy('start_date', order)
+      .where(where);
+  }
+
+  private getListPastEvents(
+    where: string,
+    order: any,
+  ): SelectQueryBuilder<Event> {
+    const attributes = ['id'];
+    return this.createQueryBuilder('event')
+      .select(attributes)
+      .addSelect('name', 'name')
+      .addSelect('hero_img_url', 'heroImgUrl')
+      .addSelect('start_date', 'startDate')
+      .addSelect('timezone', 'timezone')
       .orderBy('start_date', order)
       .where(where);
   }
@@ -176,13 +191,10 @@ export class EventRepository extends Repository<Event> {
     const attributes = ['id'];
     return this.createQueryBuilder('event')
       .select(attributes)
-      .select(attributes)
+      .addSelect('name', 'name')
       .addSelect('hero_img_url', 'heroImgUrl')
       .addSelect('start_date', 'startDate')
-      .addSelect('end_date', 'endDate')
-      .addSelect('"onLive"', 'onLive')
-      .addSelect('name', 'name')
-      .addSelect('location_name', 'locationName')
+      .addSelect('timezone', 'timezone')
       .orderBy('start_date', 'DESC')
       .where(qb => {
         const subQuery = qb
