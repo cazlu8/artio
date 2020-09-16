@@ -5,7 +5,6 @@ import {
   Repository,
   SelectQueryBuilder,
   getRepository,
-  In,
 } from 'typeorm';
 import { Event } from './event.entity';
 import {
