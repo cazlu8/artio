@@ -116,7 +116,7 @@ export class NetworkRoomGateway
     @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
-    const unlock = await this.lock('requestRoom');
+    const unlock = await this.lock('switchRoom');
     try {
       const { currentRoom, eventId } = data;
       socket.currentRoom = currentRoom;
