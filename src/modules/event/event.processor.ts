@@ -68,6 +68,9 @@ export class EventProcessor {
       const removeAllKeys = [
         `event-${eventId}:roomsTwilio`,
         `event-${eventId}:rooms`,
+        `event-${eventId}:queue`,
+        `event-${eventId}:queueSwitch`,
+        `event-${eventId}:twilioRoomThreeLength`,
         `event-${eventId}:intermissionStartedAt`,
         `event-${eventId}:intermissionTime`,
         `event-${eventId}:isOnIntermission`,
