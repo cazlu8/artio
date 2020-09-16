@@ -17,7 +17,7 @@ describe('Role', () => {
   it(`/POST role`, async done => {
     await app
       .post('/role')
-      .send(saveRole)
+      .send(saveRole())
       .set('Accept', 'application/json')
       .expect(201);
 
