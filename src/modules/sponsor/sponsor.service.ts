@@ -78,7 +78,7 @@ export class SponsorService {
         url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${bannerId}.png`,
       };
     }
-    await this.uploadService.uploadObject(params);
+    await this.updateBannerImage(params, sponsorId, bannerId);
     return {
       url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${bannerId}.png`,
     };
@@ -160,7 +160,7 @@ export class SponsorService {
         url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${logoId}.png`,
       };
     }
-    await this.uploadService.uploadObject(params);
+    await this.updateLogoImage(params, sponsorId, logoId);
     return {
       url: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${logoId}.png`,
     };

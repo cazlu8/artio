@@ -3,7 +3,6 @@ import {
   Post,
   Body,
   Get,
-  Delete,
   Param,
   UseGuards,
   Put,
@@ -143,17 +142,5 @@ export class SponsorController extends BaseWithoutAuthController {
     return this.sponsorService
       .updateSponsorInfo(id, updateSponsorDto)
       .then(() => res.status(204).send());
-  }
-
-  @ApiParam({ name: 'id', type: 'number' })
-  @ApiCreatedResponse({
-    type: Sponsor,
-    description: 'Image by sponsor id was successfully deleted',
-  })
-  @UseGuards(AuthGuard)
-  @UsePipes(ValidateSponsorId)
-  @Delete('removeLogo/:id')
-  removeLogo(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.sponsorService.removeLogo(id);
   }
 }
