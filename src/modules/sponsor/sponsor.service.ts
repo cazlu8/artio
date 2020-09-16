@@ -189,12 +189,12 @@ export class SponsorService {
   private updateLogoImage(
     params: any,
     sponsorId: number,
-    bannerId: string,
+    logoId: string,
   ): (Promise<ManagedUpload.SendData> | Promise<UpdateResult>)[] {
     return [
       this.uploadService.uploadObject(params),
       this.update(sponsorId, {
-        logo: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${bannerId}.png`,
+        logo: `${process.env.S3_BUCKET_SPONSOR_PREFIX_URL}${logoId}.png`,
       }),
     ];
   }
