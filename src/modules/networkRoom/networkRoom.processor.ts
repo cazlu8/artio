@@ -38,7 +38,7 @@ export class NetworkRoomProcessor {
       const { eventId, isRepeat } = job.data;
       if (!isRepeat) {
         await this.redisClient.set(
-          `twilioRoomThreeLength-${eventId}`,
+          `event-${eventId}:twilioRoomThreeLength`,
           'true',
           'EX',
           120,
