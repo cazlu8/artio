@@ -10,6 +10,7 @@ import { NetworkRoomService } from './networkRoom.service';
 import { parallel } from '../../shared/utils/controlFlow.utils';
 import { UserEvents } from '../userEvents/userEvents.entity';
 import { LoggerService } from '../../shared/services/logger.service';
+import networkEventEmitter from './networkRoom.event';
 
 const numCPUs = require('os').cpus().length;
 
@@ -42,6 +43,10 @@ export class NetworkRoomProcessor {
           'EX',
           120,
         );
+        setTimeout(() => {
+          networkEventEmitter.emit('changedQueuesOrRooms', eventId);
+          networkEventEmitter.emit('SwitchRoom', eventId);
+        }, 120000);
       }
       const clientsAmount =
         (await this.userEventsRepository.count({ eventId })) *
@@ -96,7 +101,7 @@ export class NetworkRoomProcessor {
 
   @Process({ name: 'findAvailableRooms', concurrency: numCPUs })
   async findAvailableRooms(job, jobDone) {
-    const unlock = await this.lock('findAvailableRooms');
+    const unlock = await this.lock('switchRoomFindAvailableRooms');
     try {
       const { eventId } = job.data;
       const roomsWithScores = await this.service.getRoomsWithScores(
@@ -150,7 +155,7 @@ export class NetworkRoomProcessor {
 
   @Process({ name: 'switchRoom', concurrency: numCPUs })
   async switchRoom(job, jobDone) {
-    const unlock = await this.lock('switchRoom');
+    const unlock = await this.lock('switchRoomFindAvailableRooms');
     try {
       const { eventId } = job.data;
       const lengthSwitch = await this.redisClient.llen(

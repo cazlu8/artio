@@ -43,7 +43,7 @@ export class NetworkRoomService {
       );
       await this.redisClient.zincrby(`event-${eventId}:rooms`, -1, RoomName);
       networkEventEmitter.emit('changedQueuesOrRooms', eventId);
-      networkEventEmitter.emit('SwitchRoom', eventId);
+      networkEventEmitter.emit('switchRoom', eventId);
     }
   }
 
@@ -186,6 +186,11 @@ export class NetworkRoomService {
         const { currentRoom, socketId } = JSON.parse(clientToSwitch[0]);
         if (current.room !== currentRoom) {
           await this.switchRoom(eventId, socketId, current.room);
+          const queueSwitchLength = await this.redisClient.llen(
+            `event-${eventId}:queueSwitch`,
+          );
+          !!+queueSwitchLength &&
+            networkEventEmitter.emit('switchRoom', eventId);
           break;
         }
       }

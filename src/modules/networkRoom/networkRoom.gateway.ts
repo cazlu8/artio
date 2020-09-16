@@ -66,7 +66,7 @@ export class NetworkRoomGateway
       this.server.to(socketId).emit('switchRoom', room);
     });
 
-    networkEventEmitter.on('SwitchRoom', async eventId => {
+    networkEventEmitter.on('switchRoom', async eventId => {
       const lengthSwitch = await this.redisClient.llen(
         `event-${eventId}:queueSwitch`,
       );
@@ -129,7 +129,7 @@ export class NetworkRoomGateway
         `event-${eventId}:queueSwitch`,
         JSON.stringify({ socketId: socket.id, currentRoom }),
       );
-      networkEventEmitter.emit('SwitchRoom', eventId);
+      networkEventEmitter.emit('switchRoom', eventId);
     } catch (error) {
       this.loggerService.error(`switchRoom: ${JSON.stringify(error)}`, error);
     } finally {
