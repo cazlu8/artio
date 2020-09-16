@@ -7,6 +7,7 @@ import { LoggerService } from '../../shared/services/logger.service';
 import { EventRepository } from './event.repository';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
 import { EventService } from './event.service';
+import { UserRepository } from '../user/user.repository';
 
 const numCPUs = require('os').cpus().length;
 
@@ -20,6 +21,7 @@ export class EventProcessor {
     private readonly loggerService: LoggerService,
     private readonly repository: EventRepository,
     private readonly userEventsRepository: UserEventsRepository,
+    private readonly userRepository: UserRepository,
     private service: EventService,
     @InjectQueue('event') private readonly eventQueue: Queue,
   ) {
@@ -95,9 +97,9 @@ export class EventProcessor {
       const connectedUsers = await this.redisClient.smembers('connectedUsers');
       if (connectedUsers.length) {
         const userGuids = connectedUsers.map(x => x.split('-')[1]);
-        const userIds = (await this.repository.getUserIdByGuid(userGuids))?.map(
-          ({ id }) => id,
-        );
+        const userIds = (
+          await this.userRepository.getUserIdByGuid(userGuids)
+        )?.map(({ id }) => id);
         const existingUserGuids = await this.userEventsRepository.getUserGuidsByUserIds(
           userIds,
           eventId,

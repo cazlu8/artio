@@ -221,11 +221,4 @@ export class EventRepository extends Repository<Event> {
       .where(`id = ${id}`)
       .execute();
   }
-
-  getUserIdByGuid(guids: string[]) {
-    return this.find({
-      select: ['id'],
-      where: { guid: In(guids) },
-    });
-  }
 }

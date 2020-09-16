@@ -11,6 +11,8 @@ import { EventProcessor } from './event.processor';
 import { EventGateway } from './event.gateway';
 import { JwtService } from '../../shared/services/jwt.service';
 import { UploadService } from '../../shared/services/upload.service';
+import { UserRepository } from '../user/user.repository';
+import { UserEventsRepository } from '../userEvents/userEvents.repository';
 
 @Module({
   imports: [
@@ -18,7 +20,11 @@ import { UploadService } from '../../shared/services/upload.service';
     EventQueue,
     NetworkRoomModule,
     BaseModule,
-    TypeOrmModule.forFeature([EventRepository, UserEvents]),
+    TypeOrmModule.forFeature([
+      EventRepository,
+      UserEventsRepository,
+      UserRepository,
+    ]),
   ],
   controllers: [EventController],
   providers: [
