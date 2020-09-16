@@ -127,48 +127,6 @@ describe('Events', () => {
     done();
   });
 
-  it(`/GET happeningNow`, async done => {
-    await repository.save([...upComingEvents(), ...happeningNowEvents()]);
-
-    const { body: events } = await app
-      .get(`/events/happeningNow`)
-      .set('Accept', 'application/json')
-      .expect(200);
-
-    expect(events).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: 6 }),
-        expect.objectContaining({ id: 7 }),
-        expect.objectContaining({ id: 8 }),
-        expect.objectContaining({ id: 9 }),
-        expect.objectContaining({ id: 10 }),
-      ]),
-    );
-    done();
-  });
-
-  it(`/GET happeningNow/1`, async done => {
-    await userRepository.save(saveUser);
-    await repository.save([...upComingEvents(), ...happeningNowEvents()]);
-    await userEventsRepository.save(saveUserEvents(10, { redeemed: true }));
-
-    const { body: events } = await app
-      .get(`/events/happeningNow/1`)
-      .set('Accept', 'application/json')
-      .expect(200);
-
-    expect(events).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: 6 }),
-        expect.objectContaining({ id: 7 }),
-        expect.objectContaining({ id: 8 }),
-        expect.objectContaining({ id: 9 }),
-        expect.objectContaining({ id: 10 }),
-      ]),
-    );
-    done();
-  });
-
   it(`/GET upcoming/0`, async done => {
     await repository.save([...happeningNowEvents(), ...upComingEvents()]);
 
