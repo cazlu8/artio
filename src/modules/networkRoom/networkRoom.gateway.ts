@@ -82,13 +82,10 @@ export class NetworkRoomGateway
   }
 
   async handleDisconnect(socket: any) {
-    if (socket.eventId) {
-      await this.redisClient.lrem(
-        `event-${socket.eventId}:queue`,
-        0,
-        socket.id,
-      );
-      if (socket.currentRoom)
+    const { eventId, currentRoom } = socket;
+    if (eventId) {
+      await this.redisClient.lrem(`event-${eventId}:queue`, 0, socket.id);
+      if (currentRoom)
         await this.redisClient.lrem(
           `event-${socket.eventId}:queueSwitch`,
           0,
@@ -116,7 +113,7 @@ export class NetworkRoomGateway
     @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: NetworkRoomSwitchRoomDto,
   ): Promise<void> {
-    const unlock = await this.lock('requestRoom');
+    const unlock = await this.lock('switchRoom');
     try {
       const { currentRoom, eventId } = data;
       socket.currentRoom = currentRoom;

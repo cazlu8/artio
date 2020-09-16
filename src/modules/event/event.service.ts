@@ -1,11 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
-import { ObjectLiteral, Repository, UpdateResult } from 'typeorm';
+import { ObjectLiteral, UpdateResult } from 'typeorm';
 import { uuid } from 'uuidv4';
 import * as sharp from 'sharp';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { InjectRepository } from '@nestjs/typeorm';
 import { RedisService } from 'nestjs-redis';
 import * as bluebird from 'bluebird';
 import { PromiseResult } from 'aws-sdk/lib/request';
@@ -20,7 +19,6 @@ import UpdateEventDTO from './dto/event.update.dto';
 import CreateHeroImage from './dto/event.create.heroImage.dto';
 import { handleBase64 } from '../../shared/utils/image.utils';
 import { NetworkRoomService } from '../networkRoom/networkRoom.service';
-import { UserEvents } from '../userEvents/userEvents.entity';
 import EventStartIntermissionDto from './dto/event.startIntermission.dto';
 import { EventGateway } from './event.gateway';
 import { LoggerService } from '../../shared/services/logger.service';
@@ -34,13 +32,21 @@ export class EventService {
     private readonly networkRoomService: NetworkRoomService,
     @InjectQueue('event') private readonly eventQueue: Queue,
     private readonly eventGateway: EventGateway,
-    @InjectRepository(UserEvents)
-    private readonly userEventsRepository: Repository<UserEvents>,
     private readonly redisService: RedisService,
     private readonly uploadService: UploadService,
     private readonly loggerService: LoggerService,
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
+  }
+
+  async updateLive(eventId: number, isLive: boolean) {
+    await this.repository.update(eventId, {
+      onLive: isLive,
+    });
+    await this.eventQueue.add('sendMessageToUsersLinkedToEvent', {
+      eventId,
+      eventName: 'eventLive',
+    });
   }
 
   getUpcomingEvents(skip: number): Promise<EventListDto[] | void> {
@@ -101,20 +107,10 @@ export class EventService {
   ): Promise<void> {
     const { eventId, intermissionTime } = eventStartIntermissionDto;
     if (!(await this.eventIsOnIntermission(eventId))) {
-      const [addCreateRoomOnQueueFn] = this.addRoomsToQueue(eventId);
-      const [
-        setIntermissionStartedAtFn,
-        setIntermissionTimeFn,
-        setIntermissionOnFn,
-      ] = this.setIntermissionData(eventId, intermissionTime);
-      await Promise.all([
-        addCreateRoomOnQueueFn,
-        setIntermissionOnFn,
-        setIntermissionStartedAtFn,
-        setIntermissionTimeFn,
-      ]);
-      await this.finishIntermission(eventId, intermissionTime);
-      this.eventGateway.server.emit('startIntermission', { eventId });
+      await this.eventQueue.add('startIntermission', {
+        eventId,
+        intermissionTime,
+      });
     } else
       throw new BadRequestException(
         `event ${eventId} is already on intermission`,
@@ -200,7 +196,7 @@ export class EventService {
     };
   }
 
-  private setIntermissionData(eventId: number, intermissionTime: number) {
+  setIntermissionData(eventId: number, intermissionTime: number) {
     return [
       this.redisClient.set(
         `event-${eventId}:intermissionStartedAt`,
@@ -214,7 +210,7 @@ export class EventService {
     ];
   }
 
-  private addRoomsToQueue(eventId: number) {
+  addRoomsToQueue(eventId: number) {
     return [this.networkRoomService.addCreateRoomOnQueue(eventId)];
   }
 
