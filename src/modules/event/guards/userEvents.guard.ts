@@ -1,9 +1,13 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { EventRepository } from '../event.repository';
+import { UserRepository } from '../../user/user.repository';
+import { UserEventsRepository } from '../../userEvents/userEvents.repository';
 
 @Injectable()
 export class UserEventsGuard implements CanActivate {
-  constructor(private readonly repository: EventRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly userEventsRepository: UserEventsRepository,
+  ) {}
 
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
@@ -15,8 +19,11 @@ export class UserEventsGuard implements CanActivate {
       const {
         user: { sub },
       } = request.raw;
-      const userIds = await this.repository.getUserIdByGuid([sub]);
-      return !!userIds && !!userIds.length;
+      const userIds = await this.userRepository.getUserIdByGuid([sub]);
+      return await this.userEventsRepository.exists({
+        userId: userIds[0].id,
+        eventId: request.params.id,
+      });
     }
     return true;
   }

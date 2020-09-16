@@ -1,4 +1,4 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { EntityRepository, In, Repository } from 'typeorm';
 import { User } from './user.entity';
 
 @EntityRepository(User)
@@ -44,5 +44,12 @@ export class UserRepository extends Repository<User> {
       .values(users)
       .onConflict(`("email") DO NOTHING`)
       .execute();
+  }
+
+  getUserIdByGuid(guids: string[]) {
+    return this.find({
+      select: ['id'],
+      where: { guid: In(guids) },
+    });
   }
 }
