@@ -5,7 +5,6 @@ import { BaseModule } from '../../shared/modules/base.module';
 import { EventService } from './event.service';
 import { EventRepository } from './event.repository';
 import { NetworkRoomModule } from '../networkRoom/networkRoom.module';
-import { UserEvents } from '../userEvents/userEvents.entity';
 import EventQueue from './event.queue';
 import { EventProcessor } from './event.processor';
 import { EventGateway } from './event.gateway';

@@ -20,7 +20,10 @@ export class UserEventsGuard implements CanActivate {
         user: { sub },
       } = request.raw;
       const userIds = await this.userRepository.getUserIdByGuid([sub]);
-      return await this.userEventsRepository.exists({ userId: userIds[0].id });
+      return await this.userEventsRepository.exists({
+        userId: userIds[0].id,
+        eventId: request.params.id,
+      });
     }
     return true;
   }
