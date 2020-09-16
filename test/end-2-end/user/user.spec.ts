@@ -16,7 +16,9 @@ import Application from '../main.test';
 import { UserEventsModule } from '../../../src/modules/userEvents/userEvents.module';
 import { UserEvents } from '../../../src/modules/userEvents/userEvents.entity';
 import { Event } from '../../../src/modules/event/event.entity';
+import { Role } from '../../../src/modules/role/role.entity';
 import { EventModule } from '../../../src/modules/event/event.module';
+import { RoleModule } from '../../../src/modules/role/role.module';
 import { saveEvent } from '../event/data';
 
 describe('Users', () => {
@@ -24,17 +26,20 @@ describe('Users', () => {
   let repository: Repository<User>;
   let userEventsRepository: Repository<UserEvents>;
   let eventRepository: Repository<Event>;
+  let roleRepository: Repository<Role>;
 
   beforeAll(async () => {
     const { server, moduleRef } = await Application([
       EventModule,
       UserModule,
       UserEventsModule,
+      RoleModule,
     ]);
     app = server;
     repository = moduleRef.get('UserRepository');
     userEventsRepository = moduleRef.get('UserEventsRepository');
     eventRepository = moduleRef.get('EventRepository');
+    roleRepository = moduleRef.get('RoleRepository');
   });
 
   it(`/POST users`, async done => {
@@ -123,6 +128,7 @@ describe('Users', () => {
 
   it(`/POST users/linkEvent`, async done => {
     await repository.save(saveUser);
+    await roleRepository.save({ name: 2 });
     await eventRepository.save(saveEvent());
     await app
       .post(`/users/linkEvent`)
@@ -138,6 +144,9 @@ describe('Users', () => {
         ticketCode: null,
         redeemed: true,
       }),
+    );
+    await roleRepository.query(
+      `truncate table "role" restart identity cascade;`,
     );
     done();
   });

@@ -150,7 +150,7 @@ describe('Events', () => {
   });
 
   it(`/GET upcoming/5`, async done => {
-    await repository.save([...happeningNowEvents(), ...upComingEvents(10)]);
+    await repository.save([...upComingEvents(10)]);
 
     const {
       body: { events },
@@ -159,13 +159,13 @@ describe('Events', () => {
       .set('Accept', 'application/json')
       .expect(200);
 
-    expect(events).toEqual(
+    expect(events.sort((x, y) => x.id - y.id)).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: 11 }),
-        expect.objectContaining({ id: 12 }),
-        expect.objectContaining({ id: 13 }),
-        expect.objectContaining({ id: 14 }),
-        expect.objectContaining({ id: 15 }),
+        expect.objectContaining({ id: 6 }),
+        expect.objectContaining({ id: 7 }),
+        expect.objectContaining({ id: 8 }),
+        expect.objectContaining({ id: 9 }),
+        expect.objectContaining({ id: 10 }),
       ]),
     );
     done();
@@ -173,8 +173,8 @@ describe('Events', () => {
 
   it(`/GET upcoming/1/0`, async done => {
     await userRepository.save(saveUser);
-    await repository.save([...upComingEvents(), ...happeningNowEvents()]);
-    await userEventsRepository.save(saveUserEvents(10, { redeemed: true }));
+    await repository.save([...upComingEvents()]);
+    await userEventsRepository.save(saveUserEvents(5, { redeemed: true }));
     const {
       body: { events },
     } = await app
