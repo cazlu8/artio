@@ -172,6 +172,22 @@ export class NetworkRoomService {
     }
   }
 
+  async getPairAndSwitchRoom(
+    eventId: number,
+    parsedClients: [{ socketId: string; currentRoom: string }],
+  ) {
+    const room = await this.createRoomAndSave(eventId);
+    await this.redisClient.zadd(`event-${eventId}:rooms`, 0, room);
+    const sendToSwitch = parsedClients
+      .filter(({ currentRoom }) => currentRoom !== parsedClients[0].currentRoom)
+      .concat(parsedClients[0])
+      .slice(-2)
+      .map(({ socketId }) => {
+        return this.switchRoom(eventId, socketId, room);
+      });
+    for (const current of sendToSwitch) await current;
+  }
+
   async findRoomToSwitch(
     eventId: number,
     roomsWithScores: [{ room: string; score: number }],

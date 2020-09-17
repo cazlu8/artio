@@ -115,11 +115,14 @@ export class EventProcessor {
           .forEach(socketId =>
             this.eventGateway.server.to(socketId).emit(eventName, { eventId }),
           );
+        this.loggerService.info(
+          `sendMessageToUsersLinkedToEvent: message: ${eventName} sent to event: ${eventId}`,
+        );
       }
       jobDone();
     } catch (error) {
       this.loggerService.error(
-        `sendUpdateLiveMessage: ${JSON.stringify(error)}`,
+        `sendMessageToUsersLinkedToEvent: ${JSON.stringify(error)}`,
         error,
       );
     }

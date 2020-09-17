@@ -173,19 +173,7 @@ export class NetworkRoomProcessor {
           ({ currentRoom }) => currentRoom !== parsedClients[0].currentRoom,
         )
       ) {
-        const room = await this.service.createRoomAndSave(eventId);
-        await this.redisClient.zadd(`event-${eventId}:rooms`, 0, room);
-        const sendToSwitch = parsedClients
-          .filter(
-            ({ currentRoom }) => currentRoom !== parsedClients[0].currentRoom,
-          )
-          .concat(parsedClients[0])
-          .slice(-2)
-          .map(({ socketId }) => {
-            return this.service.switchRoom(eventId, socketId, room);
-          });
-        for (const current of sendToSwitch) await current;
-
+        await this.service.getPairAndSwitchRoom(eventId, parsedClients);
         this.loggerService.info(
           `switchRoom: created a new room for the event ${eventId}`,
         );
