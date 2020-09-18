@@ -1,26 +1,32 @@
-import { Query, Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  Query,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Req,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ObjectLiteral } from 'typeorm';
-import { BaseController } from '../../shared/controllers/base.controller';
-import { LoggerService } from '../../shared/services/logger.service';
 import { CardWalletRepository } from './cardWallet.repository';
+import { BaseController } from '../../shared/controllers/base.controller';
 
-@ApiTags('CardWalltet')
+@ApiTags('CardWallet')
 @Controller('cardwallet')
 export class CardWalletController extends BaseController {
-  constructor(
-    private readonly loggerService: LoggerService,
-    private readonly repository: CardWalletRepository,
-  ) {
+  constructor(private readonly repository: CardWalletRepository) {
     super();
   }
 
   @Get('/:userId')
-  async statusCallback(
+  async getCardsFromUser(
     @Param('userId', ParseIntPipe) userId: number,
-    @Query('eventId', ParseIntPipe) eventId: number,
-    @Query('userName') userName: string,
+    @Req() req,
   ): Promise<void | ObjectLiteral> {
-    return await this.repository.getCardsFromUser(userId, userName, eventId);
+    return this.repository.getCardsFromUser(
+      userId,
+      req.query.userName,
+      +req.query.eventId,
+    );
   }
 }

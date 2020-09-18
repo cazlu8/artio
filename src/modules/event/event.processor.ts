@@ -113,7 +113,7 @@ export class EventProcessor {
           .filter(x => existingUserGuids.some(y => y === x.split('--')[1]))
           .map(x => x.split('--')[0])
           .forEach(socketId =>
-            this.eventGateway.server.to(socketId).emit(eventName, { eventId }),
+            this.eventGateway.server.to(socketId).emit(eventName, +eventId),
           );
         this.loggerService.info(
           `sendMessageToUsersLinkedToEvent: message: ${eventName} sent to event: ${eventId}`,

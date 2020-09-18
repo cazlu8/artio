@@ -65,11 +65,32 @@ export class CardWalletGateway
     @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: CardWalletRequestCardDto,
   ): Promise<void> {
-    const { requestedUserGuid, requestingUserName } = data;
+    const { eventId, requestedUserGuid, requestingUserName } = data;
     const requestedUserSocketId = this.redisClient.hget(
       'connectedUsersCardWallet',
       requestedUserGuid,
     );
+    const getRequestingUserId = this.userRepository.getUserIdByGuid([
+      socket.userId,
+    ]);
+    const getRequestedUserId = this.userRepository.getUserIdByGuid([
+      requestedUserGuid,
+    ]);
+    const [requestingUserId, requestedUserId] = (
+      await Promise.all([getRequestingUserId, getRequestedUserId])
+    )
+      .flat()
+      .map(({ id }) => id);
+    const exists =
+      (await this.repository.count({
+        where: { eventId, requestingUserId, requestedUserId },
+      })) > 0;
+    if (exists) {
+      const userCardData = await this.userRepository.getCardDataByGuid(
+        requestedUserGuid,
+      );
+      this.server.to(socket.id).emit('requestCard', userCardData);
+    }
     this.server.to(requestedUserSocketId).emit('askCard', {
       requestingUserName,
       requestingUserGuid: socket.userId,
@@ -103,8 +124,8 @@ export class CardWalletGateway
         requestingUserId,
         requestedUserId,
       });
-      const userCardData = await this.userRepository.getCardData(
-        requestingUserGuid,
+      const userCardData = await this.userRepository.getCardDataByGuid(
+        socket.userId,
       );
       this.server.to(requestingUserSocketId).emit('requestCard', userCardData);
     } else this.server.to(requestingUserSocketId).emit('requestCard', false);

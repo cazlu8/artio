@@ -3,10 +3,6 @@ import { User } from './user.entity';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
-  async exists(properties: {}): Promise<boolean> {
-    return (await this.count(properties)) > 0;
-  }
-
   get({ where, select }) {
     return this.findOne({ select, where });
   }
@@ -53,7 +49,7 @@ export class UserRepository extends Repository<User> {
     });
   }
 
-  getCardData(userGuid: string) {
+  getCardDataByGuid(userGuid: string) {
     return this.findOne({
       select: [
         'id',
