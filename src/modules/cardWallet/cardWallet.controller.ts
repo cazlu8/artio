@@ -7,10 +7,7 @@ import { BaseController } from '../../shared/controllers/base.controller';
 @ApiTags('CardWalltet')
 @Controller('cardwallet')
 export class CardWalletController extends BaseController {
-  constructor(
-    private readonly loggerService: LoggerService,
-    private readonly repository: CardWalletRepository,
-  ) {
+  constructor(private readonly repository: CardWalletRepository) {
     super();
   }
 
