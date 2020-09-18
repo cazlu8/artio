@@ -83,7 +83,7 @@ export class NetworkRoomService {
     ];
   }
 
-  async getNewTwillioRoom(eventId: number): Promise<{ uniqueName: string }> {
+  async getNewTwilioRoom(eventId: number): Promise<{ uniqueName: string }> {
     await this.requestToCreateNewRooms(eventId);
     const newRoom = await this.redisClient.lpop(`event-${eventId}:roomsTwilio`);
     return newRoom ? { uniqueName: newRoom } : await this.createRoom(eventId);
@@ -223,7 +223,7 @@ export class NetworkRoomService {
       1,
     );
     await this.redisClient.ltrim(`event-${eventId}:queue`, 2, -1);
-    const twilioRoom = await this.sendTwillioRoomToSockets(socketIds, eventId);
+    const twilioRoom = await this.sendTwilioRoomToSockets(socketIds, eventId);
     await this.redisClient.zadd(
       `event-${eventId}:rooms`,
       2,
@@ -232,11 +232,11 @@ export class NetworkRoomService {
     return twilioRoom.uniqueName;
   }
 
-  async sendTwillioRoomToSockets(
+  async sendTwilioRoomToSockets(
     socketIds: string[],
     eventId: number,
   ): Promise<{ uniqueName: string }> {
-    const newTwilioRoom = await this.getNewTwillioRoom(eventId);
+    const newTwilioRoom = await this.getNewTwilioRoom(eventId);
     socketIds.forEach(id =>
       networkEventEmitter.emit('sendAvailableRoom', {
         socketId: id,

@@ -179,6 +179,20 @@ export class EventController extends BaseWithoutAuthController {
     return this.repository.findOne({ id });
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'The event was successfully retrieved',
+  })
+  @UsePipes(ValidateIfEventExists)
+  @UseGuards(AuthGuard, UserEventsGuard)
+  @Get('attend/:id')
+  async findOneForAttend(
+    @Param('id', ParseIntPipe) id,
+  ): Promise<Partial<Event> | void> {
+    return this.repository.findOne({ id });
+  }
+
   @ApiCreatedResponse({
     type: Event,
     description: 'All events were successfully retrieved',
@@ -201,6 +215,17 @@ export class EventController extends BaseWithoutAuthController {
     @Param('roleId', ParseIntPipe) roleId: number,
   ) {
     return this.repository.getUserEventsByRole(userId, roleId);
+  }
+
+  @ApiParam({ name: 'userId', type: 'number' })
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'Events by user id',
+  })
+  @UseGuards(AuthGuard)
+  @Get('list/:userId')
+  async getEventListByUserId(@Param('userId', ParseIntPipe) userId: number) {
+    return this.userEventsRepository.getEventsFromUser(userId);
   }
 
   @ApiParam({ name: 'id', type: 'number' })
