@@ -1,5 +1,4 @@
 import { UseGuards } from '@nestjs/common';
-
 import { AuthGuard } from '../guards/auth.guard';
 import { BaseWithoutAuthController } from './base.withoutAuth.controller';
 

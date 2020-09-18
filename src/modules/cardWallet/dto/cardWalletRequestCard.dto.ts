@@ -8,7 +8,11 @@ export class CardWalletRequestCardDto {
 
   @IsNumber()
   @ApiProperty({ type: 'string' })
-  requestedUserGuid: number;
+  requestedUserGuid: string;
+
+  @IsNumber()
+  @ApiProperty({ type: 'number' })
+  eventId: number;
 
   @IsObject()
   auth: { token: string };
