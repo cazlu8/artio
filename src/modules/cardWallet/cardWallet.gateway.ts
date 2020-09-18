@@ -24,7 +24,7 @@ import { CardWalletRepository } from './cardWallet.repository';
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
-@WebSocketGateway(3030, { namespace: 'event', transports: ['websocket'] })
+@WebSocketGateway(3030, { namespace: 'cardwallet', transports: ['websocket'] })
 export class CardWalletGateway
   implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
