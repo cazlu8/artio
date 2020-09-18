@@ -1,20 +1,16 @@
-import {
-  Query,
-  Controller,
-  Get,
-  Param,
-  ParseIntPipe,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ObjectLiteral } from 'typeorm';
 import { CardWalletRepository } from './cardWallet.repository';
 import { BaseController } from '../../shared/controllers/base.controller';
 
-@ApiTags('CardWallet')
+@ApiTags('CardWalltet')
 @Controller('cardwallet')
 export class CardWalletController extends BaseController {
-  constructor(private readonly repository: CardWalletRepository) {
+  constructor(
+    private readonly loggerService: LoggerService,
+    private readonly repository: CardWalletRepository,
+  ) {
     super();
   }
 
