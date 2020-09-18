@@ -55,6 +55,15 @@ export class UserEventsRepository extends Repository<UserEvents> {
       .getRawMany();
   }
 
+  getEventsFromUser(userId: number) {
+    return this.createQueryBuilder(`userEvents`)
+      .select([`event.id`, `event.name`])
+      .innerJoin(`userEvents.user`, `user`)
+      .innerJoin(`userEvents.event`, `event`)
+      .where(`user.id = :userId`, { userId })
+      .getRawMany();
+  }
+
   async exists(properties: {}): Promise<boolean> {
     return (await this.count(properties)) > 0;
   }

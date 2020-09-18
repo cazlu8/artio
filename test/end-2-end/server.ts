@@ -21,8 +21,6 @@ export default async function load(module: TestingModule) {
       transform: true,
     }),
   );
-  // eslint-disable-next-line global-require
-  app.register(require('fastify-file-upload'));
   await app.init();
   await app
     .getHttpAdapter()

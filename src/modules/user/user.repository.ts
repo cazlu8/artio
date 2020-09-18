@@ -52,4 +52,20 @@ export class UserRepository extends Repository<User> {
       where: { guid: In(guids) },
     });
   }
+
+  getCardData(userGuid: string) {
+    return this.findOne({
+      select: [
+        'id',
+        'avatarImgUrl',
+        'company',
+        'currentPosition',
+        'bio',
+        'phoneNumber',
+        'email',
+        'socialUrls',
+      ],
+      where: { guid: userGuid },
+    });
+  }
 }
