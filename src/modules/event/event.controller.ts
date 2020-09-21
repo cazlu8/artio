@@ -218,19 +218,6 @@ export class EventController extends BaseWithoutAuthController {
     return this.repository.getUserEventsByRole(userId, roleId);
   }
 
-  @ApiParam({ name: 'userId', type: 'number' })
-  @ApiCreatedResponse({
-    type: Event,
-    description: 'Events by user id',
-  })
-  @UseGuards(AuthGuard)
-  @Get('list/:userId')
-  async getEventListByUserId(
-    @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<ListUserEventDto[]> {
-    return this.userEventsRepository.getEventsFromUser(userId);
-  }
-
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: SponsorDetail,
