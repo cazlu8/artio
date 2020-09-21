@@ -7,7 +7,6 @@ import {
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
 import { UserEvents } from './userEvents.entity';
 import { RedeemEventCodeDTO } from './dto/userEvents.redeemEventCode.dto';
-import { ListUserEventDto } from './dto/userEvents.list.dto';
 
 @EntityRepository(UserEvents)
 export class UserEventsRepository extends Repository<UserEvents> {
