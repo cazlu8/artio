@@ -33,7 +33,6 @@ import { SponsorDetail } from '../sponsor/dto/sponsor.detail.dto';
 import { EventGateway } from './event.gateway';
 import { OrganizerAuthGuard } from '../../shared/guards/organizerAuth.guard';
 import { UserEventsGuard } from './guards/userEvents.guard';
-import { ListUserEventDto } from '../userEvents/dto/userEvents.list.dto';
 
 @ApiTags('Events')
 @Controller('events')
@@ -216,19 +215,6 @@ export class EventController extends BaseWithoutAuthController {
     @Param('roleId', ParseIntPipe) roleId: number,
   ) {
     return this.repository.getUserEventsByRole(userId, roleId);
-  }
-
-  @ApiParam({ name: 'userId', type: 'number' })
-  @ApiCreatedResponse({
-    type: Event,
-    description: 'Events by user id',
-  })
-  @UseGuards(AuthGuard)
-  @Get('list/:userId')
-  async getEventListByUserId(
-    @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<ListUserEventDto[]> {
-    return this.userEventsRepository.getEventsFromUser(userId);
   }
 
   @ApiParam({ name: 'id', type: 'number' })
