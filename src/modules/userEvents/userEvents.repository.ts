@@ -57,8 +57,8 @@ export class UserEventsRepository extends Repository<UserEvents> {
 
   getEventsFromUser(userId: number) {
     return this.createQueryBuilder(`userEvents`)
-      .select([`event.id`, `event.name`])
-      .innerJoin(`userEvents.user`, `user`)
+      .addSelect(`event.id`, `id`)
+      .addSelect(`event.name`, `name`)
       .innerJoin(`userEvents.event`, `event`)
       .where(`user.id = :userId`, { userId })
       .getRawMany();
