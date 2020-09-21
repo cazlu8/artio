@@ -20,8 +20,8 @@ export class CardWalletRepository extends Repository<CardWallet> {
       .where('cardWallet.requestingUserId = :userId', { userId });
     if (userName)
       query = query.andWhere(
-        "concat(user.firstName,' ', user.lastName) like :name",
-        { name: `%${userName}%` },
+        "lower(concat(user.firstName,' ', user.lastName)) like :name",
+        { name: `%${userName.toLowerCase()}%` },
       );
     if (eventId)
       query = query.andWhere('cardWallet.eventId = :eventId', { eventId });
