@@ -1,5 +1,6 @@
 import { EntityRepository, Repository } from 'typeorm';
 import { CardWallet } from './cardWallet.entity';
+import { ListUserEventDto } from '../userEvents/dto/userEvents.list.dto';
 
 @EntityRepository(CardWallet)
 export class CardWalletRepository extends Repository<CardWallet> {
@@ -25,5 +26,15 @@ export class CardWalletRepository extends Repository<CardWallet> {
     if (eventId)
       query = query.andWhere('cardWallet.eventId = :eventId', { eventId });
     return query.getRawMany();
+  }
+
+  getEventsFromUser(userId: number): Promise<ListUserEventDto[]> {
+    return this.createQueryBuilder(`userEvents`)
+      .select(`event.id`, `id`)
+      .addSelect(`event.name`, `name`)
+      .innerJoin(`cardWallet.event`, `event`)
+      .where(`cardWallet.requestingUserId = :userId`, { userId })
+      .distinctOn(['event.id'])
+      .getRawMany();
   }
 }

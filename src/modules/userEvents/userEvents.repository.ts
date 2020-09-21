@@ -7,7 +7,6 @@ import {
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
 import { UserEvents } from './userEvents.entity';
 import { RedeemEventCodeDTO } from './dto/userEvents.redeemEventCode.dto';
-import { ListUserEventDto } from './dto/userEvents.list.dto';
 
 @EntityRepository(UserEvents)
 export class UserEventsRepository extends Repository<UserEvents> {
@@ -53,16 +52,6 @@ export class UserEventsRepository extends Repository<UserEvents> {
       .where('userEvents.eventId = :eventId', { eventId })
       .andWhere('userEvents.redeemed = true')
       .andWhere('user.id in (:...userIds)', { userIds })
-      .getRawMany();
-  }
-
-  getEventsFromUser(userId: number): Promise<ListUserEventDto[]> {
-    return this.createQueryBuilder(`userEvents`)
-      .select(`event.id`, `id`)
-      .addSelect(`name`, `name`)
-      .innerJoin(`userEvents.event`, `event`)
-      .where(`userEvents.userId = :userId`, { userId })
-      .distinctOn(['event.id'])
       .getRawMany();
   }
 
