@@ -8,12 +8,14 @@ export class CardWalletRepository extends Repository<CardWallet> {
       .select('user.id', 'id')
       .addSelect('email', 'email')
       .addSelect('bio', 'bio')
+      .addSelect('company', 'company')
       .addSelect('current_position', 'currentPosition')
       .addSelect('phone_number', 'phoneNumber')
       .addSelect('social_urls', 'socialUrls')
       .addSelect('avatar_img_url', 'avatarImgUrl')
-      .addSelect("concat(user.firstName,' ', user.lastName)", 'name')
-      .innerJoin('cardWallet.requestingUser', 'user')
+      .addSelect('first_name', 'firstName')
+      .addSelect('last_name', 'lastName')
+      .innerJoin('cardWallet.requestedUser', 'user')
       .where('cardWallet.requestingUserId = :userId', { userId });
     if (userName)
       query = query.andWhere(
