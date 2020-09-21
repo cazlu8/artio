@@ -56,16 +56,6 @@ export class UserEventsRepository extends Repository<UserEvents> {
       .getRawMany();
   }
 
-  getEventsFromUser(userId: number): Promise<ListUserEventDto[]> {
-    return this.createQueryBuilder(`userEvents`)
-      .select(`event.id`, `id`)
-      .addSelect(`name`, `name`)
-      .innerJoin(`userEvents.event`, `event`)
-      .where(`userEvents.userId = :userId`, { userId })
-      .distinctOn(['event.id'])
-      .getRawMany();
-  }
-
   async exists(properties: {}): Promise<boolean> {
     return (await this.count(properties)) > 0;
   }
