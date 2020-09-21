@@ -62,7 +62,7 @@ export class UserEventsRepository extends Repository<UserEvents> {
       .addSelect(`name`, `name`)
       .innerJoin(`userEvents.event`, `event`)
       .where(`userEvents.userId = :userId`, { userId })
-      .distinctOn(['event.id']
+      .distinctOn(['event.id'])
       .getRawMany();
   }
 
