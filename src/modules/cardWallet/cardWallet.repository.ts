@@ -29,7 +29,7 @@ export class CardWalletRepository extends Repository<CardWallet> {
   }
 
   getEventsFromUser(userId: number): Promise<ListUserEventDto[]> {
-    return this.createQueryBuilder(`userEvents`)
+    return this.createQueryBuilder(`cardWallet`)
       .select(`event.id`, `id`)
       .addSelect(`event.name`, `name`)
       .innerJoin(`cardWallet.event`, `event`)
