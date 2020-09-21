@@ -58,9 +58,8 @@ export class UserEventsRepository extends Repository<UserEvents> {
 
   getEventsFromUser(userId: number): Promise<ListUserEventDto[]> {
     return this.createQueryBuilder(`userEvents`)
-      .select('event.id', 'id')
-      .addSelect('event.name', 'name')
-      .innerJoin(`userEvents.user`, `user`)
+      .addSelect(`event.id`, `id`)
+      .addSelect(`event.name`, `name`)
       .innerJoin(`userEvents.event`, `event`)
       .where(`user.id = :userId`, { userId })
       .getRawMany();
