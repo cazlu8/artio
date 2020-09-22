@@ -66,8 +66,8 @@ export class CardWalletGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: CardWalletRequestCardDto,
   ): Promise<void> {
     const { eventId, requestedUserGuid, requestingUserName } = data;
-    const requestedUserSocketId = this.redisClient.hget(
-      'connectedUsersCardWallet',
+    const requestedUserSocketId = await this.redisClient.hget(
+      `connectedUsersCardWallet`,
       requestedUserGuid,
     );
     const getRequestingUserId = this.userRepository.getUserIdByGuid([
