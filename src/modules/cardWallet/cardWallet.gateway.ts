@@ -49,7 +49,7 @@ export class CardWalletGateway
     try {
       const { token } = socket.handshake.query;
       const { sub } = await this.jwtService.validateToken(token);
-      socket.userId = 2;
+      socket.userId = sub;
       await this.redisClient.hset(
         'connectedUsersCardWallet',
         socket.userId,
