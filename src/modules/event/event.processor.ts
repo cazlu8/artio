@@ -5,9 +5,7 @@ import { Queue } from 'bull';
 import { EventGateway } from './event.gateway';
 import { LoggerService } from '../../shared/services/logger.service';
 import { EventRepository } from './event.repository';
-import { UserEventsRepository } from '../userEvents/userEvents.repository';
 import { EventService } from './event.service';
-import { UserRepository } from '../user/user.repository';
 
 const numCPUs = require('os').cpus().length;
 
@@ -20,9 +18,7 @@ export class EventProcessor {
     private readonly eventGateway: EventGateway,
     private readonly loggerService: LoggerService,
     private readonly repository: EventRepository,
-    private readonly userEventsRepository: UserEventsRepository,
-    private readonly userRepository: UserRepository,
-    private service: EventService,
+    private readonly service: EventService,
     @InjectQueue('event') private readonly eventQueue: Queue,
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
@@ -65,22 +61,9 @@ export class EventProcessor {
   async endIntermission(job, jobDone) {
     try {
       const { eventId } = job.data;
-      const removeAllKeys = [
-        `event-${eventId}:roomsTwilio`,
-        `event-${eventId}:rooms`,
-        `event-${eventId}:queue`,
-        `event-${eventId}:queueSwitch`,
-        `event-${eventId}:twilioRoomThreeLength`,
-        `event-${eventId}:intermissionStartedAt`,
-        `event-${eventId}:intermissionTime`,
-        `event-${eventId}:isOnIntermission`,
-        `event-${eventId}`,
-      ].map(key => this.redisClient.del(key));
-      await Promise.all(removeAllKeys);
-      await this.eventQueue.add('sendMessageToUsersLinkedToEvent', {
+      await this.service.removeAllEventKeysAndSendEndIntermissionMessage(
         eventId,
-        eventName: 'endIntermission',
-      });
+      );
       this.loggerService.info(
         `endIntermission: intermission ended for the ${eventId}`,
       );
@@ -97,24 +80,15 @@ export class EventProcessor {
   async sendMessageToUsersLinkedToEvent(job, jobDone) {
     try {
       const { eventId, eventName } = job.data;
-      const connectedUsers = await this.redisClient.smembers('connectedUsers');
+      const connectedUsers = await this.redisClient.smembers(
+        'connectedUsersEvents',
+      );
       if (connectedUsers.length) {
-        const userGuids = connectedUsers.map(x => x.split('--')[1]);
-        const userIds = (
-          await this.userRepository.getUserIdByGuid(userGuids)
-        )?.map(({ id }) => id);
-        const existingUserGuids = (
-          await this.userEventsRepository.getUserGuidsByUserIds(
-            userIds,
-            eventId,
-          )
-        )?.map(({ user_guid }) => user_guid);
-        connectedUsers
-          .filter(x => existingUserGuids.some(y => y === x.split('--')[1]))
-          .map(x => x.split('--')[0])
-          .forEach(socketId =>
-            this.eventGateway.server.to(socketId).emit(eventName, +eventId),
-          );
+        await this.service.getConnectedUserAndSentEvent(
+          connectedUsers,
+          +eventId,
+          eventName,
+        );
         this.loggerService.info(
           `sendMessageToUsersLinkedToEvent: message: ${eventName} sent to event: ${eventId}`,
         );
