@@ -89,7 +89,7 @@ export class CardWalletGateway
       const userCardData = await this.userRepository.getCardDataByGuid(
         requestedUserGuid,
       );
-      this.server.to(socket.id).emit('requestCard', userCardData);
+      this.server.to(socket.id).emit('responseCard', userCardData);
     }
     this.server.to(requestedUserSocketId).emit('askCard', {
       requestingUserName,
@@ -127,7 +127,7 @@ export class CardWalletGateway
       const userCardData = await this.userRepository.getCardDataByGuid(
         socket.userId,
       );
-      this.server.to(requestingUserSocketId).emit('requestCard', userCardData);
-    } else this.server.to(requestingUserSocketId).emit('requestCard', false);
+      this.server.to(requestingUserSocketId).emit('responseCard', userCardData);
+    } else this.server.to(requestingUserSocketId).emit('responseCard', false);
   }
 }

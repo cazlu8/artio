@@ -49,10 +49,12 @@ export class UserRepository extends Repository<User> {
     });
   }
 
-  getCardDataByGuid(userGuid: string) {
+  getCardDataByGuid(userGuid: string): Promise<Partial<User>> {
     return this.findOne({
       select: [
         'id',
+        'firstName',
+        'lastName',
         'avatarImgUrl',
         'company',
         'currentPosition',
