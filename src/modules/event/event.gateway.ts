@@ -32,7 +32,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(socket: any) {
     await this.redisClient.srem(
-      'connectedUsers',
+      'connectedUsersEvents',
       `${socket.id}-${socket.userId}`,
     );
   }
@@ -43,7 +43,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const { sub } = await this.jwtService.validateToken(token);
       socket.userId = sub;
       await this.redisClient.sadd(
-        'connectedUsers',
+        'connectedUsersEvents',
         `${socket.id}--${socket.userId}`,
       );
     } catch (err) {

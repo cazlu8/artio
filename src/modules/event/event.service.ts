@@ -23,6 +23,8 @@ import EventStartIntermissionDto from './dto/event.startIntermission.dto';
 import { EventGateway } from './event.gateway';
 import { LoggerService } from '../../shared/services/logger.service';
 import { UploadService } from '../../shared/services/upload.service';
+import { UserEventsRepository } from '../userEvents/userEvents.repository';
+import { UserRepository } from '../user/user.repository';
 @Injectable()
 export class EventService {
   private redisClient: any;
@@ -35,6 +37,8 @@ export class EventService {
     private readonly redisService: RedisService,
     private readonly uploadService: UploadService,
     private readonly loggerService: LoggerService,
+    private readonly userEventsRepository: UserEventsRepository,
+    private readonly userRepository: UserRepository,
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
@@ -129,6 +133,25 @@ export class EventService {
       );
     } else
       throw new BadRequestException(`event ${eventId} is not on intermission`);
+  }
+
+  async removeAllEventKeysAndSendEndIntermissionMessage(eventId: number) {
+    const removeAllKeys = [
+      `event-${eventId}:roomsTwilio`,
+      `event-${eventId}:rooms`,
+      `event-${eventId}:queue`,
+      `event-${eventId}:queueSwitch`,
+      `event-${eventId}:twilioRoomThreeLength`,
+      `event-${eventId}:intermissionStartedAt`,
+      `event-${eventId}:intermissionTime`,
+      `event-${eventId}:isOnIntermission`,
+      `event-${eventId}`,
+    ].map(key => this.redisClient.del(key));
+    await Promise.all(removeAllKeys);
+    await this.eventQueue.add('sendMessageToUsersLinkedToEvent', {
+      eventId,
+      eventName: 'endIntermission',
+    });
   }
 
   async getIntermissionStatus(eventId: number): Promise<number | boolean> {
@@ -289,5 +312,25 @@ export class EventService {
       `event-${eventId}:isOnIntermission`,
     );
     return !!isOnIntermission;
+  }
+
+  async getConnectedUserAndSentEvent(
+    connectedUsers: string[],
+    eventId: number,
+    eventName: string,
+  ) {
+    const userGuids = connectedUsers.map(x => x.split('--')[1]);
+    const userIds = (await this.userRepository.getUserIdByGuid(userGuids))?.map(
+      ({ id }) => id,
+    );
+    const existingUserGuids = (
+      await this.userEventsRepository.getUserGuidsByUserIds(userIds, eventId)
+    )?.map(({ user_guid }) => user_guid);
+    connectedUsers
+      .filter(x => existingUserGuids.some(y => y === x.split('--')[1]))
+      .map(x => x.split('--')[0])
+      .forEach(socketId =>
+        this.eventGateway.server.to(socketId).emit(eventName, eventId),
+      );
   }
 }
