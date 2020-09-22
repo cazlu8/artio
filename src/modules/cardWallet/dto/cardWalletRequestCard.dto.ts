@@ -6,7 +6,7 @@ export class CardWalletRequestCardDto {
   @ApiProperty({ type: 'string' })
   requestingUserName: string;
 
-  @IsNumber()
+  @IsNotEmpty()
   @ApiProperty({ type: 'string' })
   requestedUserGuid: string;
 

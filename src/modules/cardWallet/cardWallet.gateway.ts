@@ -21,7 +21,7 @@ import { CardWalletResponseCardDto } from './dto/cardWalletResponse.dto';
 import { UserRepository } from '../user/user.repository';
 import { CardWalletRepository } from './cardWallet.repository';
 
-@UseGuards(WsAuthGuard)
+// @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
 @WebSocketGateway(3030, { namespace: 'cardwallet', transports: ['websocket'] })
@@ -47,9 +47,9 @@ export class CardWalletGateway
 
   async handleConnection(socket: any) {
     try {
-      const { token } = socket.handshake.query;
-      const { sub } = await this.jwtService.validateToken(token);
-      socket.userId = sub;
+      // const { token } = socket.handshake.query;
+      // const { sub } = await this.jwtService.validateToken(token);
+      socket.userId = 2;
       await this.redisClient.hset(
         'connectedUsersCardWallet',
         socket.userId,
@@ -66,8 +66,8 @@ export class CardWalletGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: CardWalletRequestCardDto,
   ): Promise<void> {
     const { eventId, requestedUserGuid, requestingUserName } = data;
-    const requestedUserSocketId = this.redisClient.hget(
-      'connectedUsersCardWallet',
+    const requestedUserSocketId = await this.redisClient.hget(
+      `connectedUsersCardWallet`,
       requestedUserGuid,
     );
     const getRequestingUserId = this.userRepository.getUserIdByGuid([
