@@ -21,7 +21,7 @@ import { CardWalletResponseCardDto } from './dto/cardWalletResponse.dto';
 import { UserRepository } from '../user/user.repository';
 import { CardWalletRepository } from './cardWallet.repository';
 
-// @UseGuards(WsAuthGuard)
+@UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
 @WebSocketGateway(3030, { namespace: 'cardwallet', transports: ['websocket'] })
@@ -47,8 +47,8 @@ export class CardWalletGateway
 
   async handleConnection(socket: any) {
     try {
-      // const { token } = socket.handshake.query;
-      // const { sub } = await this.jwtService.validateToken(token);
+      const { token } = socket.handshake.query;
+      const { sub } = await this.jwtService.validateToken(token);
       socket.userId = 2;
       await this.redisClient.hset(
         'connectedUsersCardWallet',
