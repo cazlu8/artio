@@ -20,6 +20,7 @@ import { CardWalletRequestCardDto } from './dto/cardWalletRequestCard.dto';
 import { CardWalletResponseCardDto } from './dto/cardWalletResponse.dto';
 import { UserRepository } from '../user/user.repository';
 import { CardWalletRepository } from './cardWallet.repository';
+import { CardWalletService } from './cardWallet.service';
 
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
@@ -35,6 +36,7 @@ export class CardWalletGateway
   constructor(
     private readonly jwtService: JwtService,
     private readonly redisService: RedisService,
+    private readonly service: CardWalletService,
     private readonly userRepository: UserRepository,
     private readonly repository: CardWalletRepository,
   ) {
@@ -66,35 +68,26 @@ export class CardWalletGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: CardWalletRequestCardDto,
   ): Promise<void> {
     const { eventId, requestedUserGuid, requestingUserName } = data;
-    const requestedUserSocketId = await this.redisClient.hget(
-      `connectedUsersCardWallet`,
+    const exists = await this.service.verifyIfRelationshipExists(
+      eventId,
+      socket.userId,
       requestedUserGuid,
     );
-    const getRequestingUserId = this.userRepository.getUserIdByGuid([
-      socket.userId,
-    ]);
-    const getRequestedUserId = this.userRepository.getUserIdByGuid([
-      requestedUserGuid,
-    ]);
-    const [requestingUserId, requestedUserId] = (
-      await Promise.all([getRequestingUserId, getRequestedUserId])
-    )
-      .flat()
-      .map(({ id }) => id);
-    const exists =
-      (await this.repository.count({
-        where: { eventId, requestingUserId, requestedUserId },
-      })) > 0;
     if (exists) {
       const userCardData = await this.userRepository.getCardDataByGuid(
         requestedUserGuid,
       );
       this.server.to(socket.id).emit('responseCard', userCardData);
+    } else {
+      const requestedUserSocketId = await this.redisClient.hget(
+        `connectedUsersCardWallet`,
+        requestedUserGuid,
+      );
+      this.server.to(requestedUserSocketId).emit('askCard', {
+        requestingUserName,
+        requestingUserGuid: socket.userId,
+      });
     }
-    this.server.to(requestedUserSocketId).emit('askCard', {
-      requestingUserName,
-      requestingUserGuid: socket.userId,
-    });
   }
 
   @SubscribeMessage('responseCard')
@@ -103,22 +96,15 @@ export class CardWalletGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: CardWalletResponseCardDto,
   ): Promise<void> {
     const { eventId, accept, requestingUserGuid } = data;
-    const requestingUserSocketId = this.redisClient.hget(
+    const requestingUserSocketId = await this.redisClient.hget(
       'connectedUsersCardWallet',
       requestingUserGuid,
     );
     if (accept) {
-      const getRequestingUserId = this.userRepository.getUserIdByGuid([
+      const [requestingUserId, requestedUserId] = await this.service.getUserIds(
         requestingUserGuid,
-      ]);
-      const getRequestedUserId = this.userRepository.getUserIdByGuid([
         socket.userId,
-      ]);
-      const [requestingUserId, requestedUserId] = (
-        await Promise.all([getRequestingUserId, getRequestedUserId])
-      )
-        .flat()
-        .map(({ id }) => id);
+      );
       this.repository.save({
         eventId,
         requestingUserId,
