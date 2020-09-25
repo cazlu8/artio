@@ -22,12 +22,16 @@ export class EventStages {
   name: string;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', name: 'eventId', primary: true })
-  eventId: number;
+  @Column('varchar', { length: 12, nullable: true, name: 'region' })
+  region: string;
 
-  @OneToOne(() => Event)
-  @JoinColumn()
-  event: Event;
+  @ApiProperty()
+  @Column('varchar', {
+    length: 15,
+    nullable: true,
+    name: 'cdn_distribution_id',
+  })
+  cdnDistributionId: string;
 
   @ApiProperty()
   @Column('varchar', { length: 255, nullable: true, name: 'liveUrl' })
@@ -52,4 +56,12 @@ export class EventStages {
   @ApiProperty()
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @ApiProperty()
+  @PrimaryColumn({ type: 'int', name: 'eventId', primary: true })
+  eventId: number;
+
+  @OneToOne(() => Event)
+  @JoinColumn()
+  event: Event;
 }
