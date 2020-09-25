@@ -111,10 +111,16 @@ export class EventService {
   ): Promise<void> {
     const { eventId, intermissionTime } = eventStartIntermissionDto;
     if (!(await this.eventIsOnIntermission(eventId))) {
-      await this.eventQueue.add('startIntermission', {
-        eventId,
-        intermissionTime,
-      });
+      await this.eventQueue.add(
+        'startIntermission',
+        {
+          eventId,
+          intermissionTime,
+        },
+        {
+          delay: 20000,
+        },
+      );
     } else
       throw new BadRequestException(
         `event ${eventId} is already on intermission`,
