@@ -26,6 +26,10 @@ export class EventStages {
   region: string;
 
   @ApiProperty()
+  @Column('int', { name: 'channel_id' })
+  channelId: number;
+
+  @ApiProperty()
   @Column('varchar', {
     length: 15,
     nullable: true,
