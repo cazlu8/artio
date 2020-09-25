@@ -14,6 +14,8 @@ import { EmailService } from '../../shared/services/email/email.service';
 import { EventRepository } from '../event/event.repository';
 import { BaseModule } from '../../shared/modules/base.module';
 import { UploadService } from '../../shared/services/upload.service';
+import { UserGateway } from './user.gateway';
+import { JwtService } from '../../shared/services/jwt.service';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { UploadService } from '../../shared/services/upload.service';
     EmailService,
     UploadService,
     UserProcessor,
+    UserGateway,
+    JwtService,
   ],
   exports: [UserService],
 })

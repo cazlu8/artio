@@ -17,6 +17,9 @@ import CognitoIdentityServiceProvider from 'aws-sdk/clients/cognitoidentityservi
 import { ConfigService } from '@nestjs/config';
 import * as short from 'short-uuid';
 import { validate as validateEmail } from 'email-validator';
+import { RedisService } from 'nestjs-redis';
+import * as bluebird from 'bluebird';
+import { UserGateway } from './user.gateway';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/user.create.dto';
 import { UpdateUserDto } from './dto/user.update.dto';
@@ -35,11 +38,15 @@ import { Event } from '../event/event.entity';
 import { UploadService } from '../../shared/services/upload.service';
 import { LinkToEventWithRoleDTO } from './dto/user.linkToEventWithRole.dto';
 import { UserEventsRolesRepository } from '../userEventsRoles/userEventsRoles.repository';
+
 @Injectable()
 export class UserService {
   private cognito: CognitoIdentityServiceProvider;
 
+  private readonly redisClient: any;
+
   constructor(
+    private readonly redisService: RedisService,
     private readonly repository: UserRepository,
     @InjectRepository(UserEvents)
     private readonly userEventsRepository: UserEventsRepository,
@@ -52,12 +59,44 @@ export class UserService {
     private readonly uploadService: UploadService,
     private readonly loggerService: LoggerService,
     private readonly userEventsService: UserEventsService,
+    private readonly userGateway: UserGateway,
+
     private configService: ConfigService,
     @InjectQueue('user') private readonly userQueue: Queue,
   ) {
     this.cognito = new AWS.CognitoIdentityServiceProvider(
       this.configService.get('cognito'),
     );
+    this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
+  }
+
+  async validateSignIn(guid, hash, isOnAdmin) {
+    if (isOnAdmin) {
+      return true;
+    }
+    if (hash === 'null') {
+      const newHash = short.generate();
+      await this.redisClient.hset(
+        'connectedUsers',
+        `${guid}`,
+        `null--${newHash}`,
+      );
+      return newHash;
+    }
+    const loginIsInvalid = await this.redisClient.hget(
+      'connectedUsers',
+      `${guid}`,
+    );
+    if (loginIsInvalid && hash) {
+      const currentRedisHash = loginIsInvalid.split('--')[1];
+      const socketId = loginIsInvalid.split('--')[0];
+      if (currentRedisHash !== hash) {
+        await this.userGateway.sendSignOutMessage(socketId);
+        return false;
+      }
+      return true;
+    }
+    return true;
   }
 
   async updateUserInfo(
