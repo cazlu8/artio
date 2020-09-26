@@ -26,6 +26,14 @@ export class EventStages {
   region: string;
 
   @ApiProperty()
+  @Column('int', { name: 'media_live_channel_id' })
+  mediaLiveChannelId: number;
+
+  @ApiProperty()
+  @Column('int', { name: 'media_live_input_id' })
+  mediaLiveInputId: number;
+
+  @ApiProperty()
   @Column('varchar', {
     length: 15,
     nullable: true,
