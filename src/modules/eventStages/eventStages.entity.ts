@@ -42,19 +42,19 @@ export class EventStages {
   cdnDistributionId: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'liveUrl' })
+  @Column('varchar', { length: 255, nullable: true, name: 'live_url' })
   liveUrl: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'streamKey' })
+  @Column('varchar', { length: 255, nullable: true, name: 'stream_key' })
   streamKey: string;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'streamUrl' })
+  @Column('varchar', { length: 255, nullable: true, name: 'stream_url' })
   streamUrl: string;
 
   @ApiProperty()
-  @Column('boolean', { default: false, name: 'onLive' })
+  @Column('boolean', { default: false, name: 'on_live' })
   onLive?: boolean;
 
   @ApiProperty()
@@ -66,7 +66,7 @@ export class EventStages {
   updatedAt: Date;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', name: 'eventId', primary: true })
+  @PrimaryColumn({ type: 'int', name: 'event_id', primary: true })
   eventId: number;
 
   @OneToOne(() => Event)
