@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class createEventStage1601070210517 implements MigrationInterface {
-  name = 'createEventStage1601070210517';
+export class createEventStage1601080210517 implements MigrationInterface {
+  name = 'createEventStage1601080210517';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
