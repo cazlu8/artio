@@ -47,10 +47,18 @@ export class EventService {
     await this.repository.update(eventId, {
       onLive: isLive,
     });
-    await this.eventQueue.add('sendMessageToUsersLinkedToEvent', {
-      eventId,
-      eventName: 'eventLive',
-    });
+    await this.eventQueue.add(
+      'sendMessageToUsersLinkedToEvent',
+      {
+        eventId,
+        eventName: 'eventLive',
+      },
+      isLive === true
+        ? {
+            delay: 20000,
+          }
+        : undefined,
+    );
   }
 
   getUpcomingEvents(skip: number): Promise<EventListDto[] | void> {
@@ -111,16 +119,10 @@ export class EventService {
   ): Promise<void> {
     const { eventId, intermissionTime } = eventStartIntermissionDto;
     if (!(await this.eventIsOnIntermission(eventId))) {
-      await this.eventQueue.add(
-        'startIntermission',
-        {
-          eventId,
-          intermissionTime,
-        },
-        {
-          delay: 20000,
-        },
-      );
+      await this.eventQueue.add('startIntermission', {
+        eventId,
+        intermissionTime,
+      });
     } else
       throw new BadRequestException(
         `event ${eventId} is already on intermission`,
