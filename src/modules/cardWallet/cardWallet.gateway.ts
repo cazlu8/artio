@@ -105,7 +105,7 @@ export class CardWalletGateway
         requestingUserGuid,
         socket.userId,
       );
-      this.repository.save({
+      await this.repository.save({
         eventId,
         requestingUserId,
         requestedUserId,
