@@ -16,15 +16,15 @@ export class CardWallet {
   id: number;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', name: 'requestingUserId', primary: true })
+  @PrimaryColumn({ type: 'int', name: 'requesting_user_id', primary: true })
   requestingUserId: number;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', name: 'requestedUserId', primary: true })
+  @PrimaryColumn({ type: 'int', name: 'requested_user_id', primary: true })
   requestedUserId: number;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', name: 'eventId', primary: true })
+  @PrimaryColumn({ type: 'int', name: 'event_id', primary: true })
   eventId: number;
 
   @OneToOne(() => Event)
