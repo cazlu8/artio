@@ -41,7 +41,7 @@ export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
       socket.userId = sub;
       await this.redisClient.hset(
         'connectedUsers',
-        `${socket.userId}`,
+        socket.userId,
         `${socket.id}--${hash}`,
       );
     } catch (err) {
