@@ -6,8 +6,8 @@ import { LinkToEventWithRoleDTO } from '../../../src/modules/user/dto/user.linkT
 import { UpdateUserDto } from '../../../src/modules/user/dto/user.update.dto';
 
 const createUserDtoFactory = Factory.Sync.makeFactory<CreateUserDto>({
-  guid: faker.random.uuid(),
-  email: faker.internet.email(),
+  guid: Factory.each(() => faker.random.uuid()),
+  email: Factory.each(() => faker.internet.email()),
 });
 
 const createUserErrorDtoFactory = Factory.Sync.makeFactory<CreateUserDto>({
@@ -48,6 +48,9 @@ const saveAvatarUrl = faker.image.image();
 
 const saveUser = createUserDtoFactory.build();
 
+const saveUsers = (amount = 5, properties = {}) =>
+  createUserDtoFactory.buildList(amount, properties);
+
 const saveUserError = createUserErrorDtoFactory.build();
 
 const updateUser = updateUserDtoFactory.build();
@@ -68,6 +71,7 @@ const linkUserToEventWithCode = {
 export {
   saveAvatarUrl,
   saveUser,
+  saveUsers,
   saveUserError,
   updateUser,
   createAvatar,
