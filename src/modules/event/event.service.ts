@@ -10,7 +10,12 @@ import * as bluebird from 'bluebird';
 import { PromiseResult } from 'aws-sdk/lib/request';
 import { AWSError, S3 } from 'aws-sdk';
 import { ManagedUpload } from 'aws-sdk/clients/s3';
-import * as dateFns from 'date-fns';
+import {
+  addHours,
+  differenceInMilliseconds,
+  differenceInSeconds,
+  addMinutes,
+} from 'date-fns';
 import { Event } from './event.entity';
 import { EventRepository } from './event.repository';
 import EventListDto from './dto/event.list.dto';
@@ -25,6 +30,7 @@ import { LoggerService } from '../../shared/services/logger.service';
 import { UploadService } from '../../shared/services/upload.service';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
 import { UserRepository } from '../user/user.repository';
+
 @Injectable()
 export class EventService {
   private redisClient: any;
@@ -43,7 +49,7 @@ export class EventService {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
-  async updateLive(eventId: number, isLive: boolean) {
+  async updateLive(eventId: number, stageId: number, isLive: boolean) {
     await this.repository.update(eventId, {
       onLive: isLive,
     });
@@ -55,9 +61,28 @@ export class EventService {
       },
       isLive === true
         ? {
-            delay: 20000,
+            delay: 25000,
           }
         : undefined,
+    );
+    if (isLive) {
+      await this.addDestroyInfraToQueue(eventId, stageId);
+    }
+  }
+
+  private async addDestroyInfraToQueue(eventId: number, stageId: number) {
+    const { endDate } = await this.repository.findOne({
+      select: ['endDate'],
+      where: { id: eventId },
+    });
+    const delay = differenceInMilliseconds(
+      addHours(new Date(endDate), 6),
+      Date.now(),
+    );
+    await this.eventQueue.add(
+      'stopMediaLiveChannelAndDestroyInfra',
+      { eventId, stageId },
+      { delay },
     );
   }
 
@@ -177,9 +202,9 @@ export class EventService {
         getStartedAtFn,
         getDurationFn,
       ]);
-      const startedAtDate = +dateFns.addMinutes(new Date(startedAt), +duration);
+      const startedAtDate = addMinutes(new Date(startedAt), +duration);
       const nowDate = Date.now();
-      return dateFns.differenceInSeconds(startedAtDate, nowDate);
+      return differenceInSeconds(startedAtDate, nowDate);
     }
     return false;
   }
