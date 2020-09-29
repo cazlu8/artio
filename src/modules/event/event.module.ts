@@ -12,6 +12,7 @@ import { JwtService } from '../../shared/services/jwt.service';
 import { UploadService } from '../../shared/services/upload.service';
 import { UserRepository } from '../user/user.repository';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
+import { EventStagesRepository } from '../eventStages/eventStages.repository';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { UserEventsRepository } from '../userEvents/userEvents.repository';
       EventRepository,
       UserEventsRepository,
       UserRepository,
+      EventStagesRepository,
     ]),
   ],
   controllers: [EventController],

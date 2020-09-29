@@ -8,12 +8,13 @@ import {
   ParseIntPipe,
   Post,
   Put,
-  Res,
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { ObjectLiteral, UpdateResult } from 'typeorm';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { EventService } from './event.service';
 import EventListDto from './dto/event.list.dto';
 import EventDetailsDTO from './dto/event.details.dto';
@@ -43,6 +44,7 @@ export class EventController extends BaseWithoutAuthController {
     private readonly eventGateway: EventGateway,
     private readonly repository: EventRepository,
     private readonly userEventsRepository: UserEventsRepository,
+    @InjectQueue('event') private readonly eventQueue: Queue,
   ) {
     super();
   }
@@ -292,10 +294,10 @@ export class EventController extends BaseWithoutAuthController {
   @HttpCode(204)
   @Put('/startLive/:eventId')
   async startLive(
-    @Res() res,
     @Param('eventId', ParseIntPipe) eventId: number,
+    @Param('stageId', ParseIntPipe) stageId: number,
   ): Promise<void> {
-    await this.service.updateLive(eventId, true);
+    await this.service.updateLive(eventId, stageId, true);
   }
 
   @ApiParam({ name: 'finishLive' })
@@ -305,11 +307,42 @@ export class EventController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @HttpCode(204)
-  @Put('/finishLive/:eventId')
+  @Put('/finishLive/:eventId/:stageId')
   async finishLive(
-    @Res() res,
     @Param('eventId', ParseIntPipe) eventId: number,
+    @Param('stageId', ParseIntPipe) stageId: number,
   ): Promise<void> {
-    await this.service.updateLive(eventId, false);
+    await this.service.updateLive(eventId, stageId, false);
+  }
+
+  @ApiParam({ name: 'destroyInfra' })
+  @ApiCreatedResponse({
+    type: UpdateEventDTO,
+    description: 'Stop and destroy live infra',
+  })
+  @UseGuards(AuthGuard)
+  @HttpCode(204)
+  @Put('/destroyInfra/:eventId/:stageId')
+  async destroyInfra(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Param('stageId', ParseIntPipe) stageId: number,
+  ): Promise<void> {
+    await this.eventQueue.add('stopMediaLiveChannel', { eventId, stageId });
+  }
+
+  @ApiParam({ name: 'destroyInfra' })
+  @ApiCreatedResponse({
+    type: UpdateEventDTO,
+    description: 'Start preview live infra',
+  })
+  @UseGuards(AuthGuard)
+  @HttpCode(204)
+  @Put('/startPreview/:eventId/:stageId/:minutes')
+  async startPreviewInfra(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Param('stageId', ParseIntPipe) stageId: number,
+    @Param('minutes', ParseIntPipe) minutes: number,
+  ): Promise<void> {
+    await this.service.startPreviewLiveInfra(eventId, stageId, minutes);
   }
 }
