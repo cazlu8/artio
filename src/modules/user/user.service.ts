@@ -74,19 +74,14 @@ export class UserService {
     if (isOnAdmin) {
       return true;
     }
+
     if (hash === 'null') {
       const newHash = short.generate();
-      await this.redisClient.hset(
-        'connectedUsers',
-        `${guid}`,
-        `null--${newHash}`,
-      );
+      await this.redisClient.hset('connectedUsers', guid, `null--${newHash}`);
       return newHash;
     }
-    const loginIsInvalid = await this.redisClient.hget(
-      'connectedUsers',
-      `${guid}`,
-    );
+    const loginIsInvalid = await this.redisClient.hget('connectedUsers', guid);
+
     if (loginIsInvalid && hash) {
       const currentRedisHash = loginIsInvalid.split('--')[1];
       const socketId = loginIsInvalid.split('--')[0];
