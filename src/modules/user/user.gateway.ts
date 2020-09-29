@@ -31,7 +31,7 @@ export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(socket: any) {
-    await this.redisClient.hdel('connectedUsers', `${socket.userId}`);
+    await this.redisClient.hdel('loggedUsers', `${socket.userId}`);
   }
 
   async handleConnection(socket: any) {
@@ -40,7 +40,7 @@ export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const { sub } = await this.jwtService.validateToken(token);
       socket.userId = sub;
       await this.redisClient.hset(
-        'connectedUsers',
+        'loggedUsers',
         socket.userId,
         `${socket.id}--${hash}`,
       );
