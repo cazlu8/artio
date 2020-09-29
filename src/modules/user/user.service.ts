@@ -77,10 +77,10 @@ export class UserService {
 
     if (hash === 'null') {
       const newHash = short.generate();
-      await this.redisClient.hset('connectedUsers', guid, `null--${newHash}`);
+      await this.redisClient.hset('loggedUsers', guid, `null--${newHash}`);
       return newHash;
     }
-    const loginIsInvalid = await this.redisClient.hget('connectedUsers', guid);
+    const loginIsInvalid = await this.redisClient.hget('loggedUsers', guid);
 
     if (loginIsInvalid && hash) {
       const currentRedisHash = loginIsInvalid.split('--')[1];
