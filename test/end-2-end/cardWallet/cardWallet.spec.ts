@@ -1,5 +1,4 @@
 import { Repository } from 'typeorm';
-import { uuid } from 'uuidv4';
 import Application from '../main.test';
 import { UserEventsModule } from '../../../src/modules/userEvents/userEvents.module';
 import { Event } from '../../../src/modules/event/event.entity';
