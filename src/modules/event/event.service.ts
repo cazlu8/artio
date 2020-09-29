@@ -80,9 +80,29 @@ export class EventService {
       Date.now(),
     );
     await this.eventQueue.add(
-      'stopMediaLiveChannelAndDestroyInfra',
+      'stopMediaLiveChannel',
       { eventId, stageId },
       { delay },
+    );
+    await this.eventQueue.add(
+      'destroyInfra',
+      { eventId, stageId },
+      {
+        delay: delay + 20000,
+      },
+    );
+  }
+
+  async startPreviewLiveInfra(
+    eventId: number,
+    stageId: number,
+    minutes: number,
+  ) {
+    await this.eventQueue.add('startMediaLiveChannel', { eventId, stageId });
+    await this.eventQueue.add(
+      'stopMediaLiveChannel',
+      { eventId, stageId },
+      { delay: minutes * 1000 * 60 },
     );
   }
 

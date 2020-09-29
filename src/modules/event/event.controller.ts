@@ -330,4 +330,20 @@ export class EventController extends BaseWithoutAuthController {
   ): Promise<void> {
     await this.eventQueue.add('stopMediaLiveChannel', { eventId, stageId });
   }
+
+  @ApiParam({ name: 'destroyInfra' })
+  @ApiCreatedResponse({
+    type: UpdateEventDTO,
+    description: 'Start preview live infra',
+  })
+  @UseGuards(AuthGuard)
+  @HttpCode(204)
+  @Put('/startPreview/:eventId/:stageId/:minutes')
+  async startPreviewInfra(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Param('stageId', ParseIntPipe) stageId: number,
+    @Param('minutes', ParseIntPipe) minutes: number,
+  ): Promise<void> {
+    await this.service.startPreviewLiveInfra(eventId, stageId, minutes);
+  }
 }

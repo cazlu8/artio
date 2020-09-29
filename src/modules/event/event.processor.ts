@@ -106,10 +106,40 @@ export class EventProcessor {
   }
 
   @Process({
-    name: 'stopMediaLiveChannelAndDestroyInfra',
+    name: 'startMediaLiveChannel',
     concurrency: numCPUs,
   })
-  async stopMediaLiveChannelAndDestroyInfra(job, jobDone) {
+  async startMediaLiveChannel(job, jobDone) {
+    try {
+      const { eventId, stageId } = job.data;
+      const {
+        region,
+        mediaLiveChannelId,
+      } = await this.eventStagesRepository.findOne({
+        select: ['region', 'mediaLiveChannelId'],
+        where: { id: stageId },
+      });
+      await axios.post(process.env.LAMBDA_START_MEDIA_LIVE_CHANNEL, {
+        mediaLiveChannelId,
+        region,
+      });
+      this.loggerService.info(
+        `startMediaLiveChannel: message: media live channel of event ${eventId} was stopped`,
+      );
+      jobDone();
+    } catch (error) {
+      this.loggerService.error(
+        `startMediaLiveChannel: ${JSON.stringify(error)}`,
+        error,
+      );
+    }
+  }
+
+  @Process({
+    name: 'stopMediaLiveChannel',
+    concurrency: numCPUs,
+  })
+  async stopMediaLiveChannel(job, jobDone) {
     try {
       const { eventId, stageId } = job.data;
       const {
@@ -123,20 +153,13 @@ export class EventProcessor {
         mediaLiveChannelId,
         region,
       });
-      await this.eventQueue.add(
-        'destroyInfra',
-        { eventId, stageId },
-        {
-          delay: 20000,
-        },
-      );
       this.loggerService.info(
-        `stopMediaLiveChannelAndDestroyInfra: message: media live channel of event ${eventId} was stopped`,
+        `stopMediaLiveChannel: message: media live channel of event ${eventId} was stopped`,
       );
       jobDone();
     } catch (error) {
       this.loggerService.error(
-        `stopMediaLiveChannelAndDestroyInfra: ${JSON.stringify(error)}`,
+        `stopMediaLiveChannel: ${JSON.stringify(error)}`,
         error,
       );
     }
