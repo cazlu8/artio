@@ -1,7 +1,6 @@
 import {
   BaseWsExceptionFilter,
   OnGatewayConnection,
-  OnGatewayDisconnect,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
@@ -17,7 +16,7 @@ import { JwtService } from '../../shared/services/jwt.service';
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
 @WebSocketGateway(3030, { namespace: 'user', transports: ['websocket'] })
-export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class UserGateway implements OnGatewayConnection {
   @WebSocketServer()
   readonly server: Server;
 
@@ -28,10 +27,6 @@ export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly redisService: RedisService,
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
-  }
-
-  async handleDisconnect(socket: any) {
-    await this.redisClient.hdel('loggedUsers', `${socket.userId}`);
   }
 
   async handleConnection(socket: any) {
@@ -50,6 +45,6 @@ export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async sendSignOutMessage(socketId: string) {
-    await this.server.to(socketId).emit('signOut', true);
+    await this.server.to(socketId).emit('signOut');
   }
 }
