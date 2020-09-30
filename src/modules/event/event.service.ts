@@ -30,6 +30,7 @@ import { LoggerService } from '../../shared/services/logger.service';
 import { UploadService } from '../../shared/services/upload.service';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
 import { UserRepository } from '../user/user.repository';
+import { EventStagesRepository } from '../eventStages/eventStages.repository';
 
 @Injectable()
 export class EventService {
@@ -44,12 +45,13 @@ export class EventService {
     private readonly uploadService: UploadService,
     private readonly loggerService: LoggerService,
     private readonly userEventsRepository: UserEventsRepository,
+    private readonly eventStagesRepository: EventStagesRepository,
     private readonly userRepository: UserRepository,
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
-  async updateLive(eventId: number, stageId: number, isLive: boolean) {
+  async updateLive(eventId: number, isLive: boolean) {
     await this.repository.update(eventId, {
       onLive: isLive,
     });
@@ -65,12 +67,13 @@ export class EventService {
           }
         : undefined,
     );
-    if (isLive) {
-      await this.addDestroyInfraToQueue(eventId, stageId);
-    }
   }
 
-  private async addDestroyInfraToQueue(eventId: number, stageId: number) {
+  async addDestroyInfraToQueue(eventId: number) {
+    const stageIds = await this.eventStagesRepository.find({
+      select: ['id'],
+      where: { eventId },
+    });
     const { endDate } = await this.repository.findOne({
       select: ['endDate'],
       where: { id: eventId },
@@ -79,18 +82,21 @@ export class EventService {
       addHours(new Date(endDate), 6),
       Date.now(),
     );
-    await this.eventQueue.add(
-      'stopMediaLiveChannel',
-      { eventId, stageId },
-      { delay },
-    );
-    await this.eventQueue.add(
-      'destroyInfra',
-      { eventId, stageId },
-      {
-        delay: delay + 20000,
-      },
-    );
+    for (const stageId of stageIds) {
+      await this.eventQueue.add(
+        'stopMediaLiveChannel',
+        { eventId, stageId },
+        { delay, jobId: `event-${eventId}` },
+      );
+      await this.eventQueue.add(
+        'destroyInfra',
+        { eventId, stageId },
+        {
+          delay: delay + 20000,
+          jobId: `event-${eventId}`,
+        },
+      );
+    }
   }
 
   async startPreviewLiveInfra(
