@@ -80,16 +80,16 @@ export class UserService {
       await this.redisClient.hset('loggedUsers', guid, `null--${newHash}`);
       return newHash;
     }
+
     const loginIsInvalid = await this.redisClient.hget('loggedUsers', guid);
 
-    if (loginIsInvalid && hash) {
+    if (loginIsInvalid) {
       const currentRedisHash = loginIsInvalid.split('--')[1];
       const socketId = loginIsInvalid.split('--')[0];
       if (currentRedisHash !== hash) {
         await this.userGateway.sendSignOutMessage(socketId);
         return false;
       }
-      return true;
     }
     return true;
   }
