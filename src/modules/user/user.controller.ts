@@ -154,13 +154,12 @@ export class UserController extends BaseWithoutAuthController {
 
   @ApiParam({ name: 'guid', type: 'string' })
   @ApiParam({ name: 'hash', type: 'string' })
-  @ApiParam({ name: 'isOnAdmin', type: 'boolean' })
   @ApiCreatedResponse({
     type: User,
     description: 'Validate user login',
   })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
-  @Get('/validateSignIn/:guid/:hash/:isOnAdmin')
+  @Get('/validateSignIn/:guid/:hash')
   async validateSignIn(
     @Param('guid', ValidateIfGuidExists) guid: string,
     @Param('hash') hash: string,
