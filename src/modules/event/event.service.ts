@@ -67,12 +67,9 @@ export class EventService {
           }
         : undefined,
     );
-    if (isLive) {
-      await this.addDestroyInfraToQueue(eventId);
-    }
   }
 
-  private async addDestroyInfraToQueue(eventId: number) {
+  async addDestroyInfraToQueue(eventId: number) {
     const stageIds = await this.eventStagesRepository.find({
       select: ['id'],
       where: { eventId },

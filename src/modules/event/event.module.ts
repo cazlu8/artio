@@ -29,8 +29,8 @@ import { EventStagesRepository } from '../eventStages/eventStages.repository';
   ],
   controllers: [EventController],
   providers: [
-    EventService,
     EventGateway,
+    EventService,
     EventProcessor,
     JwtService,
     UploadService,
