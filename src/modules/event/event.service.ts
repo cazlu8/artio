@@ -67,12 +67,9 @@ export class EventService {
           }
         : undefined,
     );
-    if (isLive) {
-      await this.addDestroyInfraToQueue(eventId);
-    }
   }
 
-  private async addDestroyInfraToQueue(eventId: number) {
+  async addDestroyInfraToQueue(eventId: number) {
     const stageIds = await this.eventStagesRepository.find({
       select: ['id'],
       where: { eventId },
@@ -89,13 +86,14 @@ export class EventService {
       await this.eventQueue.add(
         'stopMediaLiveChannel',
         { eventId, stageId },
-        { delay },
+        { delay, jobId: `event-${eventId}` },
       );
       await this.eventQueue.add(
         'destroyInfra',
         { eventId, stageId },
         {
           delay: delay + 20000,
+          jobId: `event-${eventId}`,
         },
       );
     }
