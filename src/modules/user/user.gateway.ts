@@ -1,7 +1,6 @@
 import {
   BaseWsExceptionFilter,
   OnGatewayConnection,
-  OnGatewayDisconnect,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
