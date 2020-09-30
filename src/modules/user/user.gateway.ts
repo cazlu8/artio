@@ -45,6 +45,6 @@ export class UserGateway implements OnGatewayConnection {
   }
 
   async sendSignOutMessage(socketId: string) {
-    await this.server.to(socketId).emit('signOut', true);
+    await this.server.to(socketId).emit('signOut');
   }
 }

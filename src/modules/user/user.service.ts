@@ -70,10 +70,7 @@ export class UserService {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
-  async validateSignIn(guid, hash, isOnAdmin) {
-    if (isOnAdmin) {
-      return true;
-    }
+  async validateSignIn(guid, hash) {
     const loginIsInvalid = await this.redisClient.hget('loggedUsers', guid);
     const currentRedisHash = loginIsInvalid.split('--')[1];
     const socketId = loginIsInvalid.split('--')[0];

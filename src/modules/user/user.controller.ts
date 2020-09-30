@@ -164,9 +164,8 @@ export class UserController extends BaseWithoutAuthController {
   async validateSignIn(
     @Param('guid', ValidateIfGuidExists) guid: string,
     @Param('hash') hash: string,
-    @Param('isOnAdmin') isOnAdmin: boolean,
   ): Promise<string | boolean> {
-    return this.userService.validateSignIn(guid, hash, isOnAdmin);
+    return this.userService.validateSignIn(guid, hash);
   }
 
   @ApiParam({ name: 'id', type: 'number' })
