@@ -51,7 +51,7 @@ export class EventService {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
-  async updateLive(eventId: number, stageId: number, isLive: boolean) {
+  async updateLive(eventId: number, isLive: boolean) {
     await this.repository.update(eventId, {
       onLive: isLive,
     });
