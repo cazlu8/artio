@@ -17,7 +17,6 @@ import { Queue } from 'bull';
 import { WsAuthGuard } from '../../shared/guards/wsAuth.guard';
 import { ErrorsInterceptor } from '../../shared/interceptors/errors.interceptor';
 import { JwtService } from '../../shared/services/jwt.service';
-import { EventService } from './event.service';
 import { ValidationSchemaWsPipe } from '../../shared/pipes/validationSchemaWs.pipe';
 import EventConnectToLiveEventDto from './dto/event.connectToLiveEvent.dto';
 
