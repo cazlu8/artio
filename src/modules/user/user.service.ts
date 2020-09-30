@@ -74,18 +74,18 @@ export class UserService {
     if (isOnAdmin) {
       return true;
     }
+    const loginIsInvalid = await this.redisClient.hget('loggedUsers', guid);
+    const currentRedisHash = loginIsInvalid.split('--')[1];
+    const socketId = loginIsInvalid.split('--')[0];
 
     if (hash === 'null') {
       const newHash = short.generate();
       await this.redisClient.hset('loggedUsers', guid, `null--${newHash}`);
+      await this.userGateway.sendSignOutMessage(socketId);
       return newHash;
     }
 
-    const loginIsInvalid = await this.redisClient.hget('loggedUsers', guid);
-
     if (loginIsInvalid) {
-      const currentRedisHash = loginIsInvalid.split('--')[1];
-      const socketId = loginIsInvalid.split('--')[0];
       if (currentRedisHash !== hash) {
         await this.userGateway.sendSignOutMessage(socketId);
         return false;
