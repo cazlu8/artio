@@ -94,16 +94,21 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (isAdmin && eventId) socket.adminEventId = eventId;
     if (isAdmin) {
       const currentValues = JSON.parse(
-        await this.redisClient.hget(`event-${eventId}:admins`),
+        await this.redisClient.hget(
+          `event-${eventId}:admins`,
+          `eventId-${eventId}`,
+        ),
       );
       if (currentValues) {
         await this.redisClient.hset(
           `event-${eventId}:admins`,
+          `eventId-${eventId}`,
           JSON.stringify(currentValues.concat(socket.userId)),
         );
       } else
         await this.redisClient.hset(
           `event-${eventId}:admins`,
+          `eventId-${eventId}`,
           JSON.stringify([socket.userId]),
         );
     }
@@ -111,11 +116,15 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private async removeAdminUserOfCache(eventId: number, userId: string) {
     const currentValues = JSON.parse(
-      await this.redisClient.hget(`event-${eventId}:admins`),
+      await this.redisClient.hget(
+        `event-${eventId}:admins`,
+        `eventId-${eventId}`,
+      ),
     );
     const newValues = currentValues.filter(x => x !== userId);
     await this.redisClient.hset(
       `event-${eventId}:admins`,
+      `eventId-${eventId}`,
       JSON.stringify(newValues),
     );
   }
