@@ -17,7 +17,7 @@ import { JwtService } from '../../shared/services/jwt.service';
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
 @WebSocketGateway(3030, { namespace: 'user', transports: ['websocket'] })
-export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class UserGateway implements OnGatewayConnection {
   @WebSocketServer()
   readonly server: Server;
 
@@ -28,10 +28,6 @@ export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly redisService: RedisService,
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
-  }
-
-  async handleDisconnect(socket: any) {
-    await this.redisClient.hdel('loggedUsers', `${socket.userId}`);
   }
 
   async handleConnection(socket: any) {
