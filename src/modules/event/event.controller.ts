@@ -295,9 +295,8 @@ export class EventController extends BaseWithoutAuthController {
   @Put('/startLive/:eventId')
   async startLive(
     @Param('eventId', ParseIntPipe) eventId: number,
-    @Param('stageId', ParseIntPipe) stageId: number,
   ): Promise<void> {
-    await this.service.updateLive(eventId, stageId, true);
+    await this.service.updateLive(eventId, true);
   }
 
   @ApiParam({ name: 'finishLive' })
@@ -307,12 +306,11 @@ export class EventController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @HttpCode(204)
-  @Put('/finishLive/:eventId/:stageId')
+  @Put('/finishLive/:eventId')
   async finishLive(
     @Param('eventId', ParseIntPipe) eventId: number,
-    @Param('stageId', ParseIntPipe) stageId: number,
   ): Promise<void> {
-    await this.service.updateLive(eventId, stageId, false);
+    await this.service.updateLive(eventId, false);
   }
 
   @ApiParam({ name: 'destroyInfra' })
@@ -330,7 +328,7 @@ export class EventController extends BaseWithoutAuthController {
     await this.eventQueue.add('stopMediaLiveChannel', { eventId, stageId });
   }
 
-  @ApiParam({ name: 'destroyInfra' })
+  @ApiParam({ name: 'startPreview' })
   @ApiCreatedResponse({
     type: UpdateEventDTO,
     description: 'Start preview live infra',

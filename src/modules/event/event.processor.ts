@@ -226,4 +226,32 @@ export class EventProcessor {
       );
     }
   }
+
+  @Process({ name: 'changeViewersCounter', concurrency: numCPUs })
+  async changeViewersCounter(job, jobDone) {
+    try {
+      const { eventId, mod } = job.data;
+      await this.redisClient[mod](`event-${eventId}:viewersCounter`);
+      const viewersCounter = await this.redisClient.get(
+        `event-${eventId}:viewersCounter`,
+      );
+      const adminSocketIds = JSON.parse(
+        await this.redisClient.hget(`event-${eventId}:admins`),
+      );
+      adminSocketIds.forEach(socketId =>
+        this.eventGateway.server
+          .to(socketId)
+          .emit('viewersCounter', viewersCounter),
+      );
+      this.loggerService.info(
+        `changeViewersCounter: message: viewers counter of event ${eventId} was updated`,
+      );
+      jobDone();
+    } catch (error) {
+      this.loggerService.error(
+        `changeViewersCounter: ${JSON.stringify(error)}`,
+        error,
+      );
+    }
+  }
 }
