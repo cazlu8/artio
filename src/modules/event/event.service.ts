@@ -86,13 +86,14 @@ export class EventService {
       await this.eventQueue.add(
         'stopMediaLiveChannel',
         { eventId, stageId },
-        { delay },
+        { delay, jobId: `event-${eventId}` },
       );
       await this.eventQueue.add(
         'destroyInfra',
         { eventId, stageId },
         {
           delay: delay + 20000,
+          jobId: `event-${eventId}`,
         },
       );
     }

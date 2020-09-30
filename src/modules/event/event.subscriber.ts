@@ -4,12 +4,17 @@ import {
   EventSubscriber as Subscriber,
 } from 'typeorm';
 import { uuid } from 'uuidv4';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { Event } from './event.entity';
 import { EventService } from './event.service';
 
 @Subscriber()
 export class EventSubscriber implements EntitySubscriberInterface<Event> {
-  constructor(private service: EventService) {}
+  constructor(
+    private service: EventService,
+    @InjectQueue('event') private readonly eventQueue: Queue,
+  ) {}
 
   listenTo() {
     return Event;
@@ -21,6 +26,12 @@ export class EventSubscriber implements EntitySubscriberInterface<Event> {
 
   async afterInsert(event: InsertEvent<Event>) {
     const { id } = event.entity;
+    await this.service.addDestroyInfraToQueue(id);
+  }
+
+  async afterUpdate(event: InsertEvent<Event>) {
+    const { id } = event.entity;
+    await this.eventQueue.removeJobs(`event-${id}`);
     await this.service.addDestroyInfraToQueue(id);
   }
 }
