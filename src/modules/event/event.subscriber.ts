@@ -28,10 +28,4 @@ export class EventSubscriber implements EntitySubscriberInterface<Event> {
     const { id } = event.entity;
     await this.service.addDestroyInfraToQueue(id);
   }
-
-  async afterUpdate(event: InsertEvent<Event>) {
-    const { id } = event.entity;
-    await this.eventQueue.removeJobs(`event-${id}`);
-    await this.service.addDestroyInfraToQueue(id);
-  }
 }
