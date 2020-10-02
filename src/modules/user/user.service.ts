@@ -88,12 +88,7 @@ export class UserService {
       return newHash;
     }
 
-    if (loginIsInvalid) {
-      if (currentRedisHash !== hash) {
-        return false;
-      }
-    }
-    return true;
+    return !(loginIsInvalid && currentRedisHash !== hash);
   }
 
   async updateUserInfo(
