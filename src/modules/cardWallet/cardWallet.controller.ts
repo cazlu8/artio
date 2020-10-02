@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -31,6 +32,13 @@ export class CardWalletController extends BaseController {
       req.query.userName,
       +req.query.eventId,
     );
+  }
+
+  @Delete('/:id')
+  async deleteCard(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void | ObjectLiteral> {
+    return this.repository.delete(id);
   }
 
   @ApiParam({ name: 'userId', type: 'number' })

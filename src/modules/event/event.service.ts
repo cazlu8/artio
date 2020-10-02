@@ -55,6 +55,7 @@ export class EventService {
     await this.repository.update(eventId, {
       onLive: isLive,
     });
+
     await this.eventQueue.add(
       'sendMessageToUsersLinkedToEvent',
       {
@@ -136,11 +137,14 @@ export class EventService {
       .then((event: Partial<Event>) => plainToClass(EventDetailsDTO, event));
   }
 
-  updateEventInfo(
+  async updateEventInfo(
     id: number,
     updateEventDTO: UpdateEventDTO,
   ): Promise<UpdateResult> {
-    return this.update(id, updateEventDTO);
+    const event = await this.update(id, updateEventDTO);
+    await this.eventQueue.removeJobs(`event-${id}`);
+    await this.addDestroyInfraToQueue(id);
+    return event;
   }
 
   getUpcomingByUser(
