@@ -231,14 +231,19 @@ export class EventProcessor {
   async changeViewersCounter(job, jobDone) {
     try {
       const { eventId, mod } = job.data;
-      await this.redisClient[mod](`event-${eventId}:viewersCounter`);
+      if (mod === 'incr')
+        await this.redisClient.incr(`event-${eventId}:viewersCounter`);
+      else await this.redisClient.decr(`event-${eventId}:viewersCounter`);
       const viewersCounter = await this.redisClient.get(
         `event-${eventId}:viewersCounter`,
       );
-      const adminSocketIds = JSON.parse(
-        (await this.redisClient.hget(`event-${eventId}:admins`, eventId)) || [],
+      const adminSocketIds = await this.redisClient.hget(
+        `event-${eventId}:admins`,
+        eventId,
       );
-      adminSocketIds.forEach(socketId =>
+      const adminSocketIdsFormatted =
+        adminSocketIds !== null ? JSON.parse(adminSocketIds) : [];
+      adminSocketIdsFormatted.forEach(socketId =>
         this.eventGateway.server
           .to(socketId)
           .emit('viewersCounter', viewersCounter),
