@@ -236,10 +236,7 @@ export class EventProcessor {
         `event-${eventId}:viewersCounter`,
       );
       const adminSocketIds = JSON.parse(
-        (await this.redisClient.hget(
-          `event-${eventId}:admins`,
-          `event-${eventId}`,
-        )) || [],
+        (await this.redisClient.hget(`event-${eventId}:admins`, eventId)) || [],
       );
       adminSocketIds.forEach(socketId =>
         this.eventGateway.server

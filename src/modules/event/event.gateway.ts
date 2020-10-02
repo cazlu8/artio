@@ -94,21 +94,18 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (isAdmin && eventId) socket.adminEventId = eventId;
     if (isAdmin) {
       const currentValues = JSON.parse(
-        await this.redisClient.hget(
-          `event-${eventId}:admins`,
-          `eventId-${eventId}`,
-        ),
+        await this.redisClient.hget(`event-${eventId}:admins`, eventId),
       );
       if (currentValues) {
         await this.redisClient.hset(
           `event-${eventId}:admins`,
-          `eventId-${eventId}`,
+          eventId,
           JSON.stringify(currentValues.concat(socket.userId)),
         );
       } else
         await this.redisClient.hset(
           `event-${eventId}:admins`,
-          `eventId-${eventId}`,
+          eventId,
           JSON.stringify([socket.userId]),
         );
     }
