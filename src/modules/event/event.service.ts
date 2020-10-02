@@ -31,6 +31,7 @@ import { UploadService } from '../../shared/services/upload.service';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
 import { UserRepository } from '../user/user.repository';
 import { EventStagesRepository } from '../eventStages/eventStages.repository';
+import CreateEventDTO from './dto/event.create.dto';
 
 @Injectable()
 export class EventService {
@@ -49,6 +50,13 @@ export class EventService {
     private readonly userRepository: UserRepository,
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
+  }
+
+  async create(createEventDto: CreateEventDTO) {
+    const event = await this.repository.save(createEventDto);
+    this.loggerService.info(`Event ${event.name} Created`);
+    await this.addDestroyInfraToQueue(event.id);
+    return event;
   }
 
   async updateLive(eventId: number, isLive: boolean) {

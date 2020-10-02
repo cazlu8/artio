@@ -58,9 +58,7 @@ export class EventController extends BaseWithoutAuthController {
   async create(
     @Body() createEventDto: CreateEventDTO,
   ): Promise<void | ObjectLiteral> {
-    const event = await this.repository.save(createEventDto);
-    this.loggerService.info(`Event ${event.name} Created`);
-    return event;
+    return this.service.create(createEventDto);
   }
 
   @ApiParam({ name: 'id', type: 'number' })
