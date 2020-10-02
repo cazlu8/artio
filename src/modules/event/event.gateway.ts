@@ -39,9 +39,9 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(socket: any) {
-    const { adminEventId, userId } = socket;
+    const { adminEventId } = socket;
     if (adminEventId) {
-      await this.removeAdminUserOfCache(adminEventId, userId);
+      await this.removeAdminUserOfCache(adminEventId, socket.id);
       await this.eventQueue.add('changeViewersCounter', {
         eventId: adminEventId,
         mod: 'decr',
@@ -58,7 +58,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const { token, isAdmin, eventId } = socket.handshake.query;
       const { sub } = await this.jwtService.validateToken(token);
       socket.userId = sub;
-      await this.addAdminUsersToCache(socket, eventId, isAdmin);
+      if (isAdmin) await this.addAdminUsersToCache(socket, eventId);
       await this.redisClient.sadd(
         'connectedUsersEvents',
         `${socket.id}--${socket.userId}`,
@@ -86,42 +86,33 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await this.eventQueue.add('changeViewersCounter', { eventId, mod: 'decr' });
   }
 
-  private async addAdminUsersToCache(
-    socket: any,
-    eventId: number,
-    isAdmin: boolean,
-  ) {
-    if (isAdmin && eventId) socket.adminEventId = eventId;
-    if (isAdmin) {
-      const currentValues = JSON.parse(
-        await this.redisClient.hget(`event-${eventId}:admins`, eventId),
+  private async addAdminUsersToCache(socket: any, eventId: number) {
+    socket.adminEventId = eventId;
+    const currentValues = JSON.parse(
+      await this.redisClient.hget(`event-${eventId}:admins`, eventId),
+    );
+    if (currentValues) {
+      await this.redisClient.hset(
+        `event-${eventId}:admins`,
+        eventId,
+        JSON.stringify(currentValues.concat(socket.id)),
       );
-      if (currentValues) {
-        await this.redisClient.hset(
-          `event-${eventId}:admins`,
-          eventId,
-          JSON.stringify(currentValues.concat(socket.userId)),
-        );
-      } else
-        await this.redisClient.hset(
-          `event-${eventId}:admins`,
-          eventId,
-          JSON.stringify([socket.userId]),
-        );
-    }
+    } else
+      await this.redisClient.hset(
+        `event-${eventId}:admins`,
+        eventId,
+        JSON.stringify([socket.id]),
+      );
   }
 
-  private async removeAdminUserOfCache(eventId: number, userId: string) {
+  private async removeAdminUserOfCache(eventId: number, socketId: string) {
     const currentValues = JSON.parse(
-      await this.redisClient.hget(
-        `event-${eventId}:admins`,
-        `eventId-${eventId}`,
-      ),
+      (await this.redisClient.hget(`event-${eventId}:admins`, eventId)) || [],
     );
-    const newValues = currentValues.filter(x => x !== userId);
+    const newValues = currentValues.filter(x => x !== socketId);
     await this.redisClient.hset(
       `event-${eventId}:admins`,
-      `eventId-${eventId}`,
+      eventId,
       JSON.stringify(newValues),
     );
   }
