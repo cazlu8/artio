@@ -95,14 +95,14 @@ export class EventService {
       await this.eventQueue.add(
         'stopMediaLiveChannel',
         { eventId, stageId },
-        { delay, jobId: `event-${eventId}` },
+        { delay, jobId: `event${eventId}` },
       );
       await this.eventQueue.add(
         'destroyInfra',
         { eventId, stageId },
         {
           delay: delay + 20000,
-          jobId: `event-${eventId}`,
+          jobId: `event${eventId}`,
         },
       );
     }
@@ -150,7 +150,7 @@ export class EventService {
     updateEventDTO: UpdateEventDTO,
   ): Promise<UpdateResult> {
     const event = await this.update(id, updateEventDTO);
-    await this.eventQueue.removeJobs(`event-${id}`);
+    await this.eventQueue.removeJobs(`*event${id}*`);
     await this.addDestroyInfraToQueue(id);
     return event;
   }

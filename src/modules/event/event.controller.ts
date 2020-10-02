@@ -182,6 +182,20 @@ export class EventController extends BaseWithoutAuthController {
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
+    description: 'The event about info was successfully retrieved',
+  })
+  @UsePipes(ValidateIfEventExists)
+  @UseGuards(AuthGuard, UserEventsGuard)
+  @Get('/about/:id')
+  async getAbout(
+    @Param('id', ParseIntPipe) id,
+  ): Promise<Partial<Event> | void> {
+    return this.repository.findOne({ id });
+  }
+
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiCreatedResponse({
+    type: Event,
     description: 'The event was successfully retrieved',
   })
   @UsePipes(ValidateIfEventExists)
