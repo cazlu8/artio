@@ -70,7 +70,7 @@ export class UserService {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
-  private async sendSignOutToSocket (socketId: string) {
+  private async sendSignOutToSocket(socketId: string) {
     await this.userGateway.server.to(socketId).emit('signOut');
   }
 
@@ -88,13 +88,7 @@ export class UserService {
       return newHash;
     }
 
-    if (loginIsInvalid) {
-      if (currentRedisHash !== hash) {
-        await this.sendSignOutToSocket(socketId);
-        return false;
-      }
-    }
-    return true;
+    return !(loginIsInvalid && currentRedisHash !== hash);
   }
 
   async updateUserInfo(
