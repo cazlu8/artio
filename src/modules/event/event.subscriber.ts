@@ -2,7 +2,6 @@ import {
   InsertEvent,
   EntitySubscriberInterface,
   EventSubscriber as Subscriber,
-  UpdateEvent,
 } from 'typeorm';
 import { uuid } from 'uuidv4';
 import { InjectQueue } from '@nestjs/bull';
