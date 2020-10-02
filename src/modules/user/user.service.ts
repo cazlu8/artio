@@ -72,13 +72,15 @@ export class UserService {
 
   async validateSignIn(guid, hash) {
     const loginIsInvalid = await this.redisClient.hget('loggedUsers', guid);
-    const currentRedisHash = loginIsInvalid.split('--')[1];
-    const socketId = loginIsInvalid.split('--')[0];
+    const currentRedisHash = loginIsInvalid?.split('--')[1];
+    const socketId = loginIsInvalid?.split('--')[0];
 
-    if (hash === 'null') {
+    if (!hash) {
       const newHash = short.generate();
+      if (socketId) {
+        await this.userGateway.sendSignOutMessage(socketId);
+      }
       await this.redisClient.hset('loggedUsers', guid, `null--${newHash}`);
-      await this.userGateway.sendSignOutMessage(socketId);
       return newHash;
     }
 
