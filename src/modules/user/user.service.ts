@@ -70,6 +70,10 @@ export class UserService {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
+  private async sendSignOutToSocket (socketId: string) {
+    await this.userGateway.server.to(socketId).emit('signOut');
+  }
+
   async validateSignIn(guid, hash) {
     const loginIsInvalid = await this.redisClient.hget('loggedUsers', guid);
     const currentRedisHash = loginIsInvalid?.split('--')[1];
@@ -78,7 +82,7 @@ export class UserService {
     if (!hash) {
       const newHash = short.generate();
       if (socketId) {
-        await this.userGateway.sendSignOutMessage(socketId);
+        await this.sendSignOutToSocket(socketId);
       }
       await this.redisClient.hset('loggedUsers', guid, `null--${newHash}`);
       return newHash;
@@ -86,7 +90,7 @@ export class UserService {
 
     if (loginIsInvalid) {
       if (currentRedisHash !== hash) {
-        await this.userGateway.sendSignOutMessage(socketId);
+        await this.sendSignOutToSocket(socketId);
         return false;
       }
     }
