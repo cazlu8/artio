@@ -2,6 +2,7 @@ import {
   InsertEvent,
   EntitySubscriberInterface,
   EventSubscriber as Subscriber,
+  UpdateEvent,
 } from 'typeorm';
 import { uuid } from 'uuidv4';
 import { InjectQueue } from '@nestjs/bull';
@@ -26,12 +27,6 @@ export class EventSubscriber implements EntitySubscriberInterface<Event> {
 
   async afterInsert(event: InsertEvent<Event>) {
     const { id } = event.entity;
-    await this.service.addDestroyInfraToQueue(id);
-  }
-
-  async afterUpdate(event: InsertEvent<Event>) {
-    const { id } = event.entity;
-    await this.eventQueue.removeJobs(`event-${id}`);
     await this.service.addDestroyInfraToQueue(id);
   }
 }
