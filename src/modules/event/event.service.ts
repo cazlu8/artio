@@ -60,22 +60,30 @@ export class EventService {
   }
 
   async updateLive(eventId: number, isLive: boolean) {
-    await this.repository.update(eventId, {
-      onLive: isLive,
+    const isOnLive = await this.repository.findOne({
+      select: ['onLive'],
+      where: { id: eventId },
     });
+    if (isOnLive) {
+      setTimeout(async () => {
+        await this.repository.update(eventId, {
+          onLive: isLive,
+        });
+      }, 25000);
 
-    await this.eventQueue.add(
-      'sendMessageToUsersLinkedToEvent',
-      {
-        eventId,
-        eventName: 'eventLive',
-      },
-      isLive === true
-        ? {
-            delay: 25000,
-          }
-        : undefined,
-    );
+      await this.eventQueue.add(
+        'sendMessageToUsersLinkedToEvent',
+        {
+          eventId,
+          eventName: 'eventLive',
+        },
+        isLive === true
+          ? {
+              delay: 25000,
+            }
+          : undefined,
+      );
+    }
   }
 
   async addDestroyInfraToQueue(eventId: number) {
