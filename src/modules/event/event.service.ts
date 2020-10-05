@@ -60,11 +60,11 @@ export class EventService {
   }
 
   async updateLive(eventId: number, isLive: boolean) {
-    const isOnLive = await this.repository.findOne({
+    const { onLive: isOnLive } = await this.repository.findOne({
       select: ['onLive'],
       where: { id: eventId },
     });
-    if (isOnLive) {
+    if ((!isOnLive && isLive) || (isOnLive && !isLive)) {
       setTimeout(async () => {
         await this.repository.update(eventId, {
           onLive: isLive,
