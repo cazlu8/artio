@@ -65,11 +65,16 @@ export class EventService {
       where: { id: eventId },
     });
     if ((!isOnLive && isLive) || (isOnLive && !isLive)) {
-      setTimeout(async () => {
+      if (isLive) {
+        setTimeout(async () => {
+          await this.repository.update(eventId, {
+            onLive: isLive,
+          });
+        }, 25000);
+      } else
         await this.repository.update(eventId, {
           onLive: isLive,
         });
-      }, 25000);
 
       await this.eventQueue.add(
         'sendMessageToUsersLinkedToEvent',
@@ -77,7 +82,7 @@ export class EventService {
           eventId,
           eventName: 'eventLive',
         },
-        isLive === true
+        isLive
           ? {
               delay: 25000,
             }
