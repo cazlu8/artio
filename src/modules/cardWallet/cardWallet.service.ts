@@ -22,7 +22,6 @@ export class CardWalletService {
   }
 
   async verifyIfRelationshipExists(
-    eventId: number,
     requestingUserGuid: string,
     requestedUserGuid: string,
   ) {
@@ -32,7 +31,7 @@ export class CardWalletService {
     );
     return (
       (await this.repository.count({
-        where: { eventId, requestingUserId, requestedUserId },
+        where: { requestingUserId, requestedUserId },
       })) > 0
     );
   }

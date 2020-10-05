@@ -67,9 +67,8 @@ export class CardWalletGateway
     @ConnectedSocket() socket: any,
     @MessageBody(new ValidationSchemaWsPipe()) data: CardWalletRequestCardDto,
   ): Promise<void> {
-    const { eventId, requestedUserGuid, requestingUserName } = data;
+    const { requestedUserGuid, requestingUserName } = data;
     const exists = await this.service.verifyIfRelationshipExists(
-      eventId,
       socket.userId,
       requestedUserGuid,
     );
