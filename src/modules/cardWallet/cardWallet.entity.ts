@@ -1,9 +1,9 @@
 import {
   Entity,
-  PrimaryColumn,
   OneToOne,
   JoinColumn,
   PrimaryGeneratedColumn,
+  Column,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Event } from '../event/event.entity';
@@ -16,15 +16,15 @@ export class CardWallet {
   id: number;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', name: 'requestingUserId', primary: true })
+  @Column({ type: 'int', name: 'requestingUserId', unique: true })
   requestingUserId: number;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', name: 'requestedUserId', primary: true })
+  @Column({ type: 'int', name: 'requestedUserId', unique: true })
   requestedUserId: number;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', name: 'eventId', primary: true })
+  @Column({ type: 'int', name: 'eventId', unique: true })
   eventId: number;
 
   @OneToOne(() => Event)

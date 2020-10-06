@@ -2,6 +2,8 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
+  HttpCode,
   Param,
   ParseIntPipe,
   Req,
@@ -35,10 +37,12 @@ export class CardWalletController extends BaseController {
   }
 
   @Delete('/:id')
+  @HttpCode(204)
+  @Header('Content-Length', '0')
   async deleteCard(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<void | ObjectLiteral> {
-    return this.repository.delete(id);
+    return this.repository.delete({ id });
   }
 
   @ApiParam({ name: 'userId', type: 'number' })
