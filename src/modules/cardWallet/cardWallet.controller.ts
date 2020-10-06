@@ -14,8 +14,9 @@ import { ObjectLiteral } from 'typeorm';
 import { CardWalletRepository } from './cardWallet.repository';
 import { BaseController } from '../../shared/controllers/base.controller';
 import { Event } from '../event/event.entity';
-import { AuthGuard } from '../../shared/guards/auth.guard';
 import { ListUserEventDto } from '../userEvents/dto/userEvents.list.dto';
+import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
+import { CardWalletGuard } from './guards/cardWallet.guard';
 
 @ApiTags('CardWalltet')
 @Controller('cardwallet')
@@ -24,6 +25,12 @@ export class CardWalletController extends BaseController {
     super();
   }
 
+  @ApiParam({ name: 'userId', type: 'number' })
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'Get cards from user',
+  })
+  @UseGuards(VerifyIfIsAuthenticatedUserGuard)
   @Get('/:userId')
   async getCardsFromUser(
     @Param('userId', ParseIntPipe) userId: number,
@@ -36,6 +43,12 @@ export class CardWalletController extends BaseController {
     );
   }
 
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'Delete card wallet',
+  })
+  @UseGuards(CardWalletGuard)
   @Delete('/:id')
   @HttpCode(204)
   @Header('Content-Length', '0')
@@ -50,7 +63,7 @@ export class CardWalletController extends BaseController {
     type: Event,
     description: 'Events by user id',
   })
-  @UseGuards(AuthGuard)
+  @UseGuards(VerifyIfIsAuthenticatedUserGuard)
   @Get('events/:userId')
   async getEventListByUserId(
     @Param('userId', ParseIntPipe) userId: number,

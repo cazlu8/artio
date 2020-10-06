@@ -38,4 +38,8 @@ export class CardWalletRepository extends Repository<CardWallet> {
       .distinctOn(['event.id'])
       .getRawMany();
   }
+
+  async exists(properties: {}): Promise<boolean> {
+    return (await this.count(properties)) > 0;
+  }
 }
