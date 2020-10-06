@@ -1,10 +1,10 @@
 import {
   BaseWsExceptionFilter,
-  // ConnectedSocket,
-  // MessageBody,
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  // SubscribeMessage,
+  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
@@ -17,8 +17,10 @@ import { Queue } from 'bull';
 import { WsAuthGuard } from '../../shared/guards/wsAuth.guard';
 import { ErrorsInterceptor } from '../../shared/interceptors/errors.interceptor';
 import { JwtService } from '../../shared/services/jwt.service';
-// import { ValidationSchemaWsPipe } from '../../shared/pipes/validationSchemaWs.pipe';
-// import SendMessageDto from './dto/chat.sendMessage.dto';
+import SendMessageDto from './dto/chat.sendMessage.dto';
+import { ValidationSchemaWsPipe } from '../../shared/pipes/validationSchemaWs.pipe';
+import ReadMessageDto from './dto/chat.readMessage.dto';
+import { ChatService } from './chat.service';
 
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
@@ -33,6 +35,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly jwtService: JwtService,
     private readonly redisService: RedisService,
+    private readonly service: ChatService,
     @InjectQueue('event') private readonly eventQueue: Queue,
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
@@ -57,17 +60,37 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  // @SubscribeMessage('message')
-  // async message(
-  //   @ConnectedSocket() socket: any,
-  //   @MessageBody(new ValidationSchemaWsPipe()) data: SendMessageDto,
-  // ): Promise<void> {
-  //   const { toUserGuid, fromUserName, message } = data;
-  //   const to = await this.redisClient.hget('connectedUsersChat', toUserGuid);
-  //   this.server.to(to).emit('receiveMessage', {
-  //     message,
-  //     fromUserName,
-  //     fromUserGuid: socket.userId,
-  //   });
-  // }
+  @SubscribeMessage('message')
+  async message(
+    @ConnectedSocket() socket: any,
+    @MessageBody(new ValidationSchemaWsPipe()) data: SendMessageDto,
+  ): Promise<void> {
+    const { eventId, sponsorGuid, toUserGuid, fromUserName, message } = data;
+    const to = await this.redisClient.hget('connectedUsersChat', toUserGuid);
+    const messageGuid = await this.service.create(
+      eventId,
+      sponsorGuid,
+      toUserGuid,
+      socket.userId,
+    );
+    this.server.to(to).emit('receiveMessage', {
+      messageGuid,
+      message,
+      fromUserName,
+      fromUserGuid: socket.userId,
+    });
+  }
+
+  @SubscribeMessage('messageRead')
+  async messageRead(
+    @ConnectedSocket() socket: any,
+    @MessageBody(new ValidationSchemaWsPipe()) data: ReadMessageDto,
+  ): Promise<void> {
+    const { toUserGuid, messageGuid } = data;
+    const to = await this.redisClient.hget('connectedUsersChat', toUserGuid);
+    await this.service.setReadMessage(messageGuid);
+    this.server.to(to).emit('messageRead', {
+      messageGuid,
+    });
+  }
 }

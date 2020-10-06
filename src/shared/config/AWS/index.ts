@@ -31,6 +31,14 @@ const sesConfig = registerAs('ses', () =>
     : { endpoint: new AWS.Endpoint(process.env.LOCALSTACK_URL) },
 );
 
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const dynamoConfig = registerAs('dynamo', () =>
+  process.env.NODE_ENV === 'production'
+    ? {
+        accessKeyId: process.env.S3_ACCESS_KEY,
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+        region: process.env.DYNAMODB_REGION,
+      }
+    : { endpoint: new AWS.Endpoint(process.env.LOCALSTACK_URL) },
+);
 
-export { s3Config, cognitoConfig, sesConfig, dynamodb };
+export { s3Config, cognitoConfig, sesConfig, dynamoConfig };

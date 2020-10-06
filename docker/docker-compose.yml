@@ -36,7 +36,7 @@ services:
         - "4566-4584:4566-4584"
         - "8081-8081:8081-8081"
       environment:
-        - SERVICES=s3,ses
+        - SERVICES=s3,ses,dynamodb
         - DATA_DIR=/tmp/localstack/data
         - PORT_WEB_UI=8081
         - DOCKER_HOST=unix:///var/run/docker.sock

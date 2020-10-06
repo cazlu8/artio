@@ -1,36 +1,64 @@
 import { Injectable } from '@nestjs/common';
 import { uuid } from 'uuidv4';
-import { LoggerService } from '../../shared/services/logger.service';
-import SendMessageDto from './dto/chat.sendMessage.dto';
-import { dynamodb } from '../../shared/config/AWS';
-
+import * as AWS from 'aws-sdk';
+import { ConfigService } from '@nestjs/config';
+import { DocumentClient } from 'aws-sdk/lib/dynamodb/document_client';
 @Injectable()
 export class ChatService {
-  constructor(private readonly loggerService: LoggerService) {}
+  private readonly dynamoDB: DocumentClient;
 
-  create(sendMessageDto: SendMessageDto): SendMessageDto {
-    console.log('dto', sendMessageDto);
+  constructor(private configService: ConfigService) {
+    this.dynamoDB = new AWS.DynamoDB.DocumentClient({
+      service: this.configService.get('dynamo'),
+    });
+  }
 
+  async create(
+    eventId: number,
+    sponsorGuid: string,
+    toUserGuid: string,
+    fromUserGuid: string,
+  ): Promise<string> {
     const guid = uuid();
 
     const params = {
-      TableName: 'artio-chat',
+      TableName: process.env.TABLE_CHAT_SPONSOR,
       Item: {
-        PK: `PK#${guid}`,
-        SK: `SK#${guid}`,
-        eventId: 1,
-        sponsorGuid: guid,
-        toGuid: guid,
-        fromGuid: guid,
+        guid,
+        eventId,
+        sponsorGuid,
+        toUserGuid,
+        fromUserGuid,
         toRead: false,
         createdAt: Date.now(),
       },
     };
+    try {
+      await this.dynamoDB.put(params).promise();
+      return guid;
+    } catch (err) {
+      return err;
+    }
+  }
 
-    dynamodb.put(params, (err, data) => {
-      if (err) console.log(err);
-      else console.log(data);
-    });
-    return sendMessageDto;
+  async setReadMessage(messageGuid: string): Promise<void> {
+    const params = {
+      ExpressionAttributeNames: {
+        '#R': 'toRead',
+      },
+      ExpressionAttributeValues: {
+        ':t': true,
+      },
+      Key: {
+        guid: messageGuid,
+      },
+      TableName: process.env.TABLE_CHAT_SPONSOR,
+      UpdateExpression: 'SET #R = :t',
+    };
+    try {
+      await this.dynamoDB.update(params).promise();
+    } catch (err) {
+      console.log(err);
+    }
   }
 }
