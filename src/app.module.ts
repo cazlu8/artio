@@ -12,7 +12,12 @@ import { loadModules } from './modules';
 import * as ormconfig from './ormconfig';
 import redisConfig from './shared/config/redis';
 import { JwtService } from './shared/services/jwt.service';
-import { cognitoConfig, s3Config, sesConfig } from './shared/config/AWS';
+import {
+  cognitoConfig,
+  s3Config,
+  sesConfig,
+  dynamoConfig,
+} from './shared/config/AWS';
 import {
   cloudWatchConfigError,
   cloudWatchConfigInfo,
@@ -30,6 +35,7 @@ const providers = [JwtService];
         s3Config,
         cognitoConfig,
         sesConfig,
+        dynamoConfig,
         cloudWatchConfigError,
         cloudWatchConfigInfo,
       ],

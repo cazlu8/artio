@@ -9,7 +9,7 @@ export class ChatService {
 
   constructor(private configService: ConfigService) {
     this.dynamoDB = new AWS.DynamoDB.DocumentClient({
-      service: this.configService.get('dynamo'),
+      service: new AWS.DynamoDB(this.configService.get('dynamo')),
     });
   }
 
