@@ -185,10 +185,10 @@ export class UserController extends BaseWithoutAuthController {
     description: 'User has been successfully updated',
   })
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
-  @Put('/:id')
+  @Put('/:userId')
   @HttpCode(204)
   update(
-    @Param('id', ParseIntPipe, ValidateIfIdExists)
+    @Param('userId', ParseIntPipe, ValidateIfIdExists)
     id: number,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<void | UpdateResult> {
@@ -219,8 +219,8 @@ export class UserController extends BaseWithoutAuthController {
   })
   @UsePipes(ValidateIfIdExists)
   @UseGuards(AuthGuard, VerifyIfIsAuthenticatedUserGuard)
-  @Delete('removeAvatar/:id')
-  removeAvatar(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  @Delete('removeAvatar/:userId')
+  removeAvatar(@Param('userId', ParseIntPipe) id: number): Promise<void> {
     return this.userService.removeAvatar(id);
   }
 }

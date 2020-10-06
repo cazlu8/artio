@@ -14,17 +14,17 @@ export class VerifyIfIsAuthenticatedUserGuard implements CanActivate {
     if (process.env.NODE_ENV !== 'production') {
       return true;
     }
-    const { sub: authenticatedUserGuid, id: userId, guid: userGuid } = {
+    const { sub: authenticatedUserGuid, userId, id, guid: userGuid } = {
       ...request.raw?.user,
       ...request.params,
       ...request.body,
-    } as { id: number; guid: string; sub: string };
+    } as { userId: number; id: number; guid: string; sub: string };
 
     if (userGuid) {
       return this.validateGuid(userGuid, authenticatedUserGuid);
     }
-    if (userId) {
-      return await this.validateId(userId, authenticatedUserGuid);
+    if (id || userId) {
+      return await this.validateId(id || userId, authenticatedUserGuid);
     }
     return false;
   }

@@ -66,7 +66,7 @@ export class EventStages {
   updatedAt: Date;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', name: 'eventId', primary: true })
+  @PrimaryColumn({ type: 'int', name: 'eventId' })
   eventId: number;
 
   @OneToOne(() => Event)
