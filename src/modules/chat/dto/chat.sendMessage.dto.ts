@@ -4,17 +4,13 @@ import { IsNotEmpty } from 'class-validator';
 export default class SendMessageDto {
   @ApiProperty()
   @IsNotEmpty()
-  eventId: number;
+  toUserGuid: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  sponsorGuid: string;
+  fromUserName: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  toGuid: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  fromGuid: string;
+  message: string;
 }
