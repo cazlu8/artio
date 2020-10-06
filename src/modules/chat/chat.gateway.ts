@@ -1,10 +1,10 @@
 import {
   BaseWsExceptionFilter,
-  ConnectedSocket,
-  MessageBody,
+  // ConnectedSocket,
+  // MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  SubscribeMessage,
+  // SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
@@ -17,8 +17,8 @@ import { Queue } from 'bull';
 import { WsAuthGuard } from '../../shared/guards/wsAuth.guard';
 import { ErrorsInterceptor } from '../../shared/interceptors/errors.interceptor';
 import { JwtService } from '../../shared/services/jwt.service';
-import { ValidationSchemaWsPipe } from '../../shared/pipes/validationSchemaWs.pipe';
-import SendMessageDto from './dto/chat.sendMessage.dto';
+// import { ValidationSchemaWsPipe } from '../../shared/pipes/validationSchemaWs.pipe';
+// import SendMessageDto from './dto/chat.sendMessage.dto';
 
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
@@ -57,17 +57,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  @SubscribeMessage('message')
-  async message(
-    @ConnectedSocket() socket: any,
-    @MessageBody(new ValidationSchemaWsPipe()) data: SendMessageDto,
-  ): Promise<void> {
-    const { toUserGuid, fromUserName, message } = data;
-    const to = await this.redisClient.hget('connectedUsersChat', toUserGuid);
-    this.server.to(to).emit('receiveMessage', {
-      message,
-      fromUserName,
-      fromUserGuid: socket.userId,
-    });
-  }
+  // @SubscribeMessage('message')
+  // async message(
+  //   @ConnectedSocket() socket: any,
+  //   @MessageBody(new ValidationSchemaWsPipe()) data: SendMessageDto,
+  // ): Promise<void> {
+  //   const { toUserGuid, fromUserName, message } = data;
+  //   const to = await this.redisClient.hget('connectedUsersChat', toUserGuid);
+  //   this.server.to(to).emit('receiveMessage', {
+  //     message,
+  //     fromUserName,
+  //     fromUserGuid: socket.userId,
+  //   });
+  // }
 }
