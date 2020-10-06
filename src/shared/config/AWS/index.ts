@@ -31,4 +31,6 @@ const sesConfig = registerAs('ses', () =>
     : { endpoint: new AWS.Endpoint(process.env.LOCALSTACK_URL) },
 );
 
-export { s3Config, cognitoConfig, sesConfig };
+const dynamodb = new AWS.DynamoDB.DocumentClient();
+
+export { s3Config, cognitoConfig, sesConfig, dynamodb };

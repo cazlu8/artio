@@ -80,10 +80,10 @@ export class UserService {
     const socketId = loginIsInvalid?.split('--')[0];
 
     if (!hash) {
-      const newHash = short.generate();
       if (socketId) {
         await this.sendSignOutToSocket(socketId);
       }
+      const newHash = short.generate();
       await this.redisClient.hset('loggedUsers', guid, `null--${newHash}`);
       return newHash;
     }
