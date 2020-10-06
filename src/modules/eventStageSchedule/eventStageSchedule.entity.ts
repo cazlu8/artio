@@ -1,17 +1,14 @@
 import {
   Entity,
   PrimaryColumn,
-  OneToOne,
   JoinColumn,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
   ManyToOne,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Event } from '../event/event.entity';
 import { EventStages } from '../eventStages/eventStages.entity';
 
 @Entity()
