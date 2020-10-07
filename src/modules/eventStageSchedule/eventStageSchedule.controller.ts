@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { ObjectLiteral } from 'typeorm';
@@ -15,6 +16,7 @@ import { BaseController } from '../../shared/controllers/base.controller';
 import { EventStageScheduleRepository } from './eventStageSchedule.repository';
 import EventStageScheduleCreateDTO from './dto/eventStageSchedule.create.dto';
 import EventStageScheduleUpdateDTO from './dto/eventStageSchedule.update';
+import { VerifyDateInBetween } from './pipes/verifyDateInBetween';
 
 @ApiTags('EventStageSchedule')
 @Controller('schedule')
@@ -30,6 +32,7 @@ export class EventStageScheduleController extends BaseController {
     type: EventStageScheduleCreateDTO,
     description: 'The role has been successfully created',
   })
+  @UsePipes(VerifyDateInBetween)
   @Post()
   async create(
     @Body() eventStageScheduleCreateDTO: EventStageScheduleCreateDTO,
