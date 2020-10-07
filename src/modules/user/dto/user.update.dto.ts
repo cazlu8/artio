@@ -15,12 +15,14 @@ export class UpdateUserDto {
   @IsOptional()
   bio?: string;
 
-  @IsPhoneNumber('ZZ')
   @ApiProperty()
+  @IsOptional()
+  @IsPhoneNumber('ZZ')
   phoneNumber?: string;
 
-  @IsEnum(UserGender)
   @ApiProperty()
+  @IsOptional()
+  @IsEnum(UserGender)
   gender?: UserGender;
 
   @ApiProperty()
@@ -31,7 +33,7 @@ export class UpdateUserDto {
   @IsNotEmpty()
   currentPosition?: string;
 
-  @IsOptional()
   @ApiProperty()
+  @IsOptional()
   socialUrls?: string;
 }
