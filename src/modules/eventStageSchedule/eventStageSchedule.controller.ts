@@ -54,14 +54,14 @@ export class EventStageScheduleController extends BaseController {
     return this.repository.getScheduleFromStage(eventStageId);
   }
 
-  @ApiParam({ name: 'eventStageId', type: 'number' })
+  @ApiParam({ name: 'eventStageScheduleId', type: 'number' })
   @ApiCreatedResponse({
     description: 'Get schedule by eventStageId',
   })
   @Put('/:eventStageScheduleId')
   @HttpCode(204)
   async updateSchedule(
-    @Param('eventStageId', ParseIntPipe) eventStageScheduleId,
+    @Param('eventStageScheduleId', ParseIntPipe) eventStageScheduleId,
     @Body() eventStageScheduleUpdateDTO: EventStageScheduleUpdateDTO,
   ): Promise<any | void> {
     await this.repository.update(
@@ -70,6 +70,21 @@ export class EventStageScheduleController extends BaseController {
     );
     this.loggerService.info(
       `Schedule for event stage: ${eventStageScheduleId} Updated`,
+    );
+  }
+
+  @ApiParam({ name: 'eventStageScheduleId', type: 'number' })
+  @ApiCreatedResponse({
+    description: 'delete schedule by id',
+  })
+  @Put('/:eventStageScheduleId')
+  @HttpCode(204)
+  async deleteSchedule(
+    @Param('eventStageScheduleId', ParseIntPipe) eventStageScheduleId,
+  ): Promise<any | void> {
+    await this.repository.delete({ id: eventStageScheduleId });
+    this.loggerService.info(
+      `Schedule for event stage: ${eventStageScheduleId} Deleted`,
     );
   }
 }
