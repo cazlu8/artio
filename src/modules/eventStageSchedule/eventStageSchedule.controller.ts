@@ -56,7 +56,7 @@ export class EventStageScheduleController extends BaseController {
 
   @ApiParam({ name: 'eventStageScheduleId', type: 'number' })
   @ApiCreatedResponse({
-    description: 'Get schedule by eventStageId',
+    description: 'Update schedule',
   })
   @Put('/:eventStageScheduleId')
   @HttpCode(204)
@@ -70,21 +70,6 @@ export class EventStageScheduleController extends BaseController {
     );
     this.loggerService.info(
       `Schedule for event stage: ${eventStageScheduleId} Updated`,
-    );
-  }
-
-  @ApiParam({ name: 'eventStageScheduleId', type: 'number' })
-  @ApiCreatedResponse({
-    description: 'delete schedule by id',
-  })
-  @Put('/:eventStageScheduleId')
-  @HttpCode(204)
-  async deleteSchedule(
-    @Param('eventStageScheduleId', ParseIntPipe) eventStageScheduleId,
-  ): Promise<any | void> {
-    await this.repository.delete({ id: eventStageScheduleId });
-    this.loggerService.info(
-      `Schedule for event stage: ${eventStageScheduleId} Deleted`,
     );
   }
 }
