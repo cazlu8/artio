@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export default class ReadMessageDto {
   @ApiProperty()
@@ -9,4 +9,8 @@ export default class ReadMessageDto {
   @ApiProperty()
   @IsNotEmpty()
   messageGuid: string;
+
+  @ApiProperty()
+  @IsOptional()
+  sponsorGuid?: string;
 }

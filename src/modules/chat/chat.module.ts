@@ -4,10 +4,12 @@ import { BaseModule } from '../../shared/modules/base.module';
 import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
 import { JwtService } from '../../shared/services/jwt.service';
+import ChatQueue from './chat.queue';
+import { ChatProcessor } from './chat.processor';
 
 @Module({
-  imports: [BaseModule],
+  imports: [BaseModule, ChatQueue],
   controllers: [ChatController],
-  providers: [ChatService, JwtService, ChatGateway],
+  providers: [ChatService, JwtService, ChatProcessor, ChatGateway],
 })
 export class ChatModule {}
