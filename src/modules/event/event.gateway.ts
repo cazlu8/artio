@@ -42,8 +42,21 @@ export class EventGateway extends BaseGateway
   }
 
   async handleDisconnect(socket: any) {
-    const { adminEventId } = socket;
-    if (adminEventId) {
+    if (socket.eventId) {
+      const { eventId } = socket;
+      await this.removeFromHashList(
+        this.redisClient,
+        `event-${eventId}:attendees`,
+        eventId,
+        socket.id,
+      );
+      await this.eventQueue.add('changeViewersCounter', {
+        eventId,
+        mod: 'decr',
+      });
+    }
+    if (socket.adminEventId) {
+      const { adminEventId } = socket;
       await this.removeFromHashList(
         this.redisClient,
         `event-${adminEventId}:admins`,
@@ -57,7 +70,7 @@ export class EventGateway extends BaseGateway
     }
     await this.redisClient.srem(
       'connectedUsersEvents',
-      `${socket.id}-${socket.userId}`,
+      `${socket.id}--${socket.userId}`,
     );
   }
 
@@ -90,6 +103,13 @@ export class EventGateway extends BaseGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: EventConnectToLiveEventDto,
   ): Promise<void> {
     const { eventId } = data;
+    socket.eventId = eventId;
+    await this.addToHashList(
+      this.redisClient,
+      `event-${eventId}:attendees`,
+      eventId,
+      socket.id,
+    );
     await this.eventQueue.add('changeViewersCounter', { eventId, mod: 'incr' });
   }
 
@@ -100,24 +120,5 @@ export class EventGateway extends BaseGateway
   ): Promise<void> {
     const { eventId } = data;
     await this.eventQueue.add('changeViewersCounter', { eventId, mod: 'decr' });
-  }
-
-  private async addAdminUsersToCache(socket: any, eventId: number) {
-    socket.adminEventId = eventId;
-    const currentValues = JSON.parse(
-      await this.redisClient.hget(`event-${eventId}:admins`, eventId),
-    );
-    if (currentValues) {
-      await this.redisClient.hset(
-        `event-${eventId}:admins`,
-        eventId,
-        JSON.stringify(currentValues.concat(socket.id)),
-      );
-    } else
-      await this.redisClient.hset(
-        `event-${eventId}:admins`,
-        eventId,
-        JSON.stringify([socket.id]),
-      );
   }
 }
