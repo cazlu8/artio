@@ -234,16 +234,34 @@ export class EventProcessor {
       if (mod === 'incr')
         await this.redisClient.incr(`event-${eventId}:viewersCounter`);
       else await this.redisClient.decr(`event-${eventId}:viewersCounter`);
-      const viewersCounter = await this.redisClient.get(
+      let viewersCounter = +(await this.redisClient.get(
         `event-${eventId}:viewersCounter`,
+      ));
+      viewersCounter = viewersCounter >= 0 ? viewersCounter : 0;
+      await this.redisClient.set(
+        `event-${eventId}:viewersCounter`,
+        viewersCounter >= 0 ? viewersCounter : 0,
       );
-      const adminSocketIds = await this.redisClient.hget(
+      const adminSocketIdsFn = this.redisClient.hget(
         `event-${eventId}:admins`,
         eventId,
       );
+      const attendeesSocketIdsFn = this.redisClient.hget(
+        `event-${eventId}:attendees`,
+        eventId,
+      );
+      const [adminSocketIds, attendeesSocketIds] = await Promise.all([
+        adminSocketIdsFn,
+        attendeesSocketIdsFn,
+      ]);
       const adminSocketIdsFormatted =
         adminSocketIds !== null ? JSON.parse(adminSocketIds) : [];
-      adminSocketIdsFormatted.forEach(socketId =>
+      const attendeesSocketIdsFormatted =
+        attendeesSocketIds !== null ? JSON.parse(attendeesSocketIds) : [];
+      [
+        ...adminSocketIdsFormatted,
+        ...attendeesSocketIdsFormatted,
+      ].forEach(socketId =>
         this.eventGateway.server
           .to(socketId)
           .emit('viewersCounter', viewersCounter),

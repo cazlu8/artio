@@ -19,12 +19,14 @@ import { ErrorsInterceptor } from '../../shared/interceptors/errors.interceptor'
 import { JwtService } from '../../shared/services/jwt.service';
 import { ValidationSchemaWsPipe } from '../../shared/pipes/validationSchemaWs.pipe';
 import EventConnectToLiveEventDto from './dto/event.connectToLiveEvent.dto';
+import BaseGateway from '../../shared/gateways/base.gateway';
 
 @UseGuards(WsAuthGuard)
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
 @WebSocketGateway(3030, { namespace: 'event', transports: ['websocket'] })
-export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class EventGateway extends BaseGateway
+  implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   readonly server: Server;
 
@@ -35,13 +37,32 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly redisService: RedisService,
     @InjectQueue('event') private readonly eventQueue: Queue,
   ) {
+    super();
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
   }
 
   async handleDisconnect(socket: any) {
-    const { adminEventId } = socket;
-    if (adminEventId) {
-      await this.removeAdminUserOfCache(adminEventId, socket.id);
+    if (socket.eventId) {
+      const { eventId } = socket;
+      await this.removeFromHashList(
+        this.redisClient,
+        `event-${eventId}:attendees`,
+        eventId,
+        socket.id,
+      );
+      await this.eventQueue.add('changeViewersCounter', {
+        eventId,
+        mod: 'decr',
+      });
+    }
+    if (socket.adminEventId) {
+      const { adminEventId } = socket;
+      await this.removeFromHashList(
+        this.redisClient,
+        `event-${adminEventId}:admins`,
+        adminEventId,
+        socket.id,
+      );
       await this.eventQueue.add('changeViewersCounter', {
         eventId: adminEventId,
         mod: 'decr',
@@ -49,7 +70,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     await this.redisClient.srem(
       'connectedUsersEvents',
-      `${socket.id}-${socket.userId}`,
+      `${socket.id}--${socket.userId}`,
     );
   }
 
@@ -58,7 +79,15 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const { token, isAdmin, eventId } = socket.handshake.query;
       const { sub } = await this.jwtService.validateToken(token);
       socket.userId = sub;
-      if (isAdmin) await this.addAdminUsersToCache(socket, eventId);
+      if (isAdmin) {
+        socket.adminEventId = eventId;
+        await this.addToHashList(
+          this.redisClient,
+          `event-${eventId}:admins`,
+          eventId,
+          socket.id,
+        );
+      }
       await this.redisClient.sadd(
         'connectedUsersEvents',
         `${socket.id}--${socket.userId}`,
@@ -74,6 +103,13 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody(new ValidationSchemaWsPipe()) data: EventConnectToLiveEventDto,
   ): Promise<void> {
     const { eventId } = data;
+    socket.eventId = eventId;
+    await this.addToHashList(
+      this.redisClient,
+      `event-${eventId}:attendees`,
+      eventId,
+      socket.id,
+    );
     await this.eventQueue.add('changeViewersCounter', { eventId, mod: 'incr' });
   }
 
@@ -84,36 +120,5 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): Promise<void> {
     const { eventId } = data;
     await this.eventQueue.add('changeViewersCounter', { eventId, mod: 'decr' });
-  }
-
-  private async addAdminUsersToCache(socket: any, eventId: number) {
-    socket.adminEventId = eventId;
-    const currentValues = JSON.parse(
-      await this.redisClient.hget(`event-${eventId}:admins`, eventId),
-    );
-    if (currentValues) {
-      await this.redisClient.hset(
-        `event-${eventId}:admins`,
-        eventId,
-        JSON.stringify(currentValues.concat(socket.id)),
-      );
-    } else
-      await this.redisClient.hset(
-        `event-${eventId}:admins`,
-        eventId,
-        JSON.stringify([socket.id]),
-      );
-  }
-
-  private async removeAdminUserOfCache(eventId: number, socketId: string) {
-    const currentValues = JSON.parse(
-      (await this.redisClient.hget(`event-${eventId}:admins`, eventId)) || [],
-    );
-    const newValues = currentValues.filter(x => x !== socketId);
-    await this.redisClient.hset(
-      `event-${eventId}:admins`,
-      eventId,
-      JSON.stringify(newValues),
-    );
   }
 }
