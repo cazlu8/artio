@@ -42,31 +42,31 @@ export class EventGateway extends BaseGateway
   }
 
   async handleDisconnect(socket: any) {
-    if (socket.eventId) {
-      const { eventId } = socket;
+    if (socket.eventId || socket.adminEventId) {
+      const { eventId, adminEventId } = socket;
+      const event_id = eventId || adminEventId;
+      const isAdmin = typeof adminEventId !== 'undefined';
+      const key = isAdmin ? 'admins' : 'attendees';
       await this.removeFromHashList(
         this.redisClient,
-        `event-${eventId}:attendees`,
+        `event-${event_id}:${key}`,
         eventId,
         socket.id,
       );
-      await this.eventQueue.add('changeViewersCounter', {
-        eventId,
-        mod: 'decr',
-      });
-    }
-    if (socket.adminEventId) {
-      const { adminEventId } = socket;
-      await this.removeFromHashList(
-        this.redisClient,
-        `event-${adminEventId}:admins`,
-        adminEventId,
+      const exists = await this.redisClient.hget(
+        `event-${event_id}:attendeesConnected`,
         socket.id,
       );
-      await this.eventQueue.add('changeViewersCounter', {
-        eventId: adminEventId,
-        mod: 'decr',
-      });
+      !!exists &&
+        (await this.eventQueue.add('changeViewersCounter', {
+          eventId: event_id,
+          mod: 'decr',
+        }));
+      !!exists &&
+        (await this.redisClient.hdel(
+          `event-${event_id}:attendeesConnected`,
+          socket.id,
+        ));
     }
     await this.redisClient.srem(
       'connectedUsersEvents',
@@ -104,6 +104,11 @@ export class EventGateway extends BaseGateway
   ): Promise<void> {
     const { eventId } = data;
     socket.eventId = eventId;
+    await this.redisClient.hset(
+      `event-${eventId}:attendeesConnected`,
+      socket.id,
+      socket.userId,
+    );
     await this.addToHashList(
       this.redisClient,
       `event-${eventId}:attendees`,
@@ -119,6 +124,10 @@ export class EventGateway extends BaseGateway
     @MessageBody(new ValidationSchemaWsPipe()) data: EventConnectToLiveEventDto,
   ): Promise<void> {
     const { eventId } = data;
+    await this.redisClient.hdel(
+      `event-${eventId}:attendeesConnected`,
+      socket.id,
+    );
     await this.eventQueue.add('changeViewersCounter', { eventId, mod: 'decr' });
   }
 }

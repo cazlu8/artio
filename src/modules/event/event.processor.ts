@@ -231,40 +231,18 @@ export class EventProcessor {
   async changeViewersCounter(job, jobDone) {
     try {
       const { eventId, mod } = job.data;
-      if (mod === 'incr')
-        await this.redisClient.incr(`event-${eventId}:viewersCounter`);
-      else await this.redisClient.decr(`event-${eventId}:viewersCounter`);
-      let viewersCounter = +(await this.redisClient.get(
-        `event-${eventId}:viewersCounter`,
-      ));
-      viewersCounter = viewersCounter >= 0 ? viewersCounter : 0;
-      await this.redisClient.set(
-        `event-${eventId}:viewersCounter`,
-        viewersCounter >= 0 ? viewersCounter : 0,
-      );
-      const adminSocketIdsFn = this.redisClient.hget(
-        `event-${eventId}:admins`,
+      const viewersCounter = await this.service.toggleViewersCounter(
         eventId,
+        mod,
       );
-      const attendeesSocketIdsFn = this.redisClient.hget(
-        `event-${eventId}:attendees`,
-        eventId,
-      );
-      const [adminSocketIds, attendeesSocketIds] = await Promise.all([
-        adminSocketIdsFn,
-        attendeesSocketIdsFn,
-      ]);
-      const adminSocketIdsFormatted =
-        adminSocketIds !== null ? JSON.parse(adminSocketIds) : [];
-      const attendeesSocketIdsFormatted =
-        attendeesSocketIds !== null ? JSON.parse(attendeesSocketIds) : [];
-      [
-        ...adminSocketIdsFormatted,
-        ...attendeesSocketIdsFormatted,
-      ].forEach(socketId =>
-        this.eventGateway.server
-          .to(socketId)
-          .emit('viewersCounter', viewersCounter),
+      const [
+        adminSocketIds,
+        attendeesSocketIds,
+      ] = await this.service.getAdminAndAttendeesSocketIds(eventId);
+      await this.service.sendViewersCounterMessage(
+        adminSocketIds,
+        attendeesSocketIds,
+        viewersCounter,
       );
       this.loggerService.info(
         `changeViewersCounter: message: viewers counter of event ${eventId} was updated`,
