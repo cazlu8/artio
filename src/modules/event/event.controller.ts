@@ -1,5 +1,6 @@
 import {
   Body,
+  CacheInterceptor,
   Controller,
   Delete,
   Get,
@@ -9,6 +10,7 @@ import {
   Post,
   Put,
   UseGuards,
+  UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
@@ -97,6 +99,7 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.removeHeroImage(id);
   }
 
+  @UseInterceptors(CacheInterceptor)
   @ApiParam({ name: 'skip', type: 'number' })
   @ApiCreatedResponse({
     type: EventListDto,
@@ -111,6 +114,7 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.getUpcomingEvents(skip);
   }
 
+  @UseInterceptors(CacheInterceptor)
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: EventListDto,
@@ -126,6 +130,7 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.getUpcomingByUser(userId, skip);
   }
 
+  @UseInterceptors(CacheInterceptor)
   @ApiParam({ name: 'skip', type: 'number' })
   @ApiCreatedResponse({
     type: EventListDto,
@@ -140,6 +145,7 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.getPastEvents(skip);
   }
 
+  @UseInterceptors(CacheInterceptor)
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
@@ -154,6 +160,7 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.getPastByUser(userId, skip);
   }
 
+  @UseInterceptors(CacheInterceptor)
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: EventDetailsDTO,
@@ -167,6 +174,7 @@ export class EventController extends BaseWithoutAuthController {
     return this.service.getEventDetails(id);
   }
 
+  @UseInterceptors(CacheInterceptor)
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
@@ -179,6 +187,7 @@ export class EventController extends BaseWithoutAuthController {
     return this.repository.findOne({ id });
   }
 
+  @UseInterceptors(CacheInterceptor)
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
@@ -193,6 +202,7 @@ export class EventController extends BaseWithoutAuthController {
     return this.repository.findOne({ id });
   }
 
+  @UseInterceptors(CacheInterceptor)
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
@@ -207,6 +217,7 @@ export class EventController extends BaseWithoutAuthController {
     return this.repository.findOne({ id });
   }
 
+  @UseInterceptors(CacheInterceptor)
   @ApiCreatedResponse({
     type: Event,
     description: 'All events were successfully retrieved',
@@ -217,6 +228,7 @@ export class EventController extends BaseWithoutAuthController {
     return this.repository.find();
   }
 
+  @UseInterceptors(CacheInterceptor)
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: Event,
@@ -231,6 +243,7 @@ export class EventController extends BaseWithoutAuthController {
     return this.repository.getUserEventsByRole(userId, roleId);
   }
 
+  @UseInterceptors(CacheInterceptor)
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
     type: SponsorDetail,

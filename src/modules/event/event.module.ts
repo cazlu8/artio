@@ -1,5 +1,7 @@
-import { Module } from '@nestjs/common';
+import { CacheModule, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import * as redisStore from 'cache-manager-redis-store';
+import { ConfigService } from '@nestjs/config';
 import { EventController } from './event.controller';
 import { BaseModule } from '../../shared/modules/base.module';
 import { EventService } from './event.service';
@@ -16,6 +18,15 @@ import { EventStagesRepository } from '../eventStages/eventStages.repository';
 
 @Module({
   imports: [
+    CacheModule.registerAsync({
+      useFactory: (configService: ConfigService) => ({
+        ttl: 5,
+        max: 20,
+        store: redisStore,
+        ...configService.get('redis'),
+      }),
+      inject: [ConfigService],
+    }),
     BaseModule,
     EventQueue,
     NetworkRoomModule,
