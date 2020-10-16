@@ -4,8 +4,6 @@ import {
   JoinColumn,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
   ManyToOne,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
@@ -22,11 +20,11 @@ export class EventStageSchedule {
   title: string;
 
   @ApiProperty()
-  @CreateDateColumn({ name: 'start_date' })
+  @Column('timestamptz', { nullable: false, name: 'start_date' })
   startDate: Date;
 
   @ApiProperty()
-  @UpdateDateColumn({ name: 'end_date' })
+  @Column('timestamptz', { nullable: false, name: 'end_date' })
   endDate: Date;
 
   @ApiProperty()

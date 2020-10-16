@@ -6,9 +6,9 @@ import {
   Param,
   UseGuards,
   Put,
-  Res,
   ParseIntPipe,
   UsePipes,
+  HttpCode,
 } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { ObjectLiteral, UpdateResult } from 'typeorm';
@@ -17,21 +17,22 @@ import { CreateLogoDto } from './dto/sponsor.create.logo.dto';
 import { SponsorService } from './sponsor.service';
 import { Sponsor } from './sponsor.entity';
 import { UpdateSponsorDto } from './dto/sponsor.update.dto';
-import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
-import { AuthGuard } from '../../shared/guards/auth.guard';
 import { AdminAuthGuard } from '../../shared/guards/adminAuth.guard';
 import { SponsorRepository } from './sponsor.repository';
 import { ValidateSponsorGUID } from './pipes/ValidateSponsorGUID.pipe';
 import { ValidateSponsorId } from './pipes/ValidateSponsorId.pipe';
 import { ValidateSponsorEmail } from './pipes/ValidateSponsorEmail.pipe';
 import { CreateBannerDto } from './dto/sponsor.create.banner.dto';
+import { BaseController } from '../../shared/controllers/base.controller';
+import { LoggerService } from '../../shared/services/logger.service';
 
 @ApiTags('Sponsor')
 @Controller('sponsors')
-export class SponsorController extends BaseWithoutAuthController {
+export class SponsorController extends BaseController {
   constructor(
-    private sponsorService: SponsorService,
+    private readonly sponsorService: SponsorService,
     private readonly repository: SponsorRepository,
+    private readonly loggerService: LoggerService,
   ) {
     super();
   }
@@ -40,7 +41,6 @@ export class SponsorController extends BaseWithoutAuthController {
     type: CreateSponsorDto,
     description: 'The sponsor has been successfully created',
   })
-  @UseGuards(AuthGuard)
   @Post()
   async create(
     @Body() createSponsorDto: CreateSponsorDto,
@@ -52,7 +52,6 @@ export class SponsorController extends BaseWithoutAuthController {
     type: CreateLogoDto,
     description: 'Logo has been successfully created',
   })
-  @UseGuards(AuthGuard)
   @Post('/uploadLogo')
   uploadLogo(
     @Body() createLogoDto: CreateLogoDto,
@@ -64,7 +63,6 @@ export class SponsorController extends BaseWithoutAuthController {
     type: CreateLogoDto,
     description: 'Banner has been successfully created',
   })
-  @UseGuards(AuthGuard)
   @Post('/uploadBanner')
   uploadBanner(
     @Body() createBannerDto: CreateBannerDto,
@@ -78,9 +76,10 @@ export class SponsorController extends BaseWithoutAuthController {
     description: 'Sponsor logo by id was successfully retrieved',
   })
   @UsePipes(ValidateSponsorId)
-  @UseGuards(AuthGuard)
   @Get('/logo/:id')
-  getlogoUrl(@Param('id') id): Promise<Partial<Sponsor> | void> {
+  getlogoUrl(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<Partial<Sponsor> | void> {
     return this.repository.findOne({
       select: ['logo'],
       where: { id },
@@ -107,7 +106,6 @@ export class SponsorController extends BaseWithoutAuthController {
     description: 'Sponsor by id was successfully retrieved',
   })
   @UsePipes(ValidateSponsorId)
-  @UseGuards(AuthGuard)
   @Get('/:id')
   async getSponsorById(@Param('id', ParseIntPipe) id): Promise<Sponsor | void> {
     return this.repository.findOne({
@@ -121,7 +119,6 @@ export class SponsorController extends BaseWithoutAuthController {
     description: 'Sponsor by guid was successfully retrieved',
   })
   @UsePipes(ValidateSponsorGUID)
-  @UseGuards(AuthGuard)
   @Get('/guid/:guid')
   async findOne(@Param('guid') guid): Promise<Partial<Sponsor> | void> {
     return this.repository.findOne({ guid });
@@ -132,15 +129,14 @@ export class SponsorController extends BaseWithoutAuthController {
     type: UpdateSponsorDto,
     description: 'Sponsor has been successfully updated',
   })
-  @UseGuards(AuthGuard)
+  @HttpCode(204)
   @Put('/:id')
-  update(
-    @Res() res,
+  async update(
     @Param('id', ParseIntPipe, ValidateSponsorId) id: number,
     @Body() updateSponsorDto: UpdateSponsorDto,
   ): Promise<void | UpdateResult> {
-    return this.sponsorService
-      .updateSponsorInfo(id, updateSponsorDto)
-      .then(() => res.status(204).send());
+    const sponsor = await this.repository.update(id, updateSponsorDto);
+    this.loggerService.info(`Sponsor ${id} has been updated`);
+    return sponsor;
   }
 }

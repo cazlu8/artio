@@ -135,7 +135,6 @@ export class NetworkRoomProcessor {
     try {
       const { eventId } = job.data;
       const queueLength = await this.redisClient.llen(`event-${eventId}:queue`);
-
       if (queueLength >= 2) {
         const room = await this.service.getQueueSocketIdsAndSendRoom(eventId);
         this.loggerService.info(

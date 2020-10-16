@@ -1,12 +1,12 @@
 import {
   Entity,
   PrimaryColumn,
-  OneToOne,
   JoinColumn,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Event } from '../event/event.entity';
@@ -69,7 +69,7 @@ export class EventStages {
   @PrimaryColumn({ type: 'int', name: 'eventId' })
   eventId: number;
 
-  @OneToOne(() => Event)
+  @ManyToOne(() => Event)
   @JoinColumn()
   event: Event;
 }
