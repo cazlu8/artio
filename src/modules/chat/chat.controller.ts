@@ -1,16 +1,8 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-} from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ObjectLiteral } from 'typeorm';
 import { ChatService } from './chat.service';
 import { LoggerService } from '../../shared/services/logger.service';
-import SendMessageDto from './dto/chat.sendMessage.dto';
 import { BaseController } from '../../shared/controllers/base.controller';
 
 @ApiTags('Chat')
