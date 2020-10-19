@@ -90,6 +90,7 @@ export class ChatGateway extends BaseGateway
       sponsorGuid,
       toUserGuid,
       socket.userId,
+      message,
     );
     if (!socket.sponsorGuid) {
       await this.chatQueue.add(`sendMessageToSponsor`, {
@@ -97,9 +98,9 @@ export class ChatGateway extends BaseGateway
           message,
           messageGuid,
           fromUserName,
-          sponsorGuid,
           fromUserGuid: socket.userId,
         },
+        sponsorGuid,
         eventName: `receiveMessage`,
       });
     } else {
