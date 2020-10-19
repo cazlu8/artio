@@ -1,14 +1,13 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ObjectLiteral } from 'typeorm';
 import { ChatService } from './chat.service';
-import { BaseWithoutAuthController } from '../../shared/controllers/base.withoutAuth.controller';
 import { LoggerService } from '../../shared/services/logger.service';
-import SendMessageDto from './dto/chat.sendMessage.dto';
+import { BaseController } from '../../shared/controllers/base.controller';
 
 @ApiTags('Chat')
 @Controller('chat')
-export class ChatController extends BaseWithoutAuthController {
+export class ChatController extends BaseController {
   constructor(
     private readonly loggerService: LoggerService,
     private service: ChatService,
@@ -16,10 +15,13 @@ export class ChatController extends BaseWithoutAuthController {
     super();
   }
 
-  @Post()
-  async create(
-    @Body() sendMessageDto: SendMessageDto,
+  @Get('/:to/:from/:sponsorGuid/:eventId')
+  async get(
+    @Param(`to`) to: string,
+    @Param(`from`) from: string,
+    @Param(`sponsorGuid`) sponsorGuid: string,
+    @Param(`eventId`, ParseIntPipe) eventId: number,
   ): Promise<void | ObjectLiteral> {
-    await this.create(sendMessageDto);
+    return this.service.getMessages(eventId, to, from, sponsorGuid);
   }
 }

@@ -6,7 +6,7 @@ import { ChatGateway } from './chat.gateway';
 
 const numCPUs = require('os').cpus().length;
 
-@Processor('event')
+@Processor('chat')
 export class ChatProcessor {
   private readonly redisClient: any;
 

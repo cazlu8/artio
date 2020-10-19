@@ -18,27 +18,24 @@ export class ChatService {
     sponsorGuid: string,
     toUserGuid: string,
     fromUserGuid: string,
+    message: string,
   ): Promise<string> {
     const guid = uuid();
-
     const params = {
       TableName: process.env.TABLE_CHAT_SPONSOR,
       Item: {
         guid,
-        eventId,
         sponsorGuid,
+        message,
+        eventId,
         toUserGuid,
         fromUserGuid,
         toRead: false,
         createdAt: Date.now(),
       },
     };
-    try {
-      await this.dynamoDB.put(params).promise();
-      return guid;
-    } catch (err) {
-      return err;
-    }
+    await this.dynamoDB.put(params).promise();
+    return guid;
   }
 
   async setReadMessage(messageGuid: string): Promise<void> {
@@ -55,10 +52,23 @@ export class ChatService {
       TableName: process.env.TABLE_CHAT_SPONSOR,
       UpdateExpression: 'SET #R = :t',
     };
-    try {
-      await this.dynamoDB.update(params).promise();
-    } catch (err) {
-      console.log(err);
-    }
+    await this.dynamoDB.update(params).promise();
+  }
+
+  async getMessages(eventId: number, toGuid, fromGuid, sponsorGuid) {
+    const params = {
+      TableName: process.env.TABLE_CHAT_SPONSOR,
+      ExpressionAttributeValues: {
+        ':toGuid': toGuid,
+        ':fromGuid': fromGuid,
+        ':sponsorGuid': sponsorGuid,
+        ':eventId': eventId,
+      },
+      KeyConditionExpression: 'sponsorGuid = :sponsorGuid',
+      FilterExpression:
+        'toUserGuid = :toGuid or toUserGuid = :fromGuid or fromUserGuid = :fromGuid or fromUserGuid = :toGuid and eventId = :eventId',
+      Select: `ALL_ATTRIBUTES`,
+    };
+    return await this.dynamoDB.query(params).promise();
   }
 }

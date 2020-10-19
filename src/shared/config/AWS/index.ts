@@ -24,12 +24,8 @@ const sesConfig = registerAs('ses', () =>
     : { endpoint: new AWS.Endpoint(process.env.LOCALSTACK_URL) },
 );
 
-const dynamoConfig = registerAs('dynamo', () =>
-  process.env.NODE_ENV === 'production'
-    ? {
-        region: process.env.DYNAMODB_REGION,
-      }
-    : { endpoint: new AWS.Endpoint(process.env.LOCALSTACK_URL) },
-);
+const dynamoConfig = registerAs('dynamo', () => ({
+  region: process.env.DYNAMODB_REGION,
+}));
 
 export { s3Config, cognitoConfig, sesConfig, dynamoConfig };
