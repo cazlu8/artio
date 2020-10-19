@@ -231,22 +231,18 @@ export class EventProcessor {
   async changeViewersCounter(job, jobDone) {
     try {
       const { eventId, mod } = job.data;
-      if (mod === 'incr')
-        await this.redisClient.incr(`event-${eventId}:viewersCounter`);
-      else await this.redisClient.decr(`event-${eventId}:viewersCounter`);
-      const viewersCounter = await this.redisClient.get(
-        `event-${eventId}:viewersCounter`,
-      );
-      const adminSocketIds = await this.redisClient.hget(
-        `event-${eventId}:admins`,
+      const viewersCounter = await this.service.toggleViewersCounter(
         eventId,
+        mod,
       );
-      const adminSocketIdsFormatted =
-        adminSocketIds !== null ? JSON.parse(adminSocketIds) : [];
-      adminSocketIdsFormatted.forEach(socketId =>
-        this.eventGateway.server
-          .to(socketId)
-          .emit('viewersCounter', viewersCounter),
+      const [
+        adminSocketIds,
+        attendeesSocketIds,
+      ] = await this.service.getAdminAndAttendeesSocketIds(eventId);
+      await this.service.sendViewersCounterMessage(
+        adminSocketIds,
+        attendeesSocketIds,
+        viewersCounter,
       );
       this.loggerService.info(
         `changeViewersCounter: message: viewers counter of event ${eventId} was updated`,

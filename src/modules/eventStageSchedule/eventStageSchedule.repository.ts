@@ -15,4 +15,13 @@ export class EventStageScheduleRepository extends Repository<
       })
       .getRawMany();
   }
+
+  verifyIfScheduleIsInBetween(startDate: Date) {
+    return this.createQueryBuilder('eventStageSchedule')
+      .select(['id'])
+      .where(`:startDate >= start_date and :startDate <= end_date`, {
+        startDate,
+      })
+      .getRawMany();
+  }
 }
