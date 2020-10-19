@@ -17,6 +17,7 @@ import { Event } from '../event/event.entity';
 import { ListUserEventDto } from '../userEvents/dto/userEvents.list.dto';
 import { VerifyIfIsAuthenticatedUserGuard } from '../../shared/guards/verifyIfIsAuthenticatedUser.guard';
 import { CardWalletGuard } from './guards/cardWallet.guard';
+import { CardWallet } from './cardWallet.entity';
 
 @ApiTags('CardWalltet')
 @Controller('cardwallet')
@@ -27,7 +28,7 @@ export class CardWalletController extends BaseController {
 
   @ApiParam({ name: 'userId', type: 'number' })
   @ApiCreatedResponse({
-    type: Event,
+    type: CardWallet,
     description: 'Get cards from user',
   })
   @UseGuards(VerifyIfIsAuthenticatedUserGuard)
@@ -45,7 +46,7 @@ export class CardWalletController extends BaseController {
 
   @ApiParam({ name: 'id', type: 'number' })
   @ApiCreatedResponse({
-    type: Event,
+    type: CardWallet,
     description: 'Delete card wallet',
   })
   @UseGuards(CardWalletGuard)

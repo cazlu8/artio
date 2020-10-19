@@ -417,4 +417,50 @@ export class EventService {
         this.eventGateway.server.to(socketId).emit(eventName, eventId),
       );
   }
+
+  async getAdminAndAttendeesSocketIds(eventId: number) {
+    const adminSocketIdsFn = this.redisClient.hget(
+      `event-${eventId}:admins`,
+      eventId,
+    );
+    const attendeesSocketIdsFn = this.redisClient.hget(
+      `event-${eventId}:attendees`,
+      eventId,
+    );
+    return await Promise.all([adminSocketIdsFn, attendeesSocketIdsFn]);
+  }
+
+  async toggleViewersCounter(eventId: number, mod: string) {
+    if (mod === 'incr')
+      await this.redisClient.incr(`event-${eventId}:viewersCounter`);
+    else await this.redisClient.decr(`event-${eventId}:viewersCounter`);
+    let viewersCounter = +(await this.redisClient.get(
+      `event-${eventId}:viewersCounter`,
+    ));
+    viewersCounter = viewersCounter >= 0 ? viewersCounter : 0;
+    await this.redisClient.set(
+      `event-${eventId}:viewersCounter`,
+      viewersCounter >= 0 ? viewersCounter : 0,
+    );
+    return viewersCounter;
+  }
+
+  sendViewersCounterMessage(
+    adminSocketIds: string,
+    attendeesSocketIds: string,
+    viewersCounter: number,
+  ) {
+    const adminSocketIdsFormatted =
+      adminSocketIds !== null ? JSON.parse(adminSocketIds) : [];
+    const attendeesSocketIdsFormatted =
+      attendeesSocketIds !== null ? JSON.parse(attendeesSocketIds) : [];
+    [
+      ...adminSocketIdsFormatted,
+      ...attendeesSocketIdsFormatted,
+    ].forEach(socketId =>
+      this.eventGateway.server
+        .to(socketId)
+        .emit('viewersCounter', viewersCounter),
+    );
+  }
 }
