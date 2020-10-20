@@ -18,7 +18,7 @@ export class EventStages {
   id: number;
 
   @ApiProperty()
-  @Column('varchar', { length: 255, nullable: true, name: 'name' })
+  @Column('varchar', { length: 255, nullable: false, name: 'name' })
   name: string;
 
   @ApiProperty()
@@ -26,11 +26,11 @@ export class EventStages {
   region: string;
 
   @ApiProperty()
-  @Column('int', { name: 'media_live_channel_id' })
+  @Column('int', { name: 'media_live_channel_id', nullable: true })
   mediaLiveChannelId: number;
 
   @ApiProperty()
-  @Column('int', { name: 'media_live_input_id' })
+  @Column('int', { name: 'media_live_input_id', nullable: true })
   mediaLiveInputId: number;
 
   @ApiProperty()
