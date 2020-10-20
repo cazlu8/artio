@@ -64,6 +64,7 @@ export class ChatService {
         ':sponsorGuid': sponsorGuid,
         ':eventId': eventId,
       },
+      ScanIndexForward: false,
       KeyConditionExpression: 'sponsorGuid = :sponsorGuid',
       FilterExpression:
         'toUserGuid = :toGuid or toUserGuid = :fromGuid or fromUserGuid = :fromGuid or fromUserGuid = :toGuid and eventId = :eventId',

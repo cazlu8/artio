@@ -21,8 +21,4 @@ export default class SendMessageDto {
   @ApiProperty()
   @IsNotEmpty()
   message: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  fromUserGuid: string;
 }
