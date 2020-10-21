@@ -39,7 +39,7 @@ export class EventStagesController extends BaseController {
   })
   @Get('/:eventId')
   @UsePipes(ValidateIfEventExists)
-  async get(@Param() eventId: number): Promise<void | EventStages[]> {
+  async get(@Param('eventId') eventId: number): Promise<void | EventStages[]> {
     return this.repository.getStagesByEventId(eventId);
   }
 }
