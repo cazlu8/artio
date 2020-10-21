@@ -5,7 +5,21 @@ import { EventStages } from './eventStages.entity';
 export class EventStagesRepository extends Repository<EventStages> {
   async getStagesByEventId(eventId: number) {
     return this.createQueryBuilder('eventStages')
-      .select(['id', 'name'])
+      .select([
+        'eventId',
+        'id',
+        'name',
+        'region',
+        'mediaLiveChannelId',
+        'mediaLiveInputId',
+        'cdnDistributionId',
+        'liveUrl',
+        'streamKey',
+        'streamUrl',
+        'onLive',
+        'createdAt',
+        'updatedAt',
+      ])
       .where('eventStages.eventId = :eventId', { eventId })
       .getRawMany();
   }
