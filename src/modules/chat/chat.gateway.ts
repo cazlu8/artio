@@ -61,19 +61,21 @@ export class ChatGateway extends BaseGateway
       const { sub } = await this.jwtService.validateToken(token);
       socket.userId = sub;
       socket.sponsorGuid = sponsorGuid;
-      if (isSponsor) {
+
+      if (isSponsor === 'true') {
         await this.addToHashList(
           this.redisClient,
           `connectedUsersChat`,
           sponsorGuid,
           socket.id,
         );
-      } else
+      } else {
         await this.redisClient.hset(
           'connectedUsersChat',
           socket.userId,
           socket.id,
         );
+      }
     } catch (err) {
       socket.disconnect();
     }
