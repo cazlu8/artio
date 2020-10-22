@@ -6,21 +6,21 @@ export class EventStagesRepository extends Repository<EventStages> {
   async getStagesByEventId(eventId: number) {
     return this.createQueryBuilder('eventStages')
       .select([
-        'eventId',
-        'id',
-        'name',
-        'region',
-        'mediaLiveChannelId',
-        'mediaLiveInputId',
-        'cdnDistributionId',
-        'liveUrl',
-        'streamKey',
-        'streamUrl',
-        'onLive',
-        'createdAt',
-        'updatedAt',
+        'eventStages.eventId',
+        'eventStages.id',
+        'eventStages.name',
+        'eventStages.region',
+        'eventStages.mediaLiveChannelId',
+        'eventStages.mediaLiveInputId',
+        'eventStages.cdnDistributionId',
+        'eventStages.liveUrl',
+        'eventStages.streamKey',
+        'eventStages.streamUrl',
+        'eventStages.onLive',
+        'eventStages.createdAt',
+        'eventStages.updatedAt',
       ])
       .where('eventStages.eventId = :eventId', { eventId })
-      .getRawMany();
+      .getMany();
   }
 }
