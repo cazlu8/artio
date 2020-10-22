@@ -181,8 +181,6 @@ export class LiveManagementService {
               {
                 Id: `EMP-${originId}`,
                 DomainName: originDomainName,
-                ConnectionAttempts: 3,
-                ConnectionTimeout: 10,
                 CustomOriginConfig: {
                   HTTPPort: 80,
                   HTTPSPort: 443,
@@ -194,8 +192,6 @@ export class LiveManagementService {
               {
                 Id: 'TEMP_ORIGIN_ID/channel',
                 DomainName: 'mediapackage.amazonaws.com',
-                ConnectionAttempts: 3,
-                ConnectionTimeout: 10,
                 CustomOriginConfig: {
                   HTTPPort: 80,
                   HTTPSPort: 443,
