@@ -1,15 +1,5 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Param,
-  ParseIntPipe,
-  Post,
-  Put,
-  UsePipes,
-} from '@nestjs/common';
-import { ApiTags, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
+import { Body, Controller, Post } from '@nestjs/common';
+import { ApiTags, ApiCreatedResponse } from '@nestjs/swagger';
 import { ObjectLiteral } from 'typeorm';
 import { LoggerService } from '../../shared/services/logger.service';
 import { BaseController } from '../../shared/controllers/base.controller';
