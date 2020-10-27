@@ -402,6 +402,7 @@ export class EventService {
     connectedUsers: string[],
     eventId: number,
     eventName: string,
+    params?: {},
   ) {
     const userGuids = connectedUsers.map(x => x.split('--')[1]);
     const userIds = (await this.userRepository.getUserIdByGuid(userGuids))?.map(
@@ -413,9 +414,13 @@ export class EventService {
     connectedUsers
       .filter(x => existingUserGuids.some(y => y === x.split('--')[1]))
       .map(x => x.split('--')[0])
-      .forEach(socketId =>
-        this.eventGateway.server.to(socketId).emit(eventName, eventId),
-      );
+      .forEach(socketId => {
+        const hasParameters = !!Object(params).keys().length;
+        const parameters = hasParameters ? { ...params, eventId } : eventId;
+        this.eventGateway.server
+          .to(socketId)
+          .emit(eventName, hasParameters ? parameters : eventId);
+      });
   }
 
   async getAdminAndAttendeesSocketIds(eventId: number) {
