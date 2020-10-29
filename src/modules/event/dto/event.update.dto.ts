@@ -67,7 +67,7 @@ export default class UpdateEventDTO {
   endDate?: Date;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   timezone?: string;
 
   @ApiProperty()
