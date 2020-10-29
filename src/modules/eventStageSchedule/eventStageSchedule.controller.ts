@@ -61,7 +61,7 @@ export class EventStageScheduleController extends BaseController {
   @Put('/:eventStageScheduleId')
   @HttpCode(204)
   async updateSchedule(
-    @Param('eventStageScheduleId', ParseIntPipe) eventStageScheduleId,
+    @Param('eventStageScheduleId', ParseIntPipe) eventStageScheduleId: number,
     @Body() eventStageScheduleUpdateDTO: EventStageScheduleUpdateDTO,
   ): Promise<any | void> {
     await this.repository.update(
