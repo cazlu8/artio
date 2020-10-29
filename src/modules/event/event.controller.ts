@@ -284,6 +284,19 @@ export class EventController extends BaseWithoutAuthController {
     });
   }
 
+  @ApiParam({ name: 'eventId', type: 'number' })
+  @ApiCreatedResponse({
+    type: Event,
+    description: 'Amount of viewerrs on event was successfully retrieved',
+  })
+  @UseGuards(AuthGuard)
+  @Get('/viewersCounter/:eventId')
+  async getViewersCounter(
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ): Promise<any> {
+    return this.service.getViewersCounter(eventId);
+  }
+
   @ApiParam({ name: 'startIntermission' })
   @ApiCreatedResponse({
     description: 'Intermission started',

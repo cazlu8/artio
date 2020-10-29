@@ -448,6 +448,10 @@ export class EventService {
     return await Promise.all([adminSocketIdsFn, attendeesSocketIdsFn]);
   }
 
+  async getViewersCounter(eventId: number) {
+    return await this.redisClient.get(`event-${eventId}:viewersCounter`);
+  }
+
   async toggleViewersCounter(eventId: number, mod: string) {
     if (mod === 'incr')
       await this.redisClient.incr(`event-${eventId}:viewersCounter`);
