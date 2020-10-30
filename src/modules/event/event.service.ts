@@ -391,18 +391,20 @@ export class EventService {
     const currentTimezone = (
       await this.repository.findOne({ select: ['timezone'], where: { id } })
     ).timezone;
-    const timezoneChanged = eventData.timezone !== currentTimezone;
-    if (timezoneChanged) {
-      const eventStageIds = (
-        await this.eventStagesRepository.find({
-          select: ['id'],
-          where: { eventId: id },
-        })
-      ).map(({ id: stageId }) => stageId);
-      await this.eventStageScheduleRepository.updateDateByTimezone(
-        eventStageIds,
-        eventData.timezone,
-      );
+    if (eventData.timezone) {
+      const timezoneChanged = eventData.timezone !== currentTimezone;
+      if (timezoneChanged) {
+        const eventStageIds = (
+          await this.eventStagesRepository.find({
+            select: ['id'],
+            where: { eventId: id },
+          })
+        ).map(({ id: stageId }) => stageId);
+        await this.eventStageScheduleRepository.updateDateByTimezone(
+          eventStageIds,
+          eventData.timezone,
+        );
+      }
     }
     const event = await this.repository.update(id, eventData);
     this.loggerService.info(`Event ${id} has been updated`);
