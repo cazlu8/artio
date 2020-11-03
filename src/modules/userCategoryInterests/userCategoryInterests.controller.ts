@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse } from '@nestjs/swagger';
 import { BaseController } from '../../shared/controllers/base.controller';
 import { UserCategoryInterestsRepository } from './userCategoryInterests.repository';
