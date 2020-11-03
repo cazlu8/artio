@@ -4,6 +4,7 @@ import {
   OneToOne,
   JoinColumn,
   PrimaryGeneratedColumn,
+  Column,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Event } from '../event/event.entity';
@@ -16,11 +17,11 @@ export class EventSponsors {
   id: number;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', name: 'sponsorId', primary: true })
+  @Column({ type: 'int', name: 'sponsorId' })
   sponsorId: number;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', name: 'eventId', primary: true })
+  @Column({ type: 'int', name: 'eventId' })
   eventId: number;
 
   @OneToOne(() => Event)
