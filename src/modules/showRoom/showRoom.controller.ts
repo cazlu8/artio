@@ -1,10 +1,21 @@
-import { Controller, Get, Param, ParseIntPipe, Put } from '@nestjs/common';
+import { ObjectLiteral } from 'typeorm';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { BaseController } from '../../shared/controllers/base.controller';
 import { LoggerService } from '../../shared/services/logger.service';
 import { ShowRoomService } from './showRoom.service';
+import ChangeBroadcastLayoutDTO from './dto/broadcast.change.layout.dto';
+import RegisterSessionParticipantDTO from './dto/session.register.participant.dto';
 
 @ApiTags('ShowRoom')
 @Controller('showRoom')
@@ -21,7 +32,7 @@ export class ShowRoomController extends BaseController {
   async getSessionData(
     @Param('sponsorId', ParseIntPipe) sponsorId: number,
     @Param('eventId', ParseIntPipe) eventId: number,
-  ): Promise<{ apiKey: any; sessionId: any; token: any }> {
+  ): Promise<{ apiKey: any; sessionId: any }> {
     return this.service.getSessionData(eventId, sponsorId);
   }
 
@@ -44,6 +55,19 @@ export class ShowRoomController extends BaseController {
       eventName: 'startSponsorRoomState',
       params: { sponsorId },
     });
+  }
+
+  @Post('session/sponsor/connect/:eventId/:sponsorId')
+  async registerSessionParticipant(
+    @Param('sponsorId', ParseIntPipe) sponsorId: number,
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Body() registerSessionParticipantDTO: RegisterSessionParticipantDTO,
+  ): Promise<{ token: any }> {
+    return await this.service.registerSessionParticipant(
+      eventId,
+      sponsorId,
+      registerSessionParticipantDTO.streamRole,
+    );
   }
 
   @Put('session/sponsor/stop/:eventId/:sponsorId')
@@ -73,5 +97,18 @@ export class ShowRoomController extends BaseController {
     @Param('eventId', ParseIntPipe) eventId: number,
   ) {
     return this.service.getBroadcastInfo(eventId, sponsorId);
+  }
+
+  @Post('session/sponsor/broadcast/layout/:eventId/:sponsorId')
+  async changeBroadcastLayout(
+    @Param('sponsorId', ParseIntPipe) sponsorId: number,
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Body() changeBroadcastLayoutDTO: ChangeBroadcastLayoutDTO,
+  ): Promise<void | ObjectLiteral> {
+    return await this.service.changeBroadcastLayout(
+      eventId,
+      sponsorId,
+      changeBroadcastLayoutDTO,
+    );
   }
 }

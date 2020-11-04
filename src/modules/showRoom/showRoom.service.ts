@@ -4,6 +4,8 @@ import fetch from 'node-fetch';
 import { sign } from 'jsonwebtoken';
 import { v4 as uuid } from 'uuid';
 import * as bluebird from 'bluebird';
+import * as OpenTok from 'opentok';
+import { promisify } from 'util';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '../../shared/services/logger.service';
 
@@ -11,17 +13,7 @@ import { LoggerService } from '../../shared/services/logger.service';
 export class ShowRoomService {
   private readonly redisClient: any;
 
-  private readonly broadcastOptions = {
-    sessionId: null,
-    outputs: {
-      hls: {},
-    },
-    maxDuration: 5400,
-    resolution: '640x480',
-    layout: {
-      type: 'bestFit',
-    },
-  };
+  private readonly OpenTok: any;
 
   constructor(
     private readonly redisService: RedisService,
@@ -30,8 +22,10 @@ export class ShowRoomService {
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
     const [apiKey, apiSecret] = this.configService.get('vonage');
+    this.OpenTok = new OpenTok(apiKey, apiSecret);
     this.redisClient.set(`vonageApiKey`, apiKey);
     this.redisClient.set(`vonageApiSecret`, apiSecret);
+    this.OpenTok.createSession = promisify(this.OpenTok.createSession);
   }
 
   private async generateJWT() {
@@ -55,6 +49,20 @@ export class ShowRoomService {
     }
   }
 
+  async registerSessionParticipant(
+    eventId: number,
+    sponsorId: number,
+    streamRole: string,
+  ) {
+    const sessionId = await this.redisClient.get(
+      `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
+    );
+    const token = this.OpenTok.generateToken(sessionId, {
+      role: streamRole,
+    });
+    return { token };
+  }
+
   private async createSession(eventId: number, sponsorId: number) {
     const token = await this.generateJWT();
     return await fetch(`https://api.opentok.com/session/create`, {
@@ -68,12 +76,17 @@ export class ShowRoomService {
     })
       .then(response => response.json())
       .then(data => {
+        const vonageToken = this.OpenTok.generateToken(data[0].session_id, {});
         this.redisClient.set(
           `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
           data[0].session_id,
         );
         this.redisClient.set(
           `event-${eventId}:sponsor-${sponsorId}:vonageToken`,
+          vonageToken,
+        );
+        this.redisClient.set(
+          `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
           token,
         );
         this.redisClient.set(
@@ -85,16 +98,32 @@ export class ShowRoomService {
       .catch(err => console.log(err));
   }
 
-  async startBroadcastSponsorRoom(eventId: number, sponsorId: number) {
+  private async configureBroadcastChannels(eventId: number, sponsorId: number) {
     const vonageSessionId = await this.redisClient.get(
       `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
     );
-    const token = await this.redisClient.get(
-      `event-${eventId}:sponsor-${sponsorId}:vonageToken`,
-    );
-    this.broadcastOptions.sessionId = vonageSessionId;
-    const vonageApiKey = await this.redisClient.get(`vonageApiKey`);
+    return {
+      sessionId: vonageSessionId,
+      outputs: {
+        hls: {},
+      },
+      maxDuration: 5400,
+      resolution: '640x480',
+      layout: {
+        type: 'bestFit',
+      },
+    };
+  }
 
+  async startBroadcastSponsorRoom(eventId: number, sponsorId: number) {
+    const token = await this.redisClient.get(
+      `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
+    );
+    const broadcastOptions = await this.configureBroadcastChannels(
+      eventId,
+      sponsorId,
+    );
+    const vonageApiKey = await this.redisClient.get(`vonageApiKey`);
     return await fetch(
       `https://api.opentok.com/v2/project/${vonageApiKey}/broadcast`,
       {
@@ -104,7 +133,7 @@ export class ShowRoomService {
           'X-OPENTOK-AUTH': token,
         },
         method: 'POST',
-        body: JSON.stringify(this.broadcastOptions),
+        body: JSON.stringify(broadcastOptions),
       },
     )
       .then(response => response.json())
@@ -123,7 +152,7 @@ export class ShowRoomService {
       `event-${eventId}:sponsor-${sponsorId}:broadcastId`,
     );
     const token = await this.redisClient.get(
-      `event-${eventId}:sponsor-${sponsorId}:vonageToken`,
+      `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
     );
     const vonageApiKey = await this.redisClient.get('vonageApiKey');
     return await fetch(
@@ -136,15 +165,32 @@ export class ShowRoomService {
       });
   }
 
+  async changeBroadcastLayout(eventId: number, sponsorId: number, layout: any) {
+    const vonageApiKey = await this.redisClient.get(`vonageApiKey`);
+    const token = await this.redisClient.get(
+      `event-${eventId}:sponsor-${sponsorId}:vonageJWTToken`,
+    );
+    const broadcastId = await this.redisClient.get(
+      `event-${eventId}:sponsor-${sponsorId}:broadcastId`,
+    );
+    return await fetch(
+      `https://api.opentok.com/v2/project/${vonageApiKey}/broadcast/${broadcastId}/layout`,
+      {
+        headers: { 'X-OPENTOK-AUTH': token },
+        method: 'PUT',
+        body: JSON.stringify({ type: 'custom', stylesheet: layout }),
+      },
+    ).then(response => {
+      return response;
+    });
+  }
+
   async getSessionData(eventId: number, sponsorId: number) {
     const sessionId = await this.redisClient.get(
       `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
     );
-    const token = await this.redisClient.get(
-      `event-${eventId}:sponsor-${sponsorId}:vonageToken`,
-    );
     const apiKey = await this.redisClient.get(`vonageApiKey`);
-    return { sessionId, token, apiKey };
+    return { sessionId, apiKey };
   }
 
   async startSponsorRoomState(eventId: number, sponsorId: number) {
@@ -159,28 +205,27 @@ export class ShowRoomService {
   }
 
   async stopSponsorRoom(eventId: number, sponsorId: number) {
+    const vonageApiKey = await this.redisClient.get('vonageApiKey');
     const broadcastId = await this.redisClient.get(
       `event-${eventId}:sponsor-${sponsorId}:broadcastId`,
     );
     const token = await this.redisClient.get(
-      `event-${eventId}:sponsor-${sponsorId}:vonageToken`,
+      `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
     );
+    const removeAllKeys = [
+      `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
+      `event-${eventId}:sponsor-${sponsorId}:vonageToken`,
+      `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
+      `event-${eventId}:sponsor-${sponsorId}:roomState`,
+      `event-${eventId}:sponsor-${sponsorId}:broadcastId`,
+    ].map(key => this.redisClient.del(key));
+    await Promise.all(removeAllKeys);
     await fetch(
-      `https://api.opentok.com/v2/project/${this.redisClient.get(
-        'vonageApiKey',
-      )}/broadcast/${broadcastId}/stop`,
+      `https://api.opentok.com/v2/project/${vonageApiKey}/broadcast/${broadcastId}/stop`,
       {
         headers: { 'X-OPENTOK-AUTH': token },
         method: 'POST',
       },
     ).then(response => response.json());
-
-    const removeAllKeys = [
-      `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
-      `event-${eventId}:sponsor-${sponsorId}:vonageToken`,
-      `event-${eventId}:sponsor-${sponsorId}:roomState`,
-      `event-${eventId}:sponsor-${sponsorId}:broadcastId`,
-    ].map(key => this.redisClient.del(key));
-    await Promise.all(removeAllKeys);
   }
 }
