@@ -121,7 +121,7 @@ export class UserService {
     if (typeof user === 'undefined' || user.isNew) {
       return this.repository
         .save(newUser)
-        .then(usr => this.loggerService.info(`User ${usr.id} Created`));
+        .then((usr) => this.loggerService.info(`User ${usr.id} Created`));
     }
     return Promise.resolve();
   }
@@ -156,20 +156,19 @@ export class UserService {
     };
   }
 
-  private async processAvatarImage(
-    avatarImgUrl: string,
-    userId: number,
-    avatarId: string,
-  ): Promise<any> {
-    const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
-    const sharpedImage = await sharp(base64Data)
-      .resize(400, 400)
-      .png();
-    const user: any = await this.repository.get({
-      select: ['avatarImgUrl'],
-      where: { id: userId },
-    });
-    return { sharpedImage, user, avatarId };
+  async filterAlreadyRegisteredEmails(
+    emails: string[],
+    eventId: number,
+  ): Promise<string[]> {
+    const emailsToNotSend = (
+      await this.userEventsRepository.getUserEmailsBindedToEventByEmail(
+        emails,
+        eventId,
+      )
+    )?.map((x) => x.user_email);
+    return emailsToNotSend.length
+      ? emails.filter((x) => !emailsToNotSend.some((y) => x === y))
+      : emails;
   }
 
   private deleteAvatar(user: any, Bucket: string) {
@@ -274,19 +273,18 @@ export class UserService {
     );
   }
 
-  async filterAlreadyRegisteredEmails(
-    emails: string[],
-    eventId: number,
-  ): Promise<string[]> {
-    const emailsToNotSend = (
-      await this.userEventsRepository.getUserEmailsBindedToEventByEmail(
-        emails,
-        eventId,
-      )
-    )?.map(x => x.user_email);
-    return emailsToNotSend.length
-      ? emails.filter(x => !emailsToNotSend.some(y => x === y))
-      : emails;
+  private async processAvatarImage(
+    avatarImgUrl: string,
+    userId: number,
+    avatarId: string,
+  ): Promise<any> {
+    const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
+    const sharpedImage = await sharp(base64Data).resize(400, 400).png();
+    const user: any = await this.repository.get({
+      select: ['avatarImgUrl'],
+      where: { id: userId },
+    });
+    return { sharpedImage, user, avatarId };
   }
 
   private async readCsvUsers(csvReadStream, eventId: number): Promise<void> {
@@ -294,9 +292,9 @@ export class UserService {
       .setOptions({ maxParallel: 16 })
       .lines()
       .CSVParse()
-      .map(emails => [...new Set(emails)])
-      .map(emails =>
-        emails.filter(x => validateEmail(x) && x.trim().length > 1),
+      .map((emails) => [...new Set(emails)])
+      .map((emails) =>
+        emails.filter((x) => validateEmail(x) && x.trim().length > 1),
       )
       .do((emails: string[]) => {
         if (emails?.length)
@@ -317,7 +315,7 @@ export class UserService {
       (users?.raw || users)?.length
         ? (users.raw || users).map(({ id }) => id)
         : [];
-    const usersToSave = emailsToSave.map(email => ({ email }));
+    const usersToSave = emailsToSave.map((email) => ({ email }));
     const alreadyExistsUserIds = userTransactionRepository
       .find({
         where: { email: In(emailsToSave) },
@@ -343,7 +341,7 @@ export class UserService {
       where: { id: eventId },
       select: ['guid'],
     });
-    const userEvents = userIds.map(userId => ({
+    const userEvents = userIds.map((userId) => ({
       userId,
       eventId,
       ticketCode,

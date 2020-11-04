@@ -100,7 +100,7 @@ export class UserProcessor {
 
   async sendEmails(data: SendEmailTicketCode) {
     const { emails, ticketCode, eventName, eventImg, eventDate } = data;
-    const destinations = emails.map(email => ({
+    const destinations = emails.map((email) => ({
       Destination: { ToAddresses: [email] },
     }));
     const variables = {

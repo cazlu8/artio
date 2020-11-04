@@ -63,58 +63,6 @@ export class ShowRoomService {
     return { token };
   }
 
-  private async createSession(eventId: number, sponsorId: number) {
-    const token = await this.generateJWT();
-    return await fetch(`https://api.opentok.com/session/create`, {
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-OPENTOK-AUTH': token,
-      },
-      method: 'POST',
-      body: JSON.stringify({ mediaMode: 'routed', archiveMode: 'always' }),
-    })
-      .then(response => response.json())
-      .then(data => {
-        const vonageToken = this.OpenTok.generateToken(data[0].session_id, {});
-        this.redisClient.set(
-          `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
-          data[0].session_id,
-        );
-        this.redisClient.set(
-          `event-${eventId}:sponsor-${sponsorId}:vonageToken`,
-          vonageToken,
-        );
-        this.redisClient.set(
-          `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
-          token,
-        );
-        this.redisClient.set(
-          `event-${eventId}:sponsor-${sponsorId}:roomState`,
-          'online',
-        );
-        return data[0];
-      })
-      .catch(err => console.log(err));
-  }
-
-  private async configureBroadcastChannels(eventId: number, sponsorId: number) {
-    const vonageSessionId = await this.redisClient.get(
-      `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
-    );
-    return {
-      sessionId: vonageSessionId,
-      outputs: {
-        hls: {},
-      },
-      maxDuration: 5400,
-      resolution: '640x480',
-      layout: {
-        type: 'bestFit',
-      },
-    };
-  }
-
   async startBroadcastSponsorRoom(eventId: number, sponsorId: number) {
     const token = await this.redisClient.get(
       `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
@@ -136,15 +84,32 @@ export class ShowRoomService {
         body: JSON.stringify(broadcastOptions),
       },
     )
-      .then(response => response.json())
-      .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         this.redisClient.set(
           `event-${eventId}:sponsor-${sponsorId}:broadcastId`,
           data.id,
         );
         return data;
       })
-      .catch(err => console.log(err));
+      .catch((err) => console.log(err));
+  }
+
+  private async configureBroadcastChannels(eventId: number, sponsorId: number) {
+    const vonageSessionId = await this.redisClient.get(
+      `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
+    );
+    return {
+      sessionId: vonageSessionId,
+      outputs: {
+        hls: {},
+      },
+      maxDuration: 5400,
+      resolution: '640x480',
+      layout: {
+        type: 'bestFit',
+      },
+    };
   }
 
   async getBroadcastInfo(eventId: number, sponsorId: number) {
@@ -159,8 +124,8 @@ export class ShowRoomService {
       `https://api.opentok.com/v2/project/${vonageApiKey}/broadcast/${broadcastId}`,
       { headers: { 'X-OPENTOK-AUTH': token }, method: 'GET' },
     )
-      .then(response => response.json())
-      .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         return data;
       });
   }
@@ -180,9 +145,34 @@ export class ShowRoomService {
         method: 'PUT',
         body: JSON.stringify({ type: 'custom', stylesheet: layout }),
       },
-    ).then(response => {
+    ).then((response) => {
       return response;
     });
+  }
+
+  async stopSponsorRoom(eventId: number, sponsorId: number) {
+    const vonageApiKey = await this.redisClient.get('vonageApiKey');
+    const broadcastId = await this.redisClient.get(
+      `event-${eventId}:sponsor-${sponsorId}:broadcastId`,
+    );
+    const token = await this.redisClient.get(
+      `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
+    );
+    const removeAllKeys = [
+      `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
+      `event-${eventId}:sponsor-${sponsorId}:vonageToken`,
+      `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
+      `event-${eventId}:sponsor-${sponsorId}:roomState`,
+      `event-${eventId}:sponsor-${sponsorId}:broadcastId`,
+    ].map((key) => this.redisClient.del(key));
+    await Promise.all(removeAllKeys);
+    await fetch(
+      `https://api.opentok.com/v2/project/${vonageApiKey}/broadcast/${broadcastId}/stop`,
+      {
+        headers: { 'X-OPENTOK-AUTH': token },
+        method: 'POST',
+      },
+    ).then((response) => response.json());
   }
 
   async getSessionData(eventId: number, sponsorId: number) {
@@ -207,28 +197,38 @@ export class ShowRoomService {
     return state || false;
   }
 
-  async stopSponsorRoom(eventId: number, sponsorId: number) {
-    const vonageApiKey = await this.redisClient.get('vonageApiKey');
-    const broadcastId = await this.redisClient.get(
-      `event-${eventId}:sponsor-${sponsorId}:broadcastId`,
-    );
-    const token = await this.redisClient.get(
-      `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
-    );
-    const removeAllKeys = [
-      `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
-      `event-${eventId}:sponsor-${sponsorId}:vonageToken`,
-      `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
-      `event-${eventId}:sponsor-${sponsorId}:roomState`,
-      `event-${eventId}:sponsor-${sponsorId}:broadcastId`,
-    ].map(key => this.redisClient.del(key));
-    await Promise.all(removeAllKeys);
-    await fetch(
-      `https://api.opentok.com/v2/project/${vonageApiKey}/broadcast/${broadcastId}/stop`,
-      {
-        headers: { 'X-OPENTOK-AUTH': token },
-        method: 'POST',
+  private async createSession(eventId: number, sponsorId: number) {
+    const token = await this.generateJWT();
+    return await fetch(`https://api.opentok.com/session/create`, {
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-OPENTOK-AUTH': token,
       },
-    ).then(response => response.json());
+      method: 'POST',
+      body: JSON.stringify({ mediaMode: 'routed', archiveMode: 'always' }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        const vonageToken = this.OpenTok.generateToken(data[0].session_id, {});
+        this.redisClient.set(
+          `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
+          data[0].session_id,
+        );
+        this.redisClient.set(
+          `event-${eventId}:sponsor-${sponsorId}:vonageToken`,
+          vonageToken,
+        );
+        this.redisClient.set(
+          `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
+          token,
+        );
+        this.redisClient.set(
+          `event-${eventId}:sponsor-${sponsorId}:roomState`,
+          'online',
+        );
+        return data[0];
+      })
+      .catch((err) => console.log(err));
   }
 }
