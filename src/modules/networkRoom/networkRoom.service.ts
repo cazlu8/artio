@@ -57,7 +57,7 @@ export class NetworkRoomService {
         type: 'group-small',
         uniqueName: `${eventId}-${uid}`,
       })
-      .then(room => ({
+      .then((room) => ({
         sid: room.sid,
         uniqueName: room.uniqueName,
       }));
@@ -237,7 +237,7 @@ export class NetworkRoomService {
     eventId: number,
   ): Promise<{ uniqueName: string }> {
     const newTwilioRoom = await this.getNewTwilioRoom(eventId);
-    socketIds.forEach(id =>
+    socketIds.forEach((id) =>
       networkEventEmitter.emit('sendAvailableRoom', {
         socketId: id,
         room: newTwilioRoom,

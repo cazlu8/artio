@@ -230,7 +230,7 @@ export class EventService {
       `event-${eventId}:intermissionTime`,
       `event-${eventId}:isOnIntermission`,
       `event-${eventId}`,
-    ].map(key => this.redisClient.del(key));
+    ].map((key) => this.redisClient.del(key));
     await Promise.all(removeAllKeys);
     await this.eventQueue.add('sendMessageToUsersLinkedToEvent', {
       eventId,
@@ -335,20 +335,29 @@ export class EventService {
     return Promise.resolve();
   }
 
-  private async processHeroImage(
-    heroImageUrl: string,
+  async getConnectedUserAndSentEvent(
+    connectedUsers: string[],
     eventId: number,
-    heroImageId: string,
-  ): Promise<any> {
-    const base64Data = Buffer.from(handleBase64(heroImageUrl), 'base64');
-    const sharpedImage = await sharp(base64Data)
-      .resize(800, 600)
-      .png();
-    const event: any = await this.repository.get({
-      select: ['heroImgUrl'],
-      where: { id: eventId },
-    });
-    return { sharpedImage, event, heroImageId };
+    eventName: string,
+    params?: {},
+  ) {
+    const userGuids = connectedUsers.map((x) => x.split('--')[1]);
+    const userIds = (await this.userRepository.getUserIdByGuid(userGuids))?.map(
+      ({ id }) => id,
+    );
+    const existingUserGuids = (
+      await this.userEventsRepository.getUserGuidsByUserIds(userIds, eventId)
+    )?.map(({ user_guid }) => user_guid);
+    connectedUsers
+      .filter((x) => existingUserGuids.some((y) => y === x.split('--')[1]))
+      .map((x) => x.split('--')[0])
+      .forEach((socketId) => {
+        const hasParameters = !!Object(params).keys().length;
+        const parameters = hasParameters ? { ...params, eventId } : eventId;
+        this.eventGateway.server
+          .to(socketId)
+          .emit(eventName, hasParameters ? parameters : eventId);
+      });
   }
 
   private updateHeroImage(
@@ -398,29 +407,23 @@ export class EventService {
     return !!isOnIntermission;
   }
 
-  async getConnectedUserAndSentEvent(
-    connectedUsers: string[],
-    eventId: number,
-    eventName: string,
-    params?: {},
+  sendViewersCounterMessage(
+    adminSocketIds: string,
+    attendeesSocketIds: string,
+    viewersCounter: number,
   ) {
-    const userGuids = connectedUsers.map(x => x.split('--')[1]);
-    const userIds = (await this.userRepository.getUserIdByGuid(userGuids))?.map(
-      ({ id }) => id,
+    const adminSocketIdsFormatted =
+      adminSocketIds !== null ? JSON.parse(adminSocketIds) : [];
+    const attendeesSocketIdsFormatted =
+      attendeesSocketIds !== null ? JSON.parse(attendeesSocketIds) : [];
+    [
+      ...adminSocketIdsFormatted,
+      ...attendeesSocketIdsFormatted,
+    ].forEach((socketId) =>
+      this.eventGateway.server
+        .to(socketId)
+        .emit('viewersCounter', viewersCounter),
     );
-    const existingUserGuids = (
-      await this.userEventsRepository.getUserGuidsByUserIds(userIds, eventId)
-    )?.map(({ user_guid }) => user_guid);
-    connectedUsers
-      .filter(x => existingUserGuids.some(y => y === x.split('--')[1]))
-      .map(x => x.split('--')[0])
-      .forEach(socketId => {
-        const hasParameters = !!Object(params).keys().length;
-        const parameters = hasParameters ? { ...params, eventId } : eventId;
-        this.eventGateway.server
-          .to(socketId)
-          .emit(eventName, hasParameters ? parameters : eventId);
-      });
   }
 
   async getAdminAndAttendeesSocketIds(eventId: number) {
@@ -450,22 +453,17 @@ export class EventService {
     return viewersCounter;
   }
 
-  sendViewersCounterMessage(
-    adminSocketIds: string,
-    attendeesSocketIds: string,
-    viewersCounter: number,
-  ) {
-    const adminSocketIdsFormatted =
-      adminSocketIds !== null ? JSON.parse(adminSocketIds) : [];
-    const attendeesSocketIdsFormatted =
-      attendeesSocketIds !== null ? JSON.parse(attendeesSocketIds) : [];
-    [
-      ...adminSocketIdsFormatted,
-      ...attendeesSocketIdsFormatted,
-    ].forEach(socketId =>
-      this.eventGateway.server
-        .to(socketId)
-        .emit('viewersCounter', viewersCounter),
-    );
+  private async processHeroImage(
+    heroImageUrl: string,
+    eventId: number,
+    heroImageId: string,
+  ): Promise<any> {
+    const base64Data = Buffer.from(handleBase64(heroImageUrl), 'base64');
+    const sharpedImage = await sharp(base64Data).resize(800, 600).png();
+    const event: any = await this.repository.get({
+      select: ['heroImgUrl'],
+      where: { id: eventId },
+    });
+    return { sharpedImage, event, heroImageId };
   }
 }
