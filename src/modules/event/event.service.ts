@@ -230,7 +230,7 @@ export class EventService {
       `event-${eventId}:intermissionTime`,
       `event-${eventId}:isOnIntermission`,
       `event-${eventId}`,
-    ].map(key => this.redisClient.del(key));
+    ].map((key) => this.redisClient.del(key));
     await Promise.all(removeAllKeys);
     await this.eventQueue.add('sendMessageToUsersLinkedToEvent', {
       eventId,
@@ -341,9 +341,7 @@ export class EventService {
     heroImageId: string,
   ): Promise<any> {
     const base64Data = Buffer.from(handleBase64(heroImageUrl), 'base64');
-    const sharpedImage = await sharp(base64Data)
-      .resize(800, 600)
-      .png();
+    const sharpedImage = await sharp(base64Data).resize(800, 600).png();
     const event: any = await this.repository.get({
       select: ['heroImgUrl'],
       where: { id: eventId },
@@ -404,7 +402,7 @@ export class EventService {
     eventName: string,
     params?: {},
   ) {
-    const userGuids = connectedUsers.map(x => x.split('--')[1]);
+    const userGuids = connectedUsers.map((x) => x.split('--')[1]);
     const userIds = (await this.userRepository.getUserIdByGuid(userGuids))?.map(
       ({ id }) => id,
     );
@@ -412,9 +410,9 @@ export class EventService {
       await this.userEventsRepository.getUserGuidsByUserIds(userIds, eventId)
     )?.map(({ user_guid }) => user_guid);
     connectedUsers
-      .filter(x => existingUserGuids.some(y => y === x.split('--')[1]))
-      .map(x => x.split('--')[0])
-      .forEach(socketId => {
+      .filter((x) => existingUserGuids.some((y) => y === x.split('--')[1]))
+      .map((x) => x.split('--')[0])
+      .forEach((socketId) => {
         const hasParameters = !!Object(params).keys().length;
         const parameters = hasParameters ? { ...params, eventId } : eventId;
         this.eventGateway.server
@@ -462,7 +460,7 @@ export class EventService {
     [
       ...adminSocketIdsFormatted,
       ...attendeesSocketIdsFormatted,
-    ].forEach(socketId =>
+    ].forEach((socketId) =>
       this.eventGateway.server
         .to(socketId)
         .emit('viewersCounter', viewersCounter),

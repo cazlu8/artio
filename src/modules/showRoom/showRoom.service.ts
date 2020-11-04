@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { RedisService } from 'nestjs-redis';
 import fetch from 'node-fetch';
 import { sign } from 'jsonwebtoken';
@@ -7,9 +6,10 @@ import * as bluebird from 'bluebird';
 import * as OpenTok from 'opentok';
 import { promisify } from 'util';
 import { ConfigService } from '@nestjs/config';
+import { NotFoundException } from '@nestjs/common';
 import { LoggerService } from '../../shared/services/logger.service';
+import { Role } from './dto/session.register.participant.dto';
 
-@Injectable()
 export class ShowRoomService {
   private readonly redisClient: any;
 
@@ -52,7 +52,7 @@ export class ShowRoomService {
   async registerSessionParticipant(
     eventId: number,
     sponsorId: number,
-    streamRole: string,
+    streamRole: Role,
   ) {
     const sessionId = await this.redisClient.get(
       `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
@@ -190,7 +190,10 @@ export class ShowRoomService {
       `event-${eventId}:sponsor-${sponsorId}:vonageSessionId`,
     );
     const apiKey = await this.redisClient.get(`vonageApiKey`);
-    return { sessionId, apiKey };
+    if (sessionId && apiKey) {
+      return { sessionId, apiKey };
+    }
+    throw new NotFoundException();
   }
 
   async startSponsorRoomState(eventId: number, sponsorId: number) {
