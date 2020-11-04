@@ -90,9 +90,7 @@ export class SponsorService {
     sponsorId?: number,
   ): Promise<any> {
     const base64Data = Buffer.from(handleBase64(banner), 'base64');
-    const sharpedImage = await sharp(base64Data)
-      .resize(440, 240)
-      .png();
+    const sharpedImage = await sharp(base64Data).resize(440, 240).png();
     if (sponsorId) {
       const entity: any = await this.repository.get({
         select: ['banner'],
@@ -172,9 +170,7 @@ export class SponsorService {
     sponsorId?: number,
   ): Promise<any> {
     const base64Data = Buffer.from(handleBase64(logo), 'base64');
-    const sharpedImage = await sharp(base64Data)
-      .resize(440, 240)
-      .png();
+    const sharpedImage = await sharp(base64Data).resize(440, 240).png();
     if (sponsorId) {
       const entity: any = await this.repository.get({
         select: ['logo'],

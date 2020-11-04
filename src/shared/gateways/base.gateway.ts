@@ -24,7 +24,7 @@ export default class BaseGateway {
     const currentValues = JSON.parse(
       (await redisClient.hget(keyName, key)) || [],
     );
-    const newValues = currentValues.filter(x => x !== socketId);
+    const newValues = currentValues.filter((x) => x !== socketId);
     await redisClient.hset(keyName, key, JSON.stringify(newValues));
   }
 }

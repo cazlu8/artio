@@ -27,7 +27,8 @@ import BaseGateway from '../../shared/gateways/base.gateway';
 @UseFilters(new BaseWsExceptionFilter())
 @UseInterceptors(ErrorsInterceptor)
 @WebSocketGateway(3030, { namespace: 'chat', transports: ['websocket'] })
-export class ChatGateway extends BaseGateway
+export class ChatGateway
+  extends BaseGateway
   implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   readonly server: Server;
