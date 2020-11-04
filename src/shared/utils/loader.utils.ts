@@ -9,7 +9,7 @@ function convertToDynamicModule(pathDir, dir, file): DynamicModule {
 
 function getModuleFiles(files: string[], patternFile: string) {
   return files.filter(
-    (file) =>
+    file =>
       file.endsWith(`${patternFile}.js`) || file.endsWith(`${patternFile}.ts`),
   );
 }
@@ -31,9 +31,9 @@ export default function loaderUtils(pathDir: string, patternFile: string) {
       files: getModuleFiles(files, patternFile),
     }))
     .map(({ files, dir }: { files: string[]; dir: string }) =>
-      files.map((file) => convertToDynamicModule(pathDir, dir, file)),
+      files.map(file => convertToDynamicModule(pathDir, dir, file)),
     )
-    .filter((module) => module.length)
-    .map((module) => Object.values(module[0]))
+    .filter(module => module.length)
+    .map(module => Object.values(module[0]))
     .reduce((acc, cur) => acc.concat(cur), []);
 }

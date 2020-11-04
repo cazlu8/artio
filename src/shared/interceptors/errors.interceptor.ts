@@ -14,7 +14,7 @@ export class ErrorsInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
-      catchError((error) => {
+      catchError(error => {
         const [request] = context?.getArgs();
         const requestError =
           context?.getType() === 'ws' ? request?.conn?.request : request;

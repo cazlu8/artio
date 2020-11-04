@@ -56,17 +56,17 @@ export class NetworkRoomGateway
   }
 
   afterInit() {
-    networkEventEmitter.on('sendAvailableRoom', async (data) => {
+    networkEventEmitter.on('sendAvailableRoom', async data => {
       const { socketId, room } = data;
       this.server.to(socketId).emit('requestRoom', room);
     });
 
-    networkEventEmitter.on('sendSwitchRoom', async (data) => {
+    networkEventEmitter.on('sendSwitchRoom', async data => {
       const { socketId, room } = data;
       this.server.to(socketId).emit('switchRoom', room);
     });
 
-    networkEventEmitter.on('switchRoom', async (eventId) => {
+    networkEventEmitter.on('switchRoom', async eventId => {
       const lengthSwitch = await this.redisClient.llen(
         `event-${eventId}:queueSwitch`,
       );
@@ -74,7 +74,7 @@ export class NetworkRoomGateway
         await this.networkRoomQueue.add('switchRoom', { eventId });
     });
 
-    networkEventEmitter.on('changedQueuesOrRooms', async (eventId) => {
+    networkEventEmitter.on('changedQueuesOrRooms', async eventId => {
       const length = await this.redisClient.llen(`event-${eventId}:queue`);
       if (length)
         await this.networkRoomQueue.add('findAvailableRooms', { eventId });
