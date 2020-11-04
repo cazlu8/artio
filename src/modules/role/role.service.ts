@@ -14,6 +14,6 @@ export class RoleService {
   create(createRoleDTO: CreateRoleDTO): Promise<void | ObjectLiteral> {
     return this.repository
       .save(createRoleDTO)
-      .then((role) => this.loggerService.info(`Role ${role.name} Created`));
+      .then(role => this.loggerService.info(`Role ${role.name} Created`));
   }
 }

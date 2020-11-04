@@ -28,7 +28,7 @@ export class ChatProcessor {
       );
       const sponsorSocketIdsFormatted =
         sponsorSocketIds !== null ? JSON.parse(sponsorSocketIds) : [];
-      sponsorSocketIdsFormatted.forEach((to) =>
+      sponsorSocketIdsFormatted.forEach(to =>
         this.chatGateway.server.to(to).emit(eventName, {
           ...params,
         }),

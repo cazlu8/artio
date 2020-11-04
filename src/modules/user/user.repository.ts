@@ -19,8 +19,8 @@ export class UserRepository extends Repository<User> {
         'user_events.eventId = event.id and user_events.redeemed = true',
       )
       .getRawMany()
-      .then((rows) =>
-        rows.map((r) => {
+      .then(rows =>
+        rows.map(r => {
           return r.id === null ? null : r;
         }),
       );

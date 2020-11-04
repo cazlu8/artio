@@ -12,7 +12,7 @@ export class JwtService {
       process.env.JWT_SECRET_KEY_LOCAL || '',
       process.env.JWT_SECRET_KEY_STAGING || '',
       process.env.JWT_SECRET_KEY_PROD || '',
-    ].map(async (key) => {
+    ].map(async key => {
       const publicKey = key.replace(/\\n/g, '\n');
       return await verifyToken(token, publicKey);
     });

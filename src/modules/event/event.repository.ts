@@ -34,7 +34,10 @@ export class EventRepository extends Repository<Event> {
   getUpcomingEvents(skip: number): Promise<Partial<Event[]> | void> {
     const where = 'event.end_date >= now()';
     const order = 'DESC';
-    return this.getListEvents(where, order).skip(skip).take(10).getRawMany();
+    return this.getListEvents(where, order)
+      .skip(skip)
+      .take(10)
+      .getRawMany();
   }
 
   getPastEvents(skip: number): Promise<Partial<Event[]> | void> {
@@ -113,7 +116,7 @@ export class EventRepository extends Repository<Event> {
     const attributes = ['*'];
     return this.createQueryBuilder('event')
       .select(attributes)
-      .where((qb) => {
+      .where(qb => {
         const subQuery = qb
           .subQuery()
           .select('"userEventsEventId"')
@@ -142,7 +145,7 @@ export class EventRepository extends Repository<Event> {
       .addSelect('description', 'description')
       .addSelect('phone_number', 'phoneNumber')
       .addSelect('address', 'address')
-      .where((qb) => {
+      .where(qb => {
         const subQuery = qb
           .subQuery()
           .select('"sponsorId"')
@@ -167,7 +170,7 @@ export class EventRepository extends Repository<Event> {
       .addSelect('location_name', 'locationName')
       .addOrderBy('"onLive"', 'DESC')
       .addOrderBy('start_date', 'ASC')
-      .where((qb) => {
+      .where(qb => {
         const subQuery = qb
           .subQuery()
           .select('"eventId"')
@@ -193,7 +196,7 @@ export class EventRepository extends Repository<Event> {
       .addSelect('start_date', 'startDate')
       .addSelect('timezone', 'timezone')
       .orderBy('start_date', 'DESC')
-      .where((qb) => {
+      .where(qb => {
         const subQuery = qb
           .subQuery()
           .select('"eventId"')

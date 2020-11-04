@@ -15,7 +15,7 @@ export class OrganizerAuthGuard implements CanActivate {
       const toValidate = request.raw.user['cognito:groups'];
       const role = ['Organizer'];
       return Array.isArray(role)
-        ? role.some((r) => toValidate?.indexOf(r) >= 0)
+        ? role.some(r => toValidate?.indexOf(r) >= 0)
         : Array.isArray(toValidate) && toValidate?.includes(role);
     }
     return true;
