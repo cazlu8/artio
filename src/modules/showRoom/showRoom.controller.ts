@@ -34,7 +34,7 @@ export class ShowRoomController extends BaseController {
   }
 
   @Put('session/sponsor/start/:eventId/:sponsorId')
-  async startSponsorRoomState(
+  async startSponsorRoom(
     @Param('sponsorId', ParseIntPipe) sponsorId: number,
     @Param('eventId', ParseIntPipe) eventId: number,
   ): Promise<void> {
@@ -57,5 +57,21 @@ export class ShowRoomController extends BaseController {
       eventName: 'stopSponsorRoomState',
       params: { sponsorId },
     });
+  }
+
+  @Put('session/sponsor/broadcast/:eventId/:sponsorId')
+  async startBroadcastSponsorRoom(
+    @Param('sponsorId', ParseIntPipe) sponsorId: number,
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ): Promise<void> {
+    return await this.service.startBroadcastSponsorRoom(eventId, sponsorId);
+  }
+
+  @Get('session/sponsor/broadcast/info/:eventId/:sponsorId')
+  async getBroadcastInfo(
+    @Param('sponsorId', ParseIntPipe) sponsorId: number,
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ) {
+    return this.service.getBroadcastInfo(eventId, sponsorId);
   }
 }
