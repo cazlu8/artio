@@ -24,61 +24,61 @@ export class createCategoryInterests1604434695469
       `ALTER TABLE "user_category_interests" ADD CONSTRAINT "FK_7df48242a69f792ad049d9a620a" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Arts")`,
+      `INSERT INTO "category_interests" ("name") values ('Arts')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Science")`,
+      `INSERT INTO "category_interests"  ("name") values ('Science')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Culture and Community")`,
+      `INSERT INTO "category_interests"  ("name") values ('Culture and Community')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Design and Innovation")`,
+      `INSERT INTO "category_interests"  ("name") values ('Design and Innovation')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Diversity")`,
+      `INSERT INTO "category_interests"  ("name") values ('Diversity')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Education")`,
+      `INSERT INTO "category_interests"  ("name") values ('Education')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Bussiner and Carrer")`,
+      `INSERT INTO "category_interests"  ("name") values ('Bussiner and Carrer')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Politics and Activism")`,
+      `INSERT INTO "category_interests"  ("name") values ('Politics and Activism')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Recreation and Pastimes")`,
+      `INSERT INTO "category_interests"  ("name") values ('Recreation and Pastimes')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Entertainment")`,
+      `INSERT INTO "category_interests"  ("name") values ('Entertainment')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Sports")`,
+      `INSERT INTO "category_interests"  ("name") values ('Sports')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Family and Lifestyle")`,
+      `INSERT INTO "category_interests"  ("name") values ('Family and Lifestyle')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Games")`,
+      `INSERT INTO "category_interests"  ("name") values ('Games')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Language")`,
+      `INSERT INTO "category_interests"  ("name") values ('Language')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Marketing")`,
+      `INSERT INTO "category_interests"  ("name") values ('Marketing')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Pets")`,
+      `INSERT INTO "category_interests"  ("name") values ('Pets')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Health")`,
+      `INSERT INTO "category_interests"  ("name") values ('Health')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Religion")`,
+      `INSERT INTO "category_interests"  ("name") values ('Religion')`,
     );
     await queryRunner.query(
-      `INSERT INTO category_interests  ("name") values ("Technology")`,
+      `INSERT INTO "category_interests"  ("name") values ('Technology')`,
     );
   }
 
