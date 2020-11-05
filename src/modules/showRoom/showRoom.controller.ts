@@ -108,7 +108,8 @@ export class ShowRoomController extends BaseController {
     return await this.service.changeBroadcastLayout(
       eventId,
       sponsorId,
-      changeBroadcastLayoutDTO,
+      changeBroadcastLayoutDTO.type,
+      changeBroadcastLayoutDTO.layout,
     );
   }
 }

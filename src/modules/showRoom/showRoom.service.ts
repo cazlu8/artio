@@ -93,7 +93,7 @@ export class ShowRoomService {
         );
         return data;
       })
-      .catch(err => console.log(err));
+      .catch(err => err);
   }
 
   private async configureBroadcastChannels(eventId: number, sponsorId: number) {
@@ -106,7 +106,7 @@ export class ShowRoomService {
         hls: {},
       },
       maxDuration: 5400,
-      resolution: '640x480',
+      resolution: '1280x720',
       layout: {
         type: 'bestFit',
       },
@@ -131,10 +131,15 @@ export class ShowRoomService {
       });
   }
 
-  async changeBroadcastLayout(eventId: number, sponsorId: number, layout: any) {
+  async changeBroadcastLayout(
+    eventId: number,
+    sponsorId: number,
+    layoutType: string,
+    layout: any,
+  ) {
     const vonageApiKey = await this.redisClient.get(`vonageApiKey`);
     const token = await this.redisClient.get(
-      `event-${eventId}:sponsor-${sponsorId}:vonageJWTToken`,
+      `event-${eventId}:sponsor-${sponsorId}:vonageJWT`,
     );
     const broadcastId = await this.redisClient.get(
       `event-${eventId}:sponsor-${sponsorId}:broadcastId`,
@@ -142,9 +147,12 @@ export class ShowRoomService {
     return await fetch(
       `https://api.opentok.com/v2/project/${vonageApiKey}/broadcast/${broadcastId}/layout`,
       {
-        headers: { 'X-OPENTOK-AUTH': token },
+        headers: {
+          'X-OPENTOK-AUTH': token,
+          'Content-type': 'application/json',
+        },
         method: 'PUT',
-        body: JSON.stringify({ type: 'custom', stylesheet: layout }),
+        body: JSON.stringify({ type: layoutType, stylesheet: layout }),
       },
     ).then(response => {
       return response;
@@ -230,6 +238,6 @@ export class ShowRoomService {
         );
         return data[0];
       })
-      .catch(err => console.log(err));
+      .catch(err => err);
   }
 }
