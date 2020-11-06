@@ -41,6 +41,14 @@ export class User {
   email: string;
 
   @ApiProperty()
+  @Column('varchar', {
+    length: 70,
+    nullable: false,
+    name: 'contact_email',
+  })
+  contactEmail: string;
+
+  @ApiProperty()
   @Column('varchar', { length: 255, nullable: true, name: 'avatar_img_url' })
   avatarImgUrl?: string;
 

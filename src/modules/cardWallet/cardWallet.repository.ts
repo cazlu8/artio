@@ -8,6 +8,7 @@ export class CardWalletRepository extends Repository<CardWallet> {
     let query = this.createQueryBuilder('cardWallet')
       .select('user.id', 'id')
       .addSelect('email', 'email')
+      .addSelect('contact_email', 'contactEmail')
       .addSelect('cardWallet.id', 'cardWalletId')
       .addSelect('bio', 'bio')
       .addSelect('company', 'company')

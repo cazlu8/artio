@@ -74,6 +74,14 @@ export class Sponsor {
   mediaUrl?: string;
 
   @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'youtube_url' })
+  youtubeUrl?: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 255, nullable: true, name: 'youtube_live_url' })
+  youtubeLiveUrl?: string;
+
+  @ApiProperty()
   @Column('varchar', { length: 255, nullable: true, name: 'url_360' })
   url360?: string;
 

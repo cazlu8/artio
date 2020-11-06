@@ -5,6 +5,8 @@ import { EventStageScheduleRepository } from './eventStageSchedule.repository';
 import { EventStageScheduleController } from './eventStageSchedule.controller';
 import { EventStagesRepository } from '../eventStages/eventStages.repository';
 import { EventRepository } from '../event/event.repository';
+import { EventStageScheduleService } from './eventStageSchedule.service';
+import { EventStageScheduleSpeakerRepository } from '../eventStageScheduleSpeaker/eventStageScheduleSpeaker.repository';
 
 @Module({
   imports: [
@@ -13,8 +15,10 @@ import { EventRepository } from '../event/event.repository';
       EventStageScheduleRepository,
       EventStagesRepository,
       EventRepository,
+      EventStageScheduleSpeakerRepository,
     ]),
   ],
+  providers: [EventStageScheduleService],
   controllers: [EventStageScheduleController],
 })
 export class EventStageScheduleModule {}

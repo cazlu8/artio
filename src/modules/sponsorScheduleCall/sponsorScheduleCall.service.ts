@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import groupBy from 'group-by';
+import * as groupBy from 'group-by';
 import { SponsorScheduleCallRepository } from './sponsorScheduleCall.repository';
 
 @Injectable()

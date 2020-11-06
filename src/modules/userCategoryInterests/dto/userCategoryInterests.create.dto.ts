@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber } from 'class-validator';
+import { IsNumber, IsArray } from 'class-validator';
 
 export default class UserCategoryInterestsCreateDTO {
   @ApiProperty()
@@ -7,6 +7,6 @@ export default class UserCategoryInterestsCreateDTO {
   userId: number;
 
   @ApiProperty()
-  @IsNumber()
-  categoryId: number;
+  @IsArray()
+  categoryIds: number[];
 }

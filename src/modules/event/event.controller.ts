@@ -330,11 +330,11 @@ export class EventController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @HttpCode(204)
-  @Put('/startLive/:eventId')
+  @Put('/startLive/:stageId')
   async startLive(
-    @Param('eventId', ParseIntPipe) eventId: number,
+    @Param('stageId', ParseIntPipe) stageId: number,
   ): Promise<void> {
-    await this.service.updateLive(eventId, true);
+    await this.service.updateLive(stageId, true);
   }
 
   @ApiParam({ name: 'finishLive' })

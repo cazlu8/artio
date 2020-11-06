@@ -4,9 +4,11 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  ManyToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { EventStages } from '../eventStages/eventStages.entity';
+import { EventStageScheduleSpeaker } from '../eventStageScheduleSpeaker/eventStageScheduleSpeaker.entity';
 
 @Entity()
 export class EventStageSchedule {
@@ -17,6 +19,10 @@ export class EventStageSchedule {
   @ApiProperty()
   @Column('varchar', { length: 255, name: 'title' })
   title: string;
+
+  @ApiProperty()
+  @Column('varchar', { length: 1200, name: 'description' })
+  description: string;
 
   @ApiProperty()
   @Column('timestamptz', { nullable: false, name: 'start_date' })

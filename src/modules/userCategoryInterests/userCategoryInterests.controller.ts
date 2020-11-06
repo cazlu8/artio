@@ -22,9 +22,17 @@ export class UserCategoryInterestsController extends BaseController {
   async save(
     @Body() userCategoryInterestsCreateDTO: UserCategoryInterestsCreateDTO,
   ): Promise<void> {
-    await this.repository.save(userCategoryInterestsCreateDTO);
+    const { userId } = userCategoryInterestsCreateDTO;
+    const userCategoryInterests = userCategoryInterestsCreateDTO.categoryIds.map(
+      categoryId => ({
+        categoryId,
+        userId,
+      }),
+    );
+    await this.repository.delete({ userId });
+    await this.repository.save(userCategoryInterests);
     this.loggerService.info(
-      `User category interests created with category: ${userCategoryInterestsCreateDTO.categoryId} for user ${userCategoryInterestsCreateDTO.userId}`,
+      `User category interests created with category: ${userCategoryInterestsCreateDTO.categoryIds} for user ${userCategoryInterestsCreateDTO.userId}`,
     );
   }
 }

@@ -17,6 +17,10 @@ export class UpdateUserDto {
 
   @ApiProperty()
   @IsOptional()
+  contactEmail?: string;
+
+  @ApiProperty()
+  @IsOptional()
   @IsPhoneNumber('ZZ')
   phoneNumber?: string;
 

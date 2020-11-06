@@ -17,6 +17,7 @@ import { EventStageScheduleRepository } from './eventStageSchedule.repository';
 import EventStageScheduleCreateDTO from './dto/eventStageSchedule.create.dto';
 import EventStageScheduleUpdateDTO from './dto/eventStageSchedule.update';
 import { VerifyDateInBetween } from './pipes/verifyDateInBetween';
+import { EventStageScheduleService } from './eventStageSchedule.service';
 
 @ApiTags('EventStageSchedule')
 @Controller('schedule')
@@ -24,6 +25,7 @@ export class EventStageScheduleController extends BaseController {
   constructor(
     private readonly loggerService: LoggerService,
     private readonly repository: EventStageScheduleRepository,
+    private readonly service: EventStageScheduleService,
   ) {
     super();
   }
@@ -51,7 +53,7 @@ export class EventStageScheduleController extends BaseController {
   async getScheduleFromStage(
     @Param('eventStageId', ParseIntPipe) eventStageId,
   ): Promise<any | void> {
-    return this.repository.getScheduleFromStage(eventStageId);
+    return this.service.getScheduleFromStage(eventStageId);
   }
 
   @ApiParam({ name: 'eventStageScheduleId', type: 'number' })
