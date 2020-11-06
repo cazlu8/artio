@@ -68,7 +68,7 @@ export class EventProcessor {
         eventId,
       );
       this.loggerService.info(
-        `endIntermission: intermission ended for the ${eventId}`,
+        `endIntermission: intermission ended for the event ${eventId}`,
       );
       jobDone();
     } catch (error) {
@@ -82,7 +82,7 @@ export class EventProcessor {
   @Process({ name: 'sendMessageToUsersLinkedToEvent', concurrency: numCPUs })
   async sendMessageToUsersLinkedToEvent(job, jobDone) {
     try {
-      const { eventId, eventName, params } = job.data;
+      const { eventId, stageId, eventName, params } = job.data;
       const connectedUsers = await this.redisClient.smembers(
         'connectedUsersEvents',
       );
@@ -92,6 +92,7 @@ export class EventProcessor {
           +eventId,
           eventName,
           params,
+          +stageId,
         );
         this.loggerService.info(
           `sendMessageToUsersLinkedToEvent: message: ${eventName} sent to event: ${eventId}`,

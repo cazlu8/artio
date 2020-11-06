@@ -61,20 +61,20 @@ export class EventService {
     return event;
   }
 
-  async updateLive(eventId: number, isLive: boolean) {
-    const { onLive: isOnLive } = await this.repository.findOne({
+  async updateLive(eventId: number, stageId: number, isLive: boolean) {
+    const { onLive: isOnLive } = await this.eventStagesRepository.findOne({
       select: ['onLive'],
-      where: { id: eventId },
+      where: { id: stageId },
     });
     if ((!isOnLive && isLive) || (isOnLive && !isLive)) {
       if (isLive) {
         setTimeout(async () => {
-          await this.repository.update(eventId, {
+          await this.eventStagesRepository.update(stageId, {
             onLive: isLive,
           });
         }, 25000);
       } else
-        await this.repository.update(eventId, {
+        await this.eventStagesRepository.update(stageId, {
           onLive: isLive,
         });
 
@@ -82,7 +82,8 @@ export class EventService {
         'sendMessageToUsersLinkedToEvent',
         {
           eventId,
-          eventName: 'eventLive',
+          stageId,
+          eventName: 'stageLive',
         },
         isLive
           ? {
@@ -342,6 +343,7 @@ export class EventService {
     eventId: number,
     eventName: string,
     params?: {},
+    stageId?: number,
   ) {
     const userGuids = connectedUsers.map(x => x.split('--')[1]);
     const userIds = (await this.userRepository.getUserIdByGuid(userGuids))?.map(
@@ -354,11 +356,12 @@ export class EventService {
       .filter(x => existingUserGuids.some(y => y === x.split('--')[1]))
       .map(x => x.split('--')[0])
       .forEach(socketId => {
+        const param = stageId || eventId;
         const hasParameters = !!Object(params).keys().length;
-        const parameters = hasParameters ? { ...params, eventId } : eventId;
+        const parameters = hasParameters ? { ...params, param } : param;
         this.eventGateway.server
           .to(socketId)
-          .emit(eventName, hasParameters ? parameters : eventId);
+          .emit(eventName, hasParameters ? parameters : param);
       });
   }
 

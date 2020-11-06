@@ -330,11 +330,12 @@ export class EventController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @HttpCode(204)
-  @Put('/startLive/:stageId')
+  @Put('/startLive/:eventId/:stageId')
   async startLive(
+    @Param('eventId', ParseIntPipe) eventId: number,
     @Param('stageId', ParseIntPipe) stageId: number,
   ): Promise<void> {
-    await this.service.updateLive(stageId, true);
+    await this.service.updateLive(eventId, stageId, true);
   }
 
   @ApiParam({ name: 'finishLive' })
@@ -344,11 +345,12 @@ export class EventController extends BaseWithoutAuthController {
   })
   @UseGuards(AuthGuard)
   @HttpCode(204)
-  @Put('/finishLive/:eventId')
+  @Put('/finishLive/:eventId/:stageId')
   async finishLive(
     @Param('eventId', ParseIntPipe) eventId: number,
+    @Param('stageId', ParseIntPipe) stageId: number,
   ): Promise<void> {
-    await this.service.updateLive(eventId, false);
+    await this.service.updateLive(eventId, stageId, false);
   }
 
   @ApiParam({ name: 'destroyInfra' })
