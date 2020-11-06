@@ -156,20 +156,19 @@ export class UserService {
     };
   }
 
-  private async processAvatarImage(
-    avatarImgUrl: string,
-    userId: number,
-    avatarId: string,
-  ): Promise<any> {
-    const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
-    const sharpedImage = await sharp(base64Data)
-      .resize(400, 400)
-      .png();
-    const user: any = await this.repository.get({
-      select: ['avatarImgUrl'],
-      where: { id: userId },
-    });
-    return { sharpedImage, user, avatarId };
+  async filterAlreadyRegisteredEmails(
+    emails: string[],
+    eventId: number,
+  ): Promise<string[]> {
+    const emailsToNotSend = (
+      await this.userEventsRepository.getUserEmailsBindedToEventByEmail(
+        emails,
+        eventId,
+      )
+    )?.map(x => x.user_email);
+    return emailsToNotSend.length
+      ? emails.filter(x => !emailsToNotSend.some(y => x === y))
+      : emails;
   }
 
   private deleteAvatar(user: any, Bucket: string) {
@@ -274,19 +273,20 @@ export class UserService {
     );
   }
 
-  async filterAlreadyRegisteredEmails(
-    emails: string[],
-    eventId: number,
-  ): Promise<string[]> {
-    const emailsToNotSend = (
-      await this.userEventsRepository.getUserEmailsBindedToEventByEmail(
-        emails,
-        eventId,
-      )
-    )?.map(x => x.user_email);
-    return emailsToNotSend.length
-      ? emails.filter(x => !emailsToNotSend.some(y => x === y))
-      : emails;
+  private async processAvatarImage(
+    avatarImgUrl: string,
+    userId: number,
+    avatarId: string,
+  ): Promise<any> {
+    const base64Data = Buffer.from(handleBase64(avatarImgUrl), 'base64');
+    const sharpedImage = await sharp(base64Data)
+      .resize(400, 400)
+      .png();
+    const user: any = await this.repository.get({
+      select: ['avatarImgUrl'],
+      where: { id: userId },
+    });
+    return { sharpedImage, user, avatarId };
   }
 
   private async readCsvUsers(csvReadStream, eventId: number): Promise<void> {

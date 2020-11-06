@@ -82,7 +82,7 @@ export class EventProcessor {
   @Process({ name: 'sendMessageToUsersLinkedToEvent', concurrency: numCPUs })
   async sendMessageToUsersLinkedToEvent(job, jobDone) {
     try {
-      const { eventId, eventName } = job.data;
+      const { eventId, eventName, params } = job.data;
       const connectedUsers = await this.redisClient.smembers(
         'connectedUsersEvents',
       );
@@ -91,6 +91,7 @@ export class EventProcessor {
           connectedUsers,
           +eventId,
           eventName,
+          params,
         );
         this.loggerService.info(
           `sendMessageToUsersLinkedToEvent: message: ${eventName} sent to event: ${eventId}`,
