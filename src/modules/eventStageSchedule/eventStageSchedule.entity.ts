@@ -4,11 +4,9 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  ManyToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { EventStages } from '../eventStages/eventStages.entity';
-import { EventStageScheduleSpeaker } from '../eventStageScheduleSpeaker/eventStageScheduleSpeaker.entity';
 
 @Entity()
 export class EventStageSchedule {
