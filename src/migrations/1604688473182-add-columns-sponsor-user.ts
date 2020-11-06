@@ -11,7 +11,7 @@ export class addColumnsSponsorUser1604688473182 implements MigrationInterface {
       `ALTER TABLE "sponsor" ADD "youtube_live_url" character varying(255)`,
     );
     await queryRunner.query(
-      `ALTER TABLE "user" ADD "contact_email" character varying(70) NOT NULL`,
+      `ALTER TABLE "user" ADD "contact_email" character varying(70)`,
     );
   }
 

@@ -43,7 +43,7 @@ export class User {
   @ApiProperty()
   @Column('varchar', {
     length: 70,
-    nullable: false,
+    nullable: true,
     name: 'contact_email',
   })
   contactEmail: string;
