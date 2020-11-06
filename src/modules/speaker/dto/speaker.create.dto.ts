@@ -1,10 +1,4 @@
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsObject,
-  IsOptional,
-  IsUrl,
-} from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsUrl } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SpeakerCreateDTO {
