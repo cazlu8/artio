@@ -18,6 +18,7 @@ import {
   sesConfig,
   dynamoConfig,
 } from './shared/config/AWS';
+import vonageConfig from './shared/config/vonage';
 import {
   cloudWatchConfigError,
   cloudWatchConfigInfo,
@@ -31,6 +32,7 @@ const providers = [JwtService];
     ConfigModule,
     ConfigModule.forRoot({
       load: [
+        vonageConfig,
         redisConfig,
         s3Config,
         cognitoConfig,
