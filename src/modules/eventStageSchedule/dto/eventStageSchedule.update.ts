@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsDate } from 'class-validator';
+import { IsNotEmpty, IsDateString } from 'class-validator';
 
 export default class EventStageScheduleUpdateDTO {
   @ApiProperty()
@@ -7,10 +7,10 @@ export default class EventStageScheduleUpdateDTO {
   title: string;
 
   @ApiProperty()
-  @IsDate()
+  @IsDateString()
   startDate: Date;
 
   @ApiProperty()
-  @IsDate()
+  @IsDateString()
   endDate: Date;
 }

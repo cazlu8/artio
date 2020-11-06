@@ -32,6 +32,7 @@ import { UserEventsRepository } from '../userEvents/userEvents.repository';
 import { UserRepository } from '../user/user.repository';
 import { EventStagesRepository } from '../eventStages/eventStages.repository';
 import CreateEventDTO from './dto/event.create.dto';
+import { EventStageScheduleRepository } from '../eventStageSchedule/eventStageSchedule.repository';
 
 @Injectable()
 export class EventService {
@@ -47,6 +48,7 @@ export class EventService {
     private readonly loggerService: LoggerService,
     private readonly userEventsRepository: UserEventsRepository,
     private readonly eventStagesRepository: EventStagesRepository,
+    private readonly eventStageScheduleRepository: EventStageScheduleRepository,
     private readonly userRepository: UserRepository,
   ) {
     this.redisClient = bluebird.promisifyAll(this.redisService.getClient());
@@ -395,6 +397,24 @@ export class EventService {
     id: number,
     eventData: Partial<Event>,
   ): Promise<UpdateResult> {
+    const currentTimezone = (
+      await this.repository.findOne({ select: ['timezone'], where: { id } })
+    ).timezone;
+    if (eventData.timezone) {
+      const timezoneChanged = eventData.timezone !== currentTimezone;
+      if (timezoneChanged) {
+        const eventStageIds = (
+          await this.eventStagesRepository.find({
+            select: ['id'],
+            where: { eventId: id },
+          })
+        ).map(({ id: stageId }) => stageId);
+        await this.eventStageScheduleRepository.updateDateByTimezone(
+          eventStageIds,
+          eventData.timezone,
+        );
+      }
+    }
     const event = await this.repository.update(id, eventData);
     this.loggerService.info(`Event ${id} has been updated`);
     return event;
@@ -436,6 +456,10 @@ export class EventService {
       eventId,
     );
     return await Promise.all([adminSocketIdsFn, attendeesSocketIdsFn]);
+  }
+
+  async getViewersCounter(eventId: number) {
+    return await this.redisClient.get(`event-${eventId}:viewersCounter`);
   }
 
   async toggleViewersCounter(eventId: number, mod: string) {

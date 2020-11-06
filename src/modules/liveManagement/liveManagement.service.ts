@@ -278,8 +278,18 @@ export class LiveManagementService {
     const mediaLive = new AWS.MediaLive({
       region,
     });
+    const securityInputParams = {
+      WhitelistRules: [
+        {
+          Cidr: '0.0.0.0/0',
+        },
+      ],
+    };
+    const {
+      SecurityGroup: { Id },
+    } = await mediaLive.createInputSecurityGroup(securityInputParams).promise();
     const params = {
-      InputSecurityGroups: ['3521646'],
+      InputSecurityGroups: [Id],
       Name: `event-${eventId}-stage-${stageId}`,
       Type: 'RTMP_PUSH',
       Destinations: [

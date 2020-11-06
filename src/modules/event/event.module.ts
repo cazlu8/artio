@@ -15,6 +15,7 @@ import { UploadService } from '../../shared/services/upload.service';
 import { UserRepository } from '../user/user.repository';
 import { UserEventsRepository } from '../userEvents/userEvents.repository';
 import { EventStagesRepository } from '../eventStages/eventStages.repository';
+import { EventStageScheduleRepository } from '../eventStageSchedule/eventStageSchedule.repository';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { EventStagesRepository } from '../eventStages/eventStages.repository';
       UserEventsRepository,
       UserRepository,
       EventStagesRepository,
+      EventStageScheduleRepository,
     ]),
   ],
   controllers: [EventController],

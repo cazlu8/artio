@@ -1,6 +1,5 @@
 import {
   Entity,
-  PrimaryColumn,
   JoinColumn,
   PrimaryGeneratedColumn,
   Column,
@@ -28,7 +27,7 @@ export class EventStageSchedule {
   endDate: Date;
 
   @ApiProperty()
-  @PrimaryColumn({ type: 'int', name: 'eventStageId' })
+  @Column('int', { name: 'eventStageId' })
   eventStageId: number;
 
   @ManyToOne(() => EventStages)

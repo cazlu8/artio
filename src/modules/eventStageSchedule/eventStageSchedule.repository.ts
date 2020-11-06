@@ -24,4 +24,18 @@ export class EventStageScheduleRepository extends Repository<
       })
       .getRawMany();
   }
+
+  async updateDateByTimezone(eventStageIds: number[], timezone: string) {
+    return this.createQueryBuilder('eventStageSchedule')
+      .update(EventStageSchedule)
+      .set({
+        startDate: () => `timezone('${timezone}', start_date)`,
+        endDate: () => `timezone('${timezone}', end_date)`,
+      })
+
+      .where('eventStageId in (:...ids)', {
+        ids: eventStageIds,
+      })
+      .execute();
+  }
 }
